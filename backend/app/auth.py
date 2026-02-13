@@ -67,7 +67,6 @@ async def signup(user: UserCreate, response: Response, db: Session = Depends(get
         value=access_token,
         httponly=True,
         max_age=ACCESS_TOKEN_EXPIRE_HOURS * 3600,
-        expires=ACCESS_TOKEN_EXPIRE_HOURS * 3600,
         samesite="none",
         secure=True  # Always True in production/HTTPS
     )
@@ -94,7 +93,6 @@ async def login(response: Response, login_data: UserLogin, db: Session = Depends
         value=access_token,
         httponly=True,
         max_age=ACCESS_TOKEN_EXPIRE_HOURS * 3600,
-        expires=ACCESS_TOKEN_EXPIRE_HOURS * 3600,
         samesite="none",
         secure=True 
     )
