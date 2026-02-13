@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const IS_LOCAL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 const API_URL = IS_LOCAL
     ? "http://localhost:8001/api"
-    : "https://YOUR_RENDER_APP_NAME.onrender.com/api"; // ⚠️ REPLACE THIS WITH YOUR RENDER URL
+    : "https://bizforge-api.onrender.com/api"; // ✅ Updated with live Render URL
 
 // Helper to handle loading state
 function setLoading(elementId, isLoading) {
