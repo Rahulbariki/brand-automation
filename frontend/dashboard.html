@@ -282,8 +282,153 @@
         </main>
     </div>
 
+    <!-- Ambient Background -->
+    <div id="dashGlow" style="position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;">
+        <div
+            style="position:absolute;width:500px;height:500px;border-radius:50%;filter:blur(140px);opacity:.08;background:#6366f1;top:-10%;left:-5%;animation:dOrb 22s ease-in-out infinite;">
+        </div>
+        <div
+            style="position:absolute;width:400px;height:400px;border-radius:50%;filter:blur(140px);opacity:.06;background:#ec4899;bottom:-10%;right:-5%;animation:dOrb 28s ease-in-out infinite reverse;">
+        </div>
+    </div>
+
+    <style>
+        @keyframes dOrb {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1)
+            }
+
+            33% {
+                transform: translate(50px, -40px) scale(1.05)
+            }
+
+            66% {
+                transform: translate(-30px, 50px) scale(.95)
+            }
+        }
+
+        /* Cursor Glow */
+        .dash-cursor {
+            position: fixed;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            pointer-events: none;
+            background: radial-gradient(circle, rgba(99, 102, 241, .06), transparent 70%);
+            transform: translate(-50%, -50%);
+            z-index: 9998;
+            opacity: 0;
+            transition: opacity .4s
+        }
+
+        body:hover .dash-cursor {
+            opacity: 1
+        }
+
+        /* Card inner glow on hover */
+        .card {
+            position: relative;
+            overflow: hidden
+        }
+
+        .card .clay-glow {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            pointer-events: none;
+            background: radial-gradient(circle, rgba(99, 102, 241, .1), transparent 70%);
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity .3s
+        }
+
+        .card:hover .clay-glow {
+            opacity: 1
+        }
+
+        /* Stronger clay look for stat cards */
+        .stat-card {
+            border-radius: 20px;
+            border: 1px solid var(--border-color)
+        }
+
+        /* Input clay depth */
+        .input-control {
+            border-radius: 14px
+        }
+
+        /* Button pulse */
+        .primary-btn {
+            animation: clayPulse 3s ease-in-out infinite
+        }
+
+        @keyframes clayPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 4px 16px rgba(99, 102, 241, .25)
+            }
+
+            50% {
+                box-shadow: 0 6px 28px rgba(99, 102, 241, .4)
+            }
+        }
+    </style>
+
     <!-- Scripts -->
     <script type="module" src="assets/js/dashboard.js"></script>
+
+    <script>
+        // Cursor Glow
+        (function () {
+            var g = document.createElement('div');
+            g.className = 'dash-cursor';
+            document.body.appendChild(g);
+            document.addEventListener('mousemove', function (e) { g.style.left = e.clientX + 'px'; g.style.top = e.clientY + 'px' });
+        })();
+
+        // Card glow tracking
+        (function () {
+            document.querySelectorAll('.card').forEach(function (c) {
+                var g = document.createElement('div');
+                g.className = 'clay-glow';
+                c.appendChild(g);
+                c.addEventListener('mousemove', function (e) {
+                    var r = c.getBoundingClientRect();
+                    g.style.left = (e.clientX - r.left) + 'px';
+                    g.style.top = (e.clientY - r.top) + 'px';
+                });
+            });
+        })();
+
+        // 3D Tilt on cards
+        (function () {
+            document.querySelectorAll('.card').forEach(function (c) {
+                c.addEventListener('mousemove', function (e) {
+                    var r = c.getBoundingClientRect();
+                    var x = (e.clientX - r.left) / r.width;
+                    var y = (e.clientY - r.top) / r.height;
+                    c.style.transform = 'perspective(600px) rotateX(' + ((y - .5) * 5) + 'deg) rotateY(' + ((x - .5) * -5) + 'deg) translateY(-4px)';
+                });
+                c.addEventListener('mouseleave', function () { c.style.transform = '' });
+            });
+        })();
+
+        // Magnetic nav items
+        (function () {
+            document.querySelectorAll('.nav-item').forEach(function (n) {
+                n.addEventListener('mousemove', function (e) {
+                    var r = n.getBoundingClientRect();
+                    var x = e.clientX - r.left - r.width / 2;
+                    n.style.transform = 'translateX(' + (x * 0.1 + 4) + 'px)';
+                });
+                n.addEventListener('mouseleave', function () { n.style.transform = '' });
+            });
+        })();
+    </script>
 </body>
 
 </html>
