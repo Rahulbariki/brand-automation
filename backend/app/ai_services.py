@@ -224,7 +224,8 @@ def generate_logo_image(prompt: str, filename: str = "logo.png") -> str:
         image_bytes = response.content
         
         # Ensure directory exists
-        output_dir = os.path.join(os.path.dirname(__file__), "..", "frontend", "assets", "generated_logos")
+        # Path: backend/app/ai_services.py -> ../../frontend/assets/generated_logos
+        output_dir = os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "assets", "generated_logos")
         os.makedirs(output_dir, exist_ok=True)
         
         filepath = os.path.join(output_dir, filename)

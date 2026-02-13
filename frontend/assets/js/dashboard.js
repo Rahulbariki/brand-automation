@@ -1,5 +1,5 @@
 // BIZFORGE DASHBOARD CONTROLLER
-import { api } from './api.js';
+import { api, ASSET_BASE_URL } from './api.js';
 import { ui } from './ui.js';
 import { state } from './stateManager.js';
 
@@ -178,13 +178,24 @@ async function generateLogo() {
     try {
         const data = await api.generateLogo(brandName, industry, style);
         if (data) {
+            const absoluteImageUrl = data.image_url.startsWith('http')
+                ? data.image_url
+                : `${ASSET_BASE_URL}${data.image_url}`;
+
             const content = `
                 <p class="text-muted mb-2"><strong>Prompt:</strong> ${data.prompt || 'N/A'}</p>
-                <div class="logo-frame"><img src="${data.image_url}" alt="Generated Logo"></div>
+                <div class="logo-frame">
+                    <img src="${absoluteImageUrl}" alt="Generated Logo">
+                </div>
+                <div style="margin-top: 1.5rem; text-align: center;">
+                    <a href="${absoluteImageUrl}" download="${brandName}_logo.png" target="_blank" class="primary-btn" style="text-decoration: none; display: inline-block;">
+                        <i class="fas fa-download"></i> Download Logo
+                    </a>
+                </div>
             `;
             resultDiv.innerHTML = ui.renderCard('Logo Result', content);
             ui.showToast('Logo generated successfully!', 'success');
-            state.addToHistory({ type: 'logo', image: data.image_url });
+            state.addToHistory({ type: 'logo', image: absoluteImageUrl });
         }
     } catch (error) {
         ui.showToast(error.message, 'error');

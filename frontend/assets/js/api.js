@@ -10,6 +10,10 @@ const API_BASE_URL = IS_LOCAL
     ? "http://localhost:8000/api"
     : "https://bizforge-api.onrender.com/api";
 
+export const ASSET_BASE_URL = IS_LOCAL
+    ? "http://localhost:8000"
+    : "https://bizforge-api.onrender.com";
+
 class ApiClient {
     constructor() {
         this.token = null;
