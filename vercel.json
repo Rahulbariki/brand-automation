@@ -1,27 +1,26 @@
 {
     "version": 2,
-    "builds": [
+    "cleanUrls": true,
+    "rewrites": [
         {
-            "src": "frontend/**",
-            "use": "@vercel/static"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/",
-            "dest": "/frontend/index.html"
+            "source": "/",
+            "destination": "/frontend/index.html"
         },
         {
-            "src": "/dashboard",
-            "dest": "/frontend/dashboard.html"
+            "source": "/dashboard",
+            "destination": "/frontend/dashboard.html"
         },
         {
-            "src": "/assets/(.*)",
-            "dest": "/frontend/assets/$1"
+            "source": "/assets/(.*)",
+            "destination": "/frontend/assets/$1"
         },
         {
-            "src": "/(.*)",
-            "dest": "/frontend/$1"
+            "source": "/static/(.*)",
+            "destination": "/frontend/static/$1"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/frontend/$1"
         }
     ]
 }
