@@ -79,7 +79,10 @@ class UIController {
         // Brand Names -> Chips
         if (type === 'brand_names' && Array.isArray(content)) {
             specializedContent = `<div class="brand-grid">` +
-                content.map(name => `<div class="brand-chip" onclick="navigator.clipboard.writeText('${name}'); alert('Copied!')">${name}</div>`).join('') +
+                content.map(name => {
+                    const esc = name.replace(/'/g, "\\'");
+                    return `<div class="brand-chip" onclick="navigator.clipboard.writeText('${esc}'); ui.showToast('Copied: ${esc}', 'success')">${name}</div>`;
+                }).join('') +
                 `</div>`;
         }
 
