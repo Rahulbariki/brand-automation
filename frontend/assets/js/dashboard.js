@@ -146,7 +146,13 @@ async function generateBrandNames() {
     try {
         const data = await api.generateBrandNames(industry, keywords, tone);
         if (data && data.names) {
-            resultDiv.innerHTML = ui.renderCard('Generated Names', data.names, 'brand_names');
+            const content = `<div class="brand-grid">` +
+                data.names.map(name => {
+                    const esc = name.replace(/'/g, "\\'");
+                    return `<div class="brand-chip" onclick="navigator.clipboard.writeText('${esc}'); ui.showToast('Copied: ${esc}', 'success')">${name}</div>`;
+                }).join('') + `</div>`;
+
+            resultDiv.innerHTML = ui.renderCard('Generated Names', content);
             ui.showToast('Brand names generated!', 'success');
             state.addToHistory({ type: 'brand_names', content: data.names });
         }
@@ -172,7 +178,11 @@ async function generateLogo() {
     try {
         const data = await api.generateLogo(brandName, industry, style);
         if (data) {
-            resultDiv.innerHTML = ui.renderCard('Logo Result', data.image_url, 'logo');
+            const content = `
+                <p class="text-muted mb-2"><strong>Prompt:</strong> ${data.prompt || 'N/A'}</p>
+                <div class="logo-frame"><img src="${data.image_url}" alt="Generated Logo"></div>
+            `;
+            resultDiv.innerHTML = ui.renderCard('Logo Result', content);
             ui.showToast('Logo generated successfully!', 'success');
             state.addToHistory({ type: 'logo', image: data.image_url });
         }
@@ -198,7 +208,8 @@ async function generateContent() {
     try {
         const data = await api.generateContent(brandName, description, contentType);
         if (data) {
-            resultDiv.innerHTML = ui.renderCard('Marketing Content', data.content, 'marketing');
+            const content = `<div class="marketing-preview"><p style="white-space: pre-wrap;">${data.content}</p></div>`;
+            resultDiv.innerHTML = ui.renderCard('Marketing Content', content);
             ui.showToast('Content generated!', 'success');
             state.addToHistory({ type: 'content', content: data.content });
         }
@@ -223,7 +234,15 @@ async function generateDesign() {
     try {
         const data = await api.generateDesignSystem(industry, tone);
         if (data && data.colors) {
-            resultDiv.innerHTML = ui.renderCard('Color Palette', data.colors, 'design_system');
+            const colorsHtml = `<div class="swatch-grid">` +
+                data.colors.map(color => `
+                    <div class="swatch-item">
+                        <div class="swatch-color" style="background:${color}"></div>
+                        <div class="swatch-hex">${color}</div>
+                    </div>
+                `).join('') + `</div>`;
+
+            resultDiv.innerHTML = ui.renderCard('Color Palette', colorsHtml);
             ui.showToast('Design system generated!', 'success');
         }
     } catch (error) {
@@ -246,11 +265,20 @@ async function analyzeSentiment() {
     try {
         const data = await api.analyzeSentiment(text);
         if (data) {
-            const content = {
-                score: data.confidence || 0,
-                label: data.sentiment || 'Neutral'
-            };
-            resultDiv.innerHTML = ui.renderCard('Sentiment Analysis', content, 'sentiment');
+            const score = data.confidence || 0;
+            const label = data.sentiment || 'Neutral';
+            const color = label === 'Positive' ? '#10b981' : (label === 'Negative' ? '#ef4444' : '#6366f1');
+
+            const content = `
+                <div class="sentiment-result">
+                    <h3 style="color: ${color}">${label}</h3>
+                    <div class="mood-meter">
+                        <div class="mood-bar" style="width: ${score * 100}%; background: ${color}"></div>
+                    </div>
+                    <p style="margin-top:0.5rem; font-size:0.85rem; color:var(--text-muted)">Confidence: ${(score * 100).toFixed(1)}%</p>
+                </div>
+            `;
+            resultDiv.innerHTML = ui.renderCard('Sentiment Analysis', content);
             ui.showToast('Analysis complete!', 'success');
         }
     } catch (error) {

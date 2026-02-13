@@ -1,4 +1,22 @@
 {
     "cleanUrls": true,
-    "trailingSlash": false
+    "trailingSlash": false,
+    "rewrites": [
+        {
+            "source": "/dashboard",
+            "destination": "/frontend/dashboard.html"
+        },
+        {
+            "source": "/assets/:path*",
+            "destination": "/frontend/assets/:path*"
+        },
+        {
+            "source": "/",
+            "destination": "/frontend/index.html"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/frontend/$1"
+        }
+    ]
 }
