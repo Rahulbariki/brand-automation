@@ -6,7 +6,7 @@ services:
     plan: free
     region: oregon 
     branch: main
-    repo: https://github.com/YOUR_USERNAME/YOUR_REPO # Optional if connecting via UI
+    repo: https://github.com/Rahulbariki/brand-automation # Optional if connecting via UI
     dockerContext: .
     dockerfilePath: Dockerfile
     healthCheckPath: /health
