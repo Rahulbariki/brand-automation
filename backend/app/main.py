@@ -15,10 +15,6 @@ from .ai_services import (
     get_color_palette, chat_with_ai, generate_logo_prompt, generate_logo_image,
     transcribe_audio
 )
-from .auth import router as auth_router
-from .admin import router as admin_router
-from .payments import router as payments_router
-from .dependencies import get_current_user
 from .database import engine, Base
 
 # Create tables
@@ -26,9 +22,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="BizForge API", version="1.0.0")
 
-app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
-app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
-app.include_router(payments_router, prefix="/api/payments", tags=["payments"])
+# All routers removed for fully public access
 
 # CORS
 app.add_middleware(
