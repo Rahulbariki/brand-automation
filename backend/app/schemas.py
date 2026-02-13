@@ -9,8 +9,12 @@ class UserCreate(UserBase):
     password: str
     fullname: str
 
-class UserLogin(UserBase):
+class UserLogin(BaseModel):
+    email: str
     password: str
+
+class GoogleLogin(BaseModel):
+    token: str
 
 class UserOut(UserBase):
     id: int
