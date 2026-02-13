@@ -1,179 +1,206 @@
 // ============================================
-// CINEMATIC LANDING PAGE EFFECTS
+// BIZFORGE — CINEMATIC EFFECTS ENGINE
 // ============================================
 
-// ============================================
-// Scroll Reveal Animation
-// ============================================
-const revealElements = document.querySelectorAll('[data-scroll-reveal]');
+// ---- STARFIELD CANVAS ---------------------
+(function initStarfield() {
+    const canvas = document.getElementById('starfield');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
 
-const revealOnScroll = () => {
-    const windowHeight = window.innerHeight;
-    const revealPoint = 100;
+    let stars = [];
+    const STAR_COUNT = 200;
+    const SPEED = 0.15;
 
-    revealElements.forEach(element => {
-        const elementTop = element.getBoundingClientRect().top;
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
 
-        if (elementTop < windowHeight - revealPoint) {
-            element.classList.add('revealed');
-        }
-    });
-};
-
-// Initial reveal check
-revealOnScroll();
-
-// Reveal on scroll
-window.addEventListener('scroll', revealOnScroll);
-
-// ============================================
-// Parallax Effect for Floating Cards
-// ============================================
-const parallaxElements = document.querySelectorAll('[data-parallax]');
-
-window.addEventListener('mousemove', (e) => {
-    const mouseX = e.clientX / window.innerWidth;
-    const mouseY = e.clientY / window.innerHeight;
-
-    parallaxElements.forEach(element => {
-        const speed = element.getAttribute('data-parallax') || 0.5;
-        const x = (mouseX - 0.5) * 50 * speed;
-        const y = (mouseY - 0.5) * 50 * speed;
-
-        element.style.transform = `translate(${x}px, ${y}px)`;
-    });
-});
-
-// ============================================
-// Smooth Scroll for Navigation Links
-// ============================================
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
+    function createStars() {
+        stars = [];
+        for (let i = 0; i < STAR_COUNT; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                r: Math.random() * 1.2 + 0.3,
+                alpha: Math.random() * 0.6 + 0.2,
+                drift: (Math.random() - 0.5) * SPEED
             });
         }
-    });
-});
+    }
 
-// ============================================
-// Add Glow Effect to Feature Cards
-// ============================================
-const featureCards = document.querySelectorAll('.feature-card');
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-featureCards.forEach(card => {
-    card.addEventListener('mousemove', (e) => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+        const color = isDark ? '255,255,255' : '0,0,0';
 
-        card.style.setProperty('--mouse-x', `${x}px`);
-        card.style.setProperty('--mouse-y', `${y}px`);
-    });
-});
+        stars.forEach(s => {
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${color},${s.alpha * (isDark ? 1 : 0.15)})`;
+            ctx.fill();
 
-// ============================================
-// Animated Counter for Stats
-// ============================================
-const animateCounter = (element, target, duration = 2000) => {
-    let current = 0;
-    const increment = target / (duration / 16);
+            // Twinkle
+            s.alpha += (Math.random() - 0.5) * 0.01;
+            s.alpha = Math.max(0.15, Math.min(0.7, s.alpha));
 
-    const updateCounter = () => {
-        current += increment;
-        if (current < target) {
-            element.textContent = Math.floor(current).toLocaleString();
-            requestAnimationFrame(updateCounter);
+            // Drift
+            s.y += s.drift;
+            s.x += s.drift * 0.3;
+
+            if (s.y > canvas.height + 5) s.y = -5;
+            if (s.y < -5) s.y = canvas.height + 5;
+            if (s.x > canvas.width + 5) s.x = -5;
+            if (s.x < -5) s.x = canvas.width + 5;
+        });
+
+        requestAnimationFrame(draw);
+    }
+
+    resize();
+    createStars();
+    draw();
+    window.addEventListener('resize', () => { resize(); createStars(); });
+})();
+
+// ---- TYPEWRITER ---------------------------
+(function initTypewriter() {
+    const el = document.getElementById('heroTyped');
+    if (!el) return;
+
+    const words = ['with AI.', 'in Seconds.', 'Like a Pro.', 'That Scales.'];
+    let wordIdx = 0;
+    let charIdx = 0;
+    let deleting = false;
+
+    function type() {
+        const word = words[wordIdx];
+
+        if (!deleting) {
+            el.textContent = word.substring(0, charIdx + 1);
+            charIdx++;
+            if (charIdx === word.length) {
+                deleting = true;
+                setTimeout(type, 2000); // pause at full word
+                return;
+            }
+            setTimeout(type, 90);
         } else {
-            element.textContent = target.toLocaleString();
+            el.textContent = word.substring(0, charIdx - 1);
+            charIdx--;
+            if (charIdx === 0) {
+                deleting = false;
+                wordIdx = (wordIdx + 1) % words.length;
+                setTimeout(type, 400);
+                return;
+            }
+            setTimeout(type, 50);
         }
+    }
+
+    setTimeout(type, 800);
+})();
+
+// ---- SCROLL REVEAL ------------------------
+(function initScrollReveal() {
+    const items = document.querySelectorAll('[data-reveal]');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    items.forEach(item => observer.observe(item));
+})();
+
+// ---- COUNTER ANIMATION --------------------
+(function initCounters() {
+    const counters = document.querySelectorAll('[data-count]');
+
+    const format = (n) => {
+        if (n >= 1000) return (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k';
+        return n.toLocaleString();
     };
 
-    updateCounter();
-};
+    const animate = (el, target) => {
+        const duration = 2200;
+        const start = performance.now();
 
-// Trigger counter animation when stats come into view
-const statsObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const statValues = entry.target.querySelectorAll('.stat-value');
-            statValues.forEach(stat => {
-                const target = parseInt(stat.textContent.replace(/,/g, ''));
-                if (!isNaN(target) && !stat.classList.contains('animated')) {
-                    stat.classList.add('animated');
-                    animateCounter(stat, target);
-                }
-            });
-            statsObserver.unobserve(entry.target);
+        function step(now) {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+            // Ease out cubic
+            const eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = format(Math.floor(eased * target));
+            if (progress < 1) requestAnimationFrame(step);
         }
-    });
-}, { threshold: 0.5 });
 
-const previewStats = document.querySelectorAll('.preview-stat');
-previewStats.forEach(stat => statsObserver.observe(stat));
+        requestAnimationFrame(step);
+    };
 
-// ============================================
-// Cursor Glow Effect (Optional Enhancement)
-// ============================================
-const cursor = document.createElement('div');
-cursor.className = 'cursor-glow';
-document.body.appendChild(cursor);
-
-// Add cursor styles dynamically
-const style = document.createElement('style');
-style.textContent = `
-    .cursor-glow {
-        position: fixed;
-        width: 300px;
-        height: 300px;
-        border-radius: 50%;
-        pointer-events: none;
-        background: radial-gradient(circle, rgba(99, 102, 241, 0.08), transparent 70%);
-        transform: translate(-50%, -50%);
-        transition: opacity 0.3s ease;
-        z-index: 9999;
-        opacity: 0;
-    }
-    
-    body:hover .cursor-glow {
-        opacity: 1;
-    }
-`;
-document.head.appendChild(style);
-
-document.addEventListener('mousemove', (e) => {
-    cursor.style.left = e.clientX + 'px';
-    cursor.style.top = e.clientY + 'px';
-});
-
-// ============================================
-// Performance Optimization
-// ============================================
-let ticking = false;
-
-window.addEventListener('scroll', () => {
-    if (!ticking) {
-        window.requestAnimationFrame(() => {
-            revealOnScroll();
-            ticking = false;
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const target = parseInt(entry.target.getAttribute('data-count'));
+                animate(entry.target, target);
+                observer.unobserve(entry.target);
+            }
         });
-        ticking = true;
-    }
+    }, { threshold: 0.5 });
+
+    counters.forEach(c => observer.observe(c));
+})();
+
+// ---- PARALLAX FLOATING CARDS --------------
+(function initParallax() {
+    const cards = document.querySelectorAll('[data-tilt]');
+    if (!cards.length) return;
+
+    document.addEventListener('mousemove', (e) => {
+        const mx = e.clientX / window.innerWidth - 0.5;
+        const my = e.clientY / window.innerHeight - 0.5;
+
+        cards.forEach((card, i) => {
+            const speed = [0.6, 0.4, 0.5][i] || 0.5;
+            const x = mx * 60 * speed;
+            const y = my * 60 * speed;
+            card.style.transform = `translate(${x}px, ${y}px)`;
+        });
+    });
+})();
+
+// ---- SMOOTH ANCHOR SCROLL -----------------
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 });
 
-// ============================================
-// Console Easter Egg
-// ============================================
-console.log(
-    '%c🚀 BizForge Landing Page',
-    'color: #667eea; font-size: 20px; font-weight: bold;'
-);
-console.log(
-    '%cBuilt with cinematic effects and modern web technologies',
-    'color: #a8a8ae; font-size: 12px;'
-);
+// ---- CURSOR GLOW --------------------------
+(function initCursorGlow() {
+    const glow = document.createElement('div');
+    Object.assign(glow.style, {
+        position: 'fixed', width: '350px', height: '350px',
+        borderRadius: '50%', pointerEvents: 'none',
+        background: 'radial-gradient(circle, rgba(99,102,241,0.06), transparent 70%)',
+        transform: 'translate(-50%,-50%)',
+        zIndex: '9998', opacity: '0', transition: 'opacity 0.4s'
+    });
+    document.body.appendChild(glow);
+
+    document.addEventListener('mousemove', e => {
+        glow.style.left = e.clientX + 'px';
+        glow.style.top = e.clientY + 'px';
+        glow.style.opacity = '1';
+    });
+
+    document.addEventListener('mouseleave', () => { glow.style.opacity = '0'; });
+})();
