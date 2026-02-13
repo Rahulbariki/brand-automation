@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -7,184 +7,397 @@
     <title>BizForge — AI Branding OS</title>
 
     <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
 
     <link rel="stylesheet" href="assets/css/landing.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
+    <!-- Animated Background -->
+    <div class="background-animation">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+        <div class="grid-overlay"></div>
+    </div>
 
     <!-- Sticky Navbar -->
-    <nav class="navbar">
-        <div class="logo">BizForge</div>
+    <nav class="navbar" id="navbar">
+        <div class="logo">
+            <i class="fas fa-cube"></i> BizForge
+        </div>
 
         <div class="nav-links">
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
-            <a href="dashboard.html" class="signup-btn">Enter Dashboard</a>
+            <a href="#features" class="nav-link">Features</a>
+            <a href="#showcase" class="nav-link">Showcase</a>
+            <a href="#pricing" class="nav-link">Pricing</a>
+            <a href="dashboard.html" class="cta-btn">Launch Dashboard</a>
             <button class="theme-toggle" id="themeToggle">
-                <i class="fas fa-moon"></i>
+                <i class="fas fa-sun"></i>
             </button>
         </div>
     </nav>
 
-    <!-- Hero -->
+    <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <h1>
-                The AI Branding Operating System
-                <span class="gradient-text">for Startups</span>
+            <div class="hero-badge" data-scroll-reveal>
+                <span class="pulse-dot"></span>
+                Powered by Enterprise AI
+            </div>
+
+            <h1 class="hero-title" data-scroll-reveal>
+                The AI Branding <br>
+                <span class="gradient-text">Operating System</span>
             </h1>
 
-            <p>
-                Generate brand names, logos, content, and strategy — in seconds.
-                Powered by enterprise AI.
+            <p class="hero-subtitle" data-scroll-reveal>
+                Generate brand names, logos, content, and strategy — in seconds.<br>
+                Built for founders who move fast.
             </p>
 
-            <div class="hero-buttons">
-                <a href="dashboard.html" class="primary-btn">Enter Dashboard</a>
-                <a href="#features" class="secondary-btn">Explore Features</a>
+            <div class="hero-buttons" data-scroll-reveal>
+                <a href="dashboard.html" class="primary-btn">
+                    <span>Enter Dashboard</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#features" class="secondary-btn">
+                    <i class="fas fa-play"></i>
+                    <span>Watch Demo</span>
+                </a>
             </div>
 
-            <div class="trust-badges">
-                <span>⚡ Groq Powered</span>
-                <span>🧠 IBM Granite</span>
-                <span>🎨 SDXL Visual AI</span>
+            <div class="tech-badges" data-scroll-reveal>
+                <div class="tech-badge">
+                    <i class="fas fa-bolt"></i>
+                    <span>Groq AI</span>
+                </div>
+                <div class="tech-badge">
+                    <i class="fas fa-brain"></i>
+                    <span>IBM Granite</span>
+                </div>
+                <div class="tech-badge">
+                    <i class="fas fa-palette"></i>
+                    <span>SDXL</span>
+                </div>
             </div>
+        </div>
+
+        <!-- Floating Elements -->
+        <div class="floating-card card-1" data-parallax="0.5">
+            <div class="card-glow"></div>
+            <i class="fas fa-lightbulb"></i>
+            <span>Brand Names</span>
+        </div>
+        <div class="floating-card card-2" data-parallax="0.3">
+            <div class="card-glow"></div>
+            <i class="fas fa-palette"></i>
+            <span>Logo Design</span>
+        </div>
+        <div class="floating-card card-3" data-parallax="0.4">
+            <div class="card-glow"></div>
+            <i class="fas fa-rocket"></i>
+            <span>Marketing</span>
         </div>
     </section>
 
-    <!-- Product Preview -->
-    <section class="product-preview">
-        <h2>Everything You Need to Build a Brand</h2>
-        <div class="preview-card">
-            <p>Modern dashboard with AI-powered tools and real-time generation.</p>
+    <!-- Showcase Section -->
+    <section class="showcase" id="showcase">
+        <div class="showcase-content">
+            <div class="section-header" data-scroll-reveal>
+                <span class="section-badge">Live Preview</span>
+                <h2>Everything You Need to Build a Brand</h2>
+                <p>Professional-grade AI tools at your fingertips</p>
+            </div>
+
+            <div class="dashboard-preview" data-scroll-reveal>
+                <div class="preview-glassmorphism">
+                    <div class="preview-header">
+                        <div class="preview-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="preview-title">BizForge Dashboard</div>
+                        <div class="preview-actions">
+                            <i class="fas fa-expand"></i>
+                        </div>
+                    </div>
+                    <div class="preview-content">
+                        <div class="preview-sidebar">
+                            <div class="sidebar-item active">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <div class="sidebar-item">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <div class="sidebar-item">
+                                <i class="fas fa-palette"></i>
+                            </div>
+                            <div class="sidebar-item">
+                                <i class="fas fa-rocket"></i>
+                            </div>
+                        </div>
+                        <div class="preview-main">
+                            <div class="preview-stat">
+                                <div class="stat-icon"
+                                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <div class="stat-details">
+                                    <span class="stat-label">Generated</span>
+                                    <span class="stat-value">1,247</span>
+                                </div>
+                            </div>
+                            <div class="preview-stat">
+                                <div class="stat-icon"
+                                    style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                                <div class="stat-details">
+                                    <span class="stat-label">Logos Created</span>
+                                    <span class="stat-value">342</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- Features -->
     <section class="features" id="features">
+        <div class="features-content">
+            <div class="section-header" data-scroll-reveal>
+                <span class="section-badge">Capabilities</span>
+                <h2>Powered by Next-Gen AI</h2>
+            </div>
 
-        <div class="feature-card">
-            <i class="fas fa-lightbulb"></i>
-            <h3>Brand Name Generator</h3>
-            <p>Unique, market-ready brand names tailored to your industry.</p>
+            <div class="features-grid">
+                <div class="feature-card" data-scroll-reveal>
+                    <div class="feature-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <h3>Brand Name Generator</h3>
+                    <p>AI-crafted names that resonate with your industry and vision</p>
+                    <div class="feature-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="feature-card" data-scroll-reveal>
+                    <div class="feature-icon">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <h3>Logo Studio</h3>
+                    <p>SDXL-powered logo generation with professional aesthetics</p>
+                    <div class="feature-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="feature-card" data-scroll-reveal>
+                    <div class="feature-icon">
+                        <i class="fas fa-pen-nib"></i>
+                    </div>
+                    <h3>Content Studio</h3>
+                    <p>High-converting copy for social media, ads, and campaigns</p>
+                    <div class="feature-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="feature-card" data-scroll-reveal>
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Sentiment Intelligence</h3>
+                    <p>Understand customer perception with real-time analysis</p>
+                    <div class="feature-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="feature-card" data-scroll-reveal>
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>AI Strategy Consultant</h3>
+                    <p>24/7 branding advisor powered by IBM Granite</p>
+                    <div class="feature-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="feature-card" data-scroll-reveal>
+                    <div class="feature-icon">
+                        <i class="fas fa-swatchbook"></i>
+                    </div>
+                    <h3>Design System</h3>
+                    <p>AI-curated color palettes and style guides</p>
+                    <div class="feature-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="feature-card">
-            <i class="fas fa-palette"></i>
-            <h3>Logo Studio</h3>
-            <p>AI-generated logo prompts and visuals powered by SDXL.</p>
-        </div>
-
-        <div class="feature-card">
-            <i class="fas fa-pen-nib"></i>
-            <h3>Content Studio</h3>
-            <p>High-converting marketing copy in seconds.</p>
-        </div>
-
-        <div class="feature-card">
-            <i class="fas fa-chart-line"></i>
-            <h3>Sentiment Intelligence</h3>
-            <p>Understand customer perception instantly.</p>
-        </div>
-
-        <div class="feature-card">
-            <i class="fas fa-robot"></i>
-            <h3>AI Strategy Chat</h3>
-            <p>Consult your AI branding strategist anytime.</p>
-        </div>
-
     </section>
 
     <!-- Testimonials -->
     <section class="testimonials">
-        <h2>Loved by Early Founders</h2>
-
-        <div class="testimonial-grid">
-            <div class="testimonial">
-                <p>"BizForge helped us generate our brand identity in under an hour."</p>
-                <span>— Startup Founder</span>
+        <div class="testimonials-content">
+            <div class="section-header" data-scroll-reveal>
+                <span class="section-badge">Social Proof</span>
+                <h2>Loved by Builders Worldwide</h2>
             </div>
-            <div class="testimonial">
-                <p>"The fastest branding tool I’ve ever used."</p>
-                <span>— Marketing Consultant</span>
+
+            <div class="testimonials-grid">
+                <div class="testimonial-card" data-scroll-reveal>
+                    <div class="testimonial-stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p>"BizForge helped us generate our complete brand identity in under an hour. The AI suggestions
+                        were spot-on."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">SF</div>
+                        <div class="author-details">
+                            <span class="author-name">Sarah Chen</span>
+                            <span class="author-role">Startup Founder</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card" data-scroll-reveal>
+                    <div class="testimonial-stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p>"The fastest branding tool I've ever used. It's like having an entire creative team on demand."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">MC</div>
+                        <div class="author-details">
+                            <span class="author-name">Marcus Johnson</span>
+                            <span class="author-role">Marketing Consultant</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card" data-scroll-reveal>
+                    <div class="testimonial-stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p>"Enterprise-grade AI at startup speed. BizForge transformed how we approach branding for
+                        clients."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">AL</div>
+                        <div class="author-details">
+                            <span class="author-name">Alex Rivera</span>
+                            <span class="author-role">Agency Owner</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Pricing Teaser -->
-    <section class="pricing" id="pricing">
-        <h2>Simple Pricing</h2>
-        <p>Start free. Upgrade when you scale.</p>
-        <a href="dashboard.html" class="primary-btn">Enter Dashboard</a>
+    <!-- CTA Section -->
+    <section class="cta-section" id="pricing">
+        <div class="cta-content" data-scroll-reveal>
+            <div class="cta-badge">
+                <span class="pulse-dot"></span>
+                Ready to Build
+            </div>
+            <h2>Start Creating Your Brand Today</h2>
+            <p>Join thousands of founders using AI to build category-defining brands</p>
+            <a href="dashboard.html" class="primary-btn large">
+                <span>Launch Dashboard</span>
+                <i class="fas fa-rocket"></i>
+            </a>
+        </div>
     </section>
 
-    <footer>
-        <p>© 2025 BizForge. Built with AI. Designed for founders.</p>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div class="logo">
+                    <i class="fas fa-cube"></i> BizForge
+                </div>
+                <p>AI-powered branding for the next generation of builders.</p>
+            </div>
+            <div class="footer-links">
+                <div class="footer-column">
+                    <h4>Product</h4>
+                    <a href="#features">Features</a>
+                    <a href="#showcase">Showcase</a>
+                    <a href="dashboard.html">Dashboard</a>
+                </div>
+                <div class="footer-column">
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Careers</a>
+                </div>
+                <div class="footer-column">
+                    <h4>Legal</h4>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Security</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 BizForge. Built with AI. Designed for founders.</p>
+        </div>
     </footer>
 
-    <!-- Theme Toggle Script -->
+    <!-- Scripts -->
+    <script src="assets/js/landing-effects.js"></script>
     <script>
+        // Theme Toggle
         const toggle = document.getElementById('themeToggle');
         const html = document.documentElement;
         const icon = toggle.querySelector('i');
 
         toggle.addEventListener('click', () => {
             const current = html.getAttribute('data-theme');
-            if (current === 'light') {
-                html.setAttribute('data-theme', 'dark');
-                icon.classList.replace('fa-moon', 'fa-sun');
-            } else {
+            if (current === 'dark') {
                 html.setAttribute('data-theme', 'light');
                 icon.classList.replace('fa-sun', 'fa-moon');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                icon.classList.replace('fa-moon', 'fa-sun');
             }
         });
 
-        // Auto-redirect if already logged in
-        const token = localStorage.getItem("access_token");
-        if (token) {
-            // Show upgrade button, hide login/signup
-            document.querySelector('.login-link').style.display = 'none';
-            document.querySelector('.signup-btn').style.display = 'none';
-            document.querySelector('.upgrade-btn').style.display = 'inline-block';
+        // Navbar Scroll Effect
+        let lastScroll = 0;
+        const navbar = document.getElementById('navbar');
 
-            // Redirect to dashboard layout if on landing? 
-            // For now, key navigation remains
-        }
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
 
-        async function handleUpgrade() {
-            if (!token) {
-                window.location.href = 'auth.html';
-                return;
+            if (currentScroll > 100) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
             }
 
-            // Detect environment
-            const IS_LOCAL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-            const API_BASE = IS_LOCAL
-                ? "http://localhost:8001/api"
-                : "https://bizforge-api.onrender.com/api"; // ✅ Updated with live Render URL
-
-            try {
-                const res = await fetch(`${API_BASE}/payments/create-checkout-session?plan=pro`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    window.location.href = data.url;
-                } else {
-                    alert("Failed to initiate checkout. Please try again.");
-                }
-            } catch (e) {
-                console.error("Error:", e);
-                alert("An error occurred.");
-            }
-        }
+            lastScroll = currentScroll;
+        });
     </script>
 
 </body>
