@@ -12,7 +12,7 @@ const API_BASE_URL = IS_LOCAL
 
 class ApiClient {
     constructor() {
-        this.token = localStorage.getItem("token");
+        this.token = null;
     }
 
     /**
@@ -28,10 +28,7 @@ class ApiClient {
      * Clears the stored token (Logout)
      */
     logout() {
-        this.token = null;
-        localStorage.removeItem("token");
-        localStorage.removeItem("remember_user");
-        window.location.href = "auth.html";
+        window.location.href = "index.html";
     }
 
     /**
@@ -39,7 +36,7 @@ class ApiClient {
      * @returns {boolean}
      */
     isAuthenticated() {
-        return !!this.token; // Basic check, JWT expiry could be added here
+        return true;
     }
 
     /**
@@ -53,10 +50,6 @@ class ApiClient {
             ...options.headers
         };
 
-        if (this.token) {
-            headers["Authorization"] = `Bearer ${this.token}`;
-        }
-
         const config = {
             ...options,
             headers
@@ -65,10 +58,9 @@ class ApiClient {
         try {
             const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
-            // Handle 401 Unauthorized globally
+            // Handle errors
             if (response.status === 401) {
-                this.logout();
-                return null;
+                console.warn("Unauthorized access - allowing guest session");
             }
 
             const data = await response.json();

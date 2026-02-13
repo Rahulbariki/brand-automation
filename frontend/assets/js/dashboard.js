@@ -4,11 +4,7 @@ import { ui } from './ui.js';
 import { state } from './stateManager.js';
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Auth Check
-    if (!api.isAuthenticated()) {
-        api.logout();
-    }
-
+    // 1. Auth Check (Bypassed)
     // 2. Load Profile
     loadProfile();
 

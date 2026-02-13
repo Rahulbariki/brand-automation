@@ -74,37 +74,37 @@ def health_check():
 
 # --- Activity 2.5: Brand Name Generator ---
 @app.post("/api/generate-brand")
-async def api_generate_brand(request: BrandNameRequest, current_user: dict = Depends(get_current_user)):
+async def api_generate_brand(request: BrandNameRequest):
     names = generate_brand_names(request)
     return {"names": names}
 
 # --- Activity 2.6: Marketing Content ---
 @app.post("/api/generate-content")
-async def api_generate_content(request: MarketingContentRequest, current_user: dict = Depends(get_current_user)):
+async def api_generate_content(request: MarketingContentRequest):
     content = generate_marketing_content(request)
     return {"content": content}
 
 # --- Activity 2.7: Sentiment Analysis ---
 @app.post("/api/analyze-sentiment")
-async def api_analyze_sentiment(request: SentimentRequest, current_user: dict = Depends(get_current_user)):
+async def api_analyze_sentiment(request: SentimentRequest):
     result = analyze_sentiment(request)
     return result
 
 # --- Activity 2.8: Color Palette ---
 @app.post("/api/get-colors")
-async def api_get_colors(request: ColorPaletteRequest, current_user: dict = Depends(get_current_user)):
+async def api_get_colors(request: ColorPaletteRequest):
     colors = get_color_palette(request)
     return {"colors": colors}
 
 # --- Activity 2.9: Chatbot ---
 @app.post("/api/chat")
-async def api_chat(request: ChatRequest, current_user: dict = Depends(get_current_user)):
+async def api_chat(request: ChatRequest):
     response = chat_with_ai(request)
     return {"response": response}
 
 # --- Activity 2.10: Logo Generation ---
 @app.post("/api/generate-logo")
-async def api_generate_logo(request: LogoRequest, current_user: dict = Depends(get_current_user)):
+async def api_generate_logo(request: LogoRequest):
     # 1. Generate Prompt
     prompt = generate_logo_prompt(request)
     
@@ -129,7 +129,7 @@ async def api_generate_logo(request: LogoRequest, current_user: dict = Depends(g
 
 # --- Activity 2.11: Voice Transcription ---
 @app.post("/api/transcribe-voice")
-async def api_transcribe_voice(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+async def api_transcribe_voice(file: UploadFile = File(...)):
     temp_filename = f"temp_{file.filename}"
     try:
         with open(temp_filename, "wb") as buffer:
