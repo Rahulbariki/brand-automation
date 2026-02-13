@@ -43,8 +43,10 @@ app.add_middleware(
 # internal structure: backend/app/main.py -> ../../frontend
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
 assets_path = os.path.join(frontend_path, "assets")
+static_path = os.path.join(frontend_path, "static")
 
 app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
+app.mount("/static", StaticFiles(directory=static_path), name="static")
 
 @app.get("/")
 async def read_root():
