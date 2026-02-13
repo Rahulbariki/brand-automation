@@ -68,19 +68,18 @@ async def signup(user: UserCreate, response: Response, db: Session = Depends(get
         httponly=True,
         max_age=ACCESS_TOKEN_EXPIRE_HOURS * 3600,
         expires=ACCESS_TOKEN_EXPIRE_HOURS * 3600,
-        samesite="lax",
-        secure=False  # Set to True in production with HTTPS
+        samesite="none",
+        secure=True  # Always True in production/HTTPS
     )
     
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/login", response_model=Token)
-async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    # OAuth2PasswordRequestForm expects username and password
-    db_user = db.query(User).filter(User.email == form_data.username).first()
+async def login(response: Response, login_data: UserLogin, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.email == login_data.email).first()
     if not db_user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
-    if not verify_password(form_data.password, db_user.password):
+    if not verify_password(login_data.password, db_user.password):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     
     access_token_expires = timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
@@ -96,8 +95,8 @@ async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depen
         httponly=True,
         max_age=ACCESS_TOKEN_EXPIRE_HOURS * 3600,
         expires=ACCESS_TOKEN_EXPIRE_HOURS * 3600,
-        samesite="lax",
-        secure=False 
+        samesite="none",
+        secure=True 
     )
     
     return {"access_token": access_token, "token_type": "bearer"}
