@@ -1140,6 +1140,87 @@
             transform: translateY(0)
         }
 
+        /* ===== CURSOR GLOW ===== */
+        .cursor-glow {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            pointer-events: none;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.07), transparent 70%);
+            transform: translate(-50%, -50%);
+            z-index: 9998;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        body:hover .cursor-glow {
+            opacity: 1;
+        }
+
+        /* ===== CLAYMORPHISM ===== */
+        .f-card {
+            box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.15), -4px -4px 12px rgba(255, 255, 255, 0.02);
+        }
+
+        .f-card:hover {
+            box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.2), -3px -3px 10px rgba(255, 255, 255, 0.03);
+        }
+
+        .f-card .card-glow {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            pointer-events: none;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.12), transparent 70%);
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .f-card:hover .card-glow {
+            opacity: 1;
+        }
+
+        .step {
+            box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.12), -4px -4px 12px rgba(255, 255, 255, 0.02);
+        }
+
+        .step:hover {
+            box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.18), -3px -3px 10px rgba(255, 255, 255, 0.03);
+        }
+
+        .t-card {
+            box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.12), -4px -4px 12px rgba(255, 255, 255, 0.02);
+        }
+
+        .t-card:hover {
+            box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.18), -3px -3px 10px rgba(255, 255, 255, 0.03);
+        }
+
+        .browser {
+            box-shadow: 12px 12px 30px rgba(0, 0, 0, 0.25), -6px -6px 15px rgba(255, 255, 255, 0.02);
+        }
+
+        .browser:hover {
+            box-shadow: 10px 10px 24px rgba(0, 0, 0, 0.3), -5px -5px 12px rgba(255, 255, 255, 0.03);
+        }
+
+        .cta-box {
+            box-shadow: 10px 10px 24px rgba(0, 0, 0, 0.15), -5px -5px 12px rgba(255, 255, 255, 0.02);
+        }
+
+        /* Magnetic button hover */
+        .btn-p {
+            transition: all .3s var(--ease), box-shadow .3s var(--ease);
+        }
+
+        /* Interactive nav links glow on hover */
+        .nav-mid a:hover {
+            text-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+        }
+
         /* ===== RESPONSIVE ===== */
         @media(max-width:1024px) {
             .fcards {
@@ -1608,6 +1689,64 @@
         addEventListener('scroll', function () {
             document.getElementById('nav').classList.toggle('scrolled', pageYOffset > 80);
         });
+
+        // ===== CURSOR GLOW =====
+        (function () {
+            var glow = document.createElement('div');
+            glow.className = 'cursor-glow';
+            document.body.appendChild(glow);
+            document.addEventListener('mousemove', function (e) {
+                glow.style.left = e.clientX + 'px';
+                glow.style.top = e.clientY + 'px';
+            });
+        })();
+
+        // ===== CARD GLOW TRACKING =====
+        (function () {
+            document.querySelectorAll('.f-card').forEach(function (card) {
+                var glow = document.createElement('div');
+                glow.className = 'card-glow';
+                card.appendChild(glow);
+                card.addEventListener('mousemove', function (e) {
+                    var rect = card.getBoundingClientRect();
+                    glow.style.left = (e.clientX - rect.left) + 'px';
+                    glow.style.top = (e.clientY - rect.top) + 'px';
+                });
+            });
+        })();
+
+        // ===== MAGNETIC BUTTONS =====
+        (function () {
+            document.querySelectorAll('.btn-p, .nav-cta').forEach(function (btn) {
+                btn.addEventListener('mousemove', function (e) {
+                    var rect = btn.getBoundingClientRect();
+                    var x = e.clientX - rect.left - rect.width / 2;
+                    var y = e.clientY - rect.top - rect.height / 2;
+                    btn.style.transform = 'translate(' + x * 0.15 + 'px,' + y * 0.15 + 'px)';
+                });
+                btn.addEventListener('mouseleave', function () {
+                    btn.style.transform = '';
+                });
+            });
+        })();
+
+        // ===== TILT EFFECT ON CARDS =====
+        (function () {
+            var cards = document.querySelectorAll('.f-card, .t-card, .step');
+            cards.forEach(function (card) {
+                card.addEventListener('mousemove', function (e) {
+                    var rect = card.getBoundingClientRect();
+                    var x = (e.clientX - rect.left) / rect.width;
+                    var y = (e.clientY - rect.top) / rect.height;
+                    var tiltX = (y - 0.5) * 6;
+                    var tiltY = (x - 0.5) * -6;
+                    card.style.transform = 'perspective(600px) rotateX(' + tiltX + 'deg) rotateY(' + tiltY + 'deg) translateY(-4px)';
+                });
+                card.addEventListener('mouseleave', function () {
+                    card.style.transform = '';
+                });
+            });
+        })();
     </script>
 </body>
 
