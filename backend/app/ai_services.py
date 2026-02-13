@@ -213,9 +213,9 @@ def generate_tagline(request: TaglineRequest) -> str:
 # --- Activity 2.10 (Part 2): Logo Image Generation (SDXL) ---
 def generate_logo_image(prompt: str, filename: str = "logo.png") -> str:
     """Generates a logo image using SDXL via Hugging Face and saves it."""
-    # Use a more reliable/stable model for the inference API
-    STABLE_MODEL = "stabilityai/stable-diffusion-2-1" 
-    API_URL = f"https://api-inference.huggingface.co/models/{STABLE_MODEL}"
+    # Use FLUX.1-schnell on the new HF Router for high reliability and speed
+    MODEL_ID = "black-forest-labs/FLUX.1-schnell" 
+    API_URL = f"https://router.huggingface.co/hf-inference/models/{MODEL_ID}"
     
     payload = {"inputs": prompt}
     try:
