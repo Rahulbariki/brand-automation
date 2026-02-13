@@ -1,26 +1,4 @@
 {
     "cleanUrls": true,
-    "trailingSlash": false,
-    "rewrites": [
-        {
-            "source": "/",
-            "destination": "/frontend/index.html"
-        },
-        {
-            "source": "/dashboard",
-            "destination": "/frontend/dashboard.html"
-        },
-        {
-            "source": "/assets/:path*",
-            "destination": "/frontend/assets/:path*"
-        },
-        {
-            "source": "/static/:path*",
-            "destination": "/frontend/static/:path*"
-        },
-        {
-            "source": "/(.*)",
-            "destination": "/frontend/$1"
-        }
-    ]
+    "trailingSlash": false
 }
