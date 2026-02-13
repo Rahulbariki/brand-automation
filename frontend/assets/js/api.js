@@ -67,7 +67,12 @@ class ApiClient {
                 console.warn("Unauthorized access - allowing guest session");
             }
 
-            const data = await response.json();
+            let data;
+            try {
+                data = await response.json();
+            } catch (e) {
+                data = { detail: "Invalid server response. Please check if the backend is waking up." };
+            }
 
             if (!response.ok) {
                 throw new Error(data.detail || `API Error: ${response.statusText}`);

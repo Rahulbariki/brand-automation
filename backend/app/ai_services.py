@@ -44,6 +44,28 @@ IBM_MODEL = os.getenv("IBM_MODEL", "ibm-granite/granite-4.0-h-350m")
 HF_API_URL = f"https://api-inference.huggingface.co/models/{IBM_MODEL}"
 HF_HEADERS = {"Authorization": f"Bearer {HF_API_KEY}"}
 
+# --- Helper: Robust JSON Extraction ---
+def extract_json(text: str):
+    """Extracts JSON content from potentially messy AI output."""
+    try:
+        # Try direct parse
+        return json.loads(text.strip())
+    except:
+        # Try to find the first [ or { and last ] or }
+        try:
+            start_idx = text.find('[')
+            if start_idx == -1: start_idx = text.find('{')
+            
+            end_idx = text.rfind(']')
+            if end_idx == -1: end_idx = text.rfind('}')
+            
+            if start_idx != -1 and end_idx != -1:
+                json_str = text[start_idx:end_idx+1]
+                return json.loads(json_str)
+        except:
+            pass
+    return None
+
 # --- Activity 2.5: Brand Name Generator ---
 def generate_brand_names(request: BrandNameRequest) -> list[str]:
     """Generates creative brand names using Groq."""
@@ -53,7 +75,7 @@ def generate_brand_names(request: BrandNameRequest) -> list[str]:
     Description: {request.description or 'N/A'}
     
     Return ONLY a JSON array of strings, e.g., ["Name1", "Name2"]. 
-    Do not add any markdown formatting, numbering, or explanation.
+    Do not add any markdown formatting or explanation.
     """
     
     try:
@@ -63,15 +85,15 @@ def generate_brand_names(request: BrandNameRequest) -> list[str]:
             temperature=0.8,
         )
         content = chat_completion.choices[0].message.content.strip()
-        # Cleanup
-        if "```" in content:
-            content = content.replace("```json", "").replace("```", "")
-        return json.loads(content)
+        result = extract_json(content)
+        if isinstance(result, list):
+            return result
+        return ["Error: AI returned invalid format", "Please try again"]
     except Exception as e:
         import traceback
         traceback.print_exc()
         print(f"Error generating names: {e}")
-        return ["Error generating names", "Please try again"]
+        return ["Error connecting to AI", f"Detail: {str(e)}"]
 
 # --- Activity 2.6: Marketing Content Generator ---
 def generate_marketing_content(request: MarketingContentRequest) -> str:
@@ -114,11 +136,13 @@ def analyze_sentiment(request: SentimentRequest) -> dict:
             temperature=0.1, # Low temp for consistent analysis
         )
         content = chat_completion.choices[0].message.content.strip()
-        if "```" in content:
-            content = content.replace("```json", "").replace("```", "")
-        return json.loads(content)
-    except Exception:
-        return {"sentiment": "Unknown", "confidence": 0.0, "tone_alignment": "Error"}
+        result = extract_json(content)
+        if result:
+            return result
+        return {"sentiment": "Unknown", "confidence": 0.0, "tone_alignment": "Invalid Response"}
+    except Exception as e:
+        print(f"Sentiment Error: {e}")
+        return {"sentiment": "Unknown", "confidence": 0.0, "tone_alignment": f"Error: {str(e)}"}
 
 # --- Activity 2.8: Color Palette --
 def get_color_palette(request: ColorPaletteRequest) -> list[str]:
@@ -134,10 +158,12 @@ def get_color_palette(request: ColorPaletteRequest) -> list[str]:
             model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
         )
         content = chat_completion.choices[0].message.content.strip()
-        if "```" in content:
-            content = content.replace("```json", "").replace("```", "")
-        return json.loads(content)
-    except Exception:
+        result = extract_json(content)
+        if result and isinstance(result, list):
+            return result
+        return ["#000000", "#FFFFFF", "#808080", "#C0C0C0", "#333333"]
+    except Exception as e:
+        print(f"Color Palette Error: {e}")
         return ["#000000", "#FFFFFF", "#808080", "#C0C0C0", "#333333"]
 
 # --- Activity 2.9: AI Chatbot (IBM Granite) ---
@@ -148,13 +174,16 @@ def chat_with_ai(request: ChatRequest) -> str:
     [User: {request.message}]
     """
     
+    # Updated to new HF Router endpoint
+    ROUTER_URL = f"https://router.huggingface.co/hf-inference/models/{IBM_MODEL}"
+    
     payload = {
         "inputs": prompt,
         "parameters": {"max_new_tokens": 500, "return_full_text": False}
     }
     
     try:
-        response = requests.post(HF_API_URL, headers=HF_HEADERS, json=payload, timeout=10)
+        response = requests.post(ROUTER_URL, headers=HF_HEADERS, json=payload, timeout=10)
         response.raise_for_status()
         result = response.json()
         
