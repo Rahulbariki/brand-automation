@@ -185,7 +185,7 @@ async function generateLogo() {
             const content = `
                 <p class="text-muted mb-2"><strong>Prompt:</strong> ${data.prompt || 'N/A'}</p>
                 <div class="logo-frame">
-                    <img src="${absoluteImageUrl}" alt="Generated Logo">
+                    <img src="${absoluteImageUrl}" alt="Generated Logo" crossorigin="anonymous" style="border-radius: 12px; border: 1px solid var(--border-color);">
                 </div>
                 <div style="margin-top: 1.5rem; text-align: center;">
                     <a href="${absoluteImageUrl}" download="${brandName}_logo.png" target="_blank" class="primary-btn" style="text-decoration: none; display: inline-block;">
