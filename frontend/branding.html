@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BizForge Dashboard</title>
+    <link rel="stylesheet" href="static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-cube"></i> BizForge
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <div class="nav-item active" data-target="overview">
+                    <i class="fas fa-home"></i> Dashboard
+                </div>
+                <div class="nav-item" data-target="brand">
+                    <i class="fas fa-lightbulb"></i> Brand Names
+                </div>
+                <div class="nav-item" data-target="logo">
+                    <i class="fas fa-paint-brush"></i> Logo Creator
+                </div>
+                <div class="nav-item" data-target="content">
+                    <i class="fas fa-pen-fancy"></i> Marketing
+                </div>
+                <div class="nav-item" data-target="design">
+                    <i class="fas fa-palette"></i> Design System
+                </div>
+                <div class="nav-item" data-target="sentiment">
+                    <i class="fas fa-heart"></i> Sentiment
+                </div>
+                <div class="nav-item" data-target="chat">
+                    <i class="fas fa-robot"></i> AI Consultant
+                </div>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">JS</div>
+                <div style="font-size: 0.9rem;">
+                    <div style="font-weight: 600;">John Smith</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Pro Plan</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="search-bar">
+                    <i class="fas fa-search" style="color: var(--text-muted);"></i>
+                    <input type="text" placeholder="Search for templates, projects...">
+                </div>
+
+                <div class="header-actions">
+                    <button class="icon-btn" id="themeToggle" title="Toggle Theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <div class="icon-btn">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+
+                <!-- 1. Overview Dashboard -->
+                <div id="overview" class="feature-view active">
+                    <h1 class="page-title">Welcome back, John!</h1>
+                    <p class="page-subtitle">Here's what's happening with your brands today.</p>
+
+                    <div class="overview-grid">
+                        <div class="card stat-card">
+                            <div>
+                                <h3>Total Projects</h3>
+                                <div class="value">12</div>
+                            </div>
+                            <div class="trend"><i class="fas fa-arrow-up"></i> +2 this week</div>
+                            <div
+                                style="position: absolute; right: -20px; bottom: -20px; font-size: 6rem; opacity: 0.05;">
+                                <i class="fas fa-folder"></i>
+                            </div>
+                        </div>
+                        <div class="card stat-card">
+                            <div>
+                                <h3>Words Generated</h3>
+                                <div class="value">45k</div>
+                            </div>
+                            <div class="trend"><i class="fas fa-bolt"></i> Speed: 45ms</div>
+                            <div
+                                style="position: absolute; right: -20px; bottom: -20px; font-size: 6rem; opacity: 0.05;">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                        </div>
+                        <div class="card stat-card">
+                            <div>
+                                <h3>Images Created</h3>
+                                <div class="value">156</div>
+                            </div>
+                            <div class="trend"><i class="fas fa-layer-group"></i> 85% success</div>
+                            <div
+                                style="position: absolute; right: -20px; bottom: -20px; font-size: 6rem; opacity: 0.05;">
+                                <i class="fas fa-image"></i>
+                            </div>
+                        </div>
+                        <div class="card stat-card"
+                            style="background: linear-gradient(135deg, var(--primary-color), var(--primary-light)); color: white;">
+                            <div>
+                                <h3 style="color: rgba(255,255,255,0.8);">Pro Status</h3>
+                                <div class="value">Active</div>
+                            </div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">Next billing: Mar 1</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fas fa-clock"></i> Recent Activity</h3>
+                        <ul style="list-style: none; margin-top: 1rem;">
+                            <li
+                                style="padding: 0.8rem 0; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+                                <span>Generated prompt for "Coffee Shop"</span>
+                                <span style="color: var(--text-muted); font-size: 0.9rem;">2 mins ago</span>
+                            </li>
+                            <li
+                                style="padding: 0.8rem 0; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+                                <span>Created logo for "TechFlow"</span>
+                                <span style="color: var(--text-muted); font-size: 0.9rem;">1 hour ago</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 2. Brand Names -->
+                <div id="brand" class="feature-view">
+                    <h1 class="page-title">Brand Name Generator</h1>
+                    <p class="page-subtitle">Generate unique, catchy names tailored to your industry.</p>
+
+                    <div class="card" style="max-width: 800px;">
+                        <div class="input-group">
+                            <label>Industry</label>
+                            <input type="text" id="brandIndustry" class="input-control"
+                                placeholder="e.g. SaaS, Coffee, Fashion">
+                        </div>
+                        <div class="input-group">
+                            <label>Keywords (comma separated)</label>
+                            <input type="text" id="brandKeywords" class="input-control"
+                                placeholder="e.g. fast, ai, smart">
+                        </div>
+                        <div class="input-group">
+                            <label>Tone</label>
+                            <select id="brandTone" class="input-control">
+                                <option value="modern">Modern</option>
+                                <option value="luxury">Luxury</option>
+                                <option value="playful">Playful</option>
+                                <option value="minimalist">Minimalist</option>
+                            </select>
+                        </div>
+                        <button class="primary-btn" onclick="generateBrandNames()">Generate Names</button>
+
+                        <div id="brandResult" class="result-card">Results will appear here...</div>
+                    </div>
+                </div>
+
+                <!-- 3. Logo Generator -->
+                <div id="logo" class="feature-view">
+                    <h1 class="page-title">Logo Creator</h1>
+                    <p class="page-subtitle">Create stunning professional logos with Stable Diffusion.</p>
+
+                    <div class="card" style="max-width: 800px;">
+                        <div class="input-group">
+                            <label>Brand Name</label>
+                            <input type="text" id="logoName" class="input-control" placeholder="e.g. BizForge">
+                        </div>
+                        <div class="input-group">
+                            <label>Industry</label>
+                            <input type="text" id="logoIndustry" class="input-control" placeholder="e.g. Technology">
+                        </div>
+                        <div class="input-group">
+                            <label>Style</label>
+                            <select id="logoStyle" class="input-control">
+                                <option value="minimalist">Minimalist</option>
+                                <option value="vintage">Vintage</option>
+                                <option value="abstract">Abstract</option>
+                                <option value="3d render">3D Render</option>
+                            </select>
+                        </div>
+                        <button class="primary-btn" onclick="generateLogo()">Generate Logo</button>
+
+                        <div id="logoResult" class="result-card">Logo will appear here...</div>
+                    </div>
+                </div>
+
+                <!-- 4. Marketing Content -->
+                <div id="content" class="feature-view">
+                    <h1 class="page-title">Marketing Content</h1>
+                    <p class="page-subtitle">Generate high-converting copy for social media and ads.</p>
+
+                    <div class="card" style="max-width: 800px;">
+                        <div class="input-group">
+                            <label>Brand Name</label>
+                            <input type="text" id="contentBrand" class="input-control" placeholder="e.g. BizForge">
+                        </div>
+                        <div class="input-group">
+                            <label>Content Type</label>
+                            <select id="contentType" class="input-control">
+                                <option value="social media caption">Social Media Caption</option>
+                                <option value="product description">Product Description</option>
+                                <option value="ad copy">Ad Copy</option>
+                                <option value="email newsletter">Email Newsletter</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Description/Topic</label>
+                            <textarea id="contentDesc" rows="4" class="input-control"
+                                placeholder="Briefly describe the topic..."></textarea>
+                        </div>
+                        <button class="primary-btn" onclick="generateContent()">Generate Content</button>
+
+                        <div id="contentResult" class="result-card" style="white-space: pre-wrap;">Content will appear
+                            here...</div>
+                    </div>
+                </div>
+
+                <!-- 5. Design System -->
+                <div id="design" class="feature-view">
+                    <h1 class="page-title">Design System</h1>
+                    <p class="page-subtitle">Get AI-curated color palettes and style guides.</p>
+
+                    <div class="card" style="max-width: 800px;">
+                        <div class="input-group">
+                            <label>Industry</label>
+                            <input type="text" id="designIndustry" class="input-control" placeholder="e.g. Health">
+                        </div>
+                        <div class="input-group">
+                            <label>Tone</label>
+                            <select id="designTone" class="input-control">
+                                <option value="trustworthy">Trustworthy</option>
+                                <option value="energetic">Energetic</option>
+                                <option value="elegant">Elegant</option>
+                                <option value="calm">Calm</option>
+                            </select>
+                        </div>
+                        <button class="primary-btn" onclick="generateDesign()">Get Palette</button>
+
+                        <div id="designResult" class="result-card">Palette will appear here...</div>
+                    </div>
+                </div>
+
+                <!-- 6. Sentiment Analysis -->
+                <div id="sentiment" class="feature-view">
+                    <h1 class="page-title">Sentiment Analysis</h1>
+                    <p class="page-subtitle">Analyze customer feedback to understand brand perception.</p>
+
+                    <div class="card" style="max-width: 800px;">
+                        <div class="input-group">
+                            <label>Customer Review</label>
+                            <textarea id="sentimentText" rows="4" class="input-control"
+                                placeholder="Paste the review text here..."></textarea>
+                        </div>
+                        <button class="primary-btn" onclick="analyzeSentiment()">Analyze</button>
+
+                        <div id="sentimentResult" class="result-card">Analysis will appear here...</div>
+                    </div>
+                </div>
+
+                <!-- 7. Chatbot -->
+                <div id="chat" class="feature-view">
+                    <h1 class="page-title">AI Branding Consultant</h1>
+                    <p class="page-subtitle">Chat with IBM Granite for strategic advice.</p>
+
+                    <div class="card" style="max-width: 800px; height: 60vh; display: flex; flex-direction: column;">
+                        <div id="chatHistory" class="result-card"
+                            style="flex: 1; overflow-y: auto; margin-top: 0; margin-bottom: 1rem; border: 1px solid var(--border-color);">
+                            <div
+                                style="background: rgba(79, 70, 229, 0.1); padding: 0.8rem; border-radius: var(--radius-md); margin-bottom: 0.5rem; max-width: 80%;">
+                                Hello! I am BizForge. How can I help with your brand today?
+                            </div>
+                        </div>
+                        <div class="input-group" style="display: flex; gap: 0.5rem; margin-bottom: 0;">
+                            <input type="text" id="chatInput" class="input-control" placeholder="Ask me anything..."
+                                onkeypress="if(event.key==='Enter') sendChat()">
+                            <button class="primary-btn" style="width: auto;" onclick="sendChat()">Send</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="static/script.js"></script>
+    <script>
+        // Inline script for theme toggle initialization
+        const toggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        const icon = toggle.querySelector('i');
+
+        toggle.addEventListener('click', () => {
+            const current = html.getAttribute('data-theme');
+            if (current === 'light') {
+                html.setAttribute('data-theme', 'dark');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                html.setAttribute('data-theme', 'light');
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        });
+    </script>
+</body>
+
+</html>

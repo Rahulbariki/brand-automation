@@ -1,0 +1,36 @@
+services:
+  # Backend API Service
+  - type: web
+    name: bizforge-api
+    env: docker
+    plan: free
+    region: oregon 
+    branch: main
+    repo: https://github.com/YOUR_USERNAME/YOUR_REPO # Optional if connecting via UI
+    dockerContext: .
+    dockerfilePath: Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bizforge-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: GROQ_API_KEY
+        sync: false # Set in Dashboard
+      - key: IBM_MODEL
+        value: ibm-granite/granite-3.0-2b-instruct
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+
+databases:
+  # PostgreSQL Database
+  - name: bizforge-db
+    plan: free
+    region: oregon
+    user: bizforge_user
+    databaseName: bizforge
+    ipAllowList: [] # Access from anywhere (or restrict if needed)
