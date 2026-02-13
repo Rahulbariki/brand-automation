@@ -234,7 +234,11 @@
 
     <script src="assets/js/ui.js"></script>
     <script>
-        const API_BASE = "/api";
+        // Detect environment
+        const IS_LOCAL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+        const API_BASE = IS_LOCAL
+            ? "http://localhost:8001/api"
+            : "https://YOUR_RENDER_APP_NAME.onrender.com/api"; // ⚠️ REPLACE THIS WITH YOUR RENDER URL
 
         // Auth Check
         async function checkAdminAuth() {
