@@ -146,8 +146,7 @@ async function generateBrandNames() {
     try {
         const data = await api.generateBrandNames(industry, keywords, tone);
         if (data && data.names) {
-            const content = '<ul>' + data.names.map(name => `<li><strong>${name}</strong></li>`).join('') + '</ul>';
-            resultDiv.innerHTML = ui.renderCard('Generated Names', content);
+            resultDiv.innerHTML = ui.renderCard('Generated Names', data.names, 'brand_names');
             ui.showToast('Brand names generated!', 'success');
             state.addToHistory({ type: 'brand_names', content: data.names });
         }
@@ -173,11 +172,7 @@ async function generateLogo() {
     try {
         const data = await api.generateLogo(brandName, industry, style);
         if (data) {
-            const content = `
-                <p class="text-muted mb-2"><strong>Prompt:</strong> ${data.prompt || 'N/A'}</p>
-                <img src="${data.image_url}" alt="Generated Logo" class="img-fluid rounded shadow-sm border">
-            `;
-            resultDiv.innerHTML = ui.renderCard('Logo Result', content);
+            resultDiv.innerHTML = ui.renderCard('Logo Result', data.image_url, 'logo');
             ui.showToast('Logo generated successfully!', 'success');
             state.addToHistory({ type: 'logo', image: data.image_url });
         }
@@ -203,7 +198,7 @@ async function generateContent() {
     try {
         const data = await api.generateContent(brandName, description, contentType);
         if (data) {
-            resultDiv.innerHTML = ui.renderCard('Marketing Content', `<p style="white-space: pre-wrap;">${data.content}</p>`);
+            resultDiv.innerHTML = ui.renderCard('Marketing Content', data.content, 'marketing');
             ui.showToast('Content generated!', 'success');
             state.addToHistory({ type: 'content', content: data.content });
         }
@@ -228,14 +223,7 @@ async function generateDesign() {
     try {
         const data = await api.generateDesignSystem(industry, tone);
         if (data && data.colors) {
-            const colorsHtml = data.colors.map(color => `
-                <div style="display: inline-block; margin: 10px; text-align: center;">
-                    <div style="width: 80px; height: 80px; background-color: ${color}; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
-                    <div style="margin-top: 5px; font-family: monospace;">${color}</div>
-                </div>
-            `).join('');
-
-            resultDiv.innerHTML = ui.renderCard('Color Palette', `<div style="text-align:center">${colorsHtml}</div>`);
+            resultDiv.innerHTML = ui.renderCard('Color Palette', data.colors, 'design_system');
             ui.showToast('Design system generated!', 'success');
         }
     } catch (error) {
@@ -258,16 +246,11 @@ async function analyzeSentiment() {
     try {
         const data = await api.analyzeSentiment(text);
         if (data) {
-            let color = '#666';
-            if (data.sentiment === 'Positive') color = 'var(--secondary-color)'; // Emerald
-            if (data.sentiment === 'Negative') color = '#ef4444'; // Red
-
-            const content = `
-                <h3>Sentiment: <span style="color: ${color}">${data.sentiment || 'Unknown'}</span></h3>
-                <p><strong>Confidence:</strong> ${(data.confidence ? data.confidence * 100 : 0).toFixed(1)}%</p>
-                <p><strong>Analysis:</strong> ${data.tone_alignment || 'N/A'}</p>
-            `;
-            resultDiv.innerHTML = ui.renderCard('Sentiment Analysis', content);
+            const content = {
+                score: data.confidence || 0,
+                label: data.sentiment || 'Neutral'
+            };
+            resultDiv.innerHTML = ui.renderCard('Sentiment Analysis', content, 'sentiment');
             ui.showToast('Analysis complete!', 'success');
         }
     } catch (error) {
@@ -301,7 +284,7 @@ async function sendChat() {
     try {
         const data = await api.chatWithAI(message);
         aiDiv.classList.remove('loading-msg');
-        aiDiv.textContent = data.response || "No response.";
+        aiDiv.innerHTML = `<strong>BizForge AI:</strong><br>${data.response || "No response."}`;
     } catch (error) {
         aiDiv.innerHTML = `<span style="color:red">Error: ${error.message}</span>`;
     }

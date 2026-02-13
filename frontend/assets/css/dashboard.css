@@ -769,3 +769,175 @@ select.input-control {
         padding: 1.25rem;
     }
 }
+
+/* --- SECTION SPECIFIC PREMIUM STYLES --- */
+
+/* Stat Card Icons */
+.stat-card i {
+    transition: all 0.5s var(--ease);
+}
+
+.stat-card i.stat-icon {
+    position: absolute;
+    right: -15px;
+    bottom: -15px;
+    font-size: 5.5rem;
+    opacity: 0.04;
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .stat-card i.stat-icon {
+    opacity: 0.08;
+}
+
+/* Chat Bubbles */
+#chatHistory {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-clay-inset);
+}
+
+[data-theme="dark"] #chatHistory {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.chat-msg {
+    max-width: 85%;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-md);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    position: relative;
+    box-shadow: var(--shadow-clay);
+}
+
+.user-msg {
+    align-self: flex-end;
+    background: var(--grad-btn);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.ai-msg {
+    align-self: flex-start;
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-bottom-left-radius: 4px;
+}
+
+/* Mood Meter */
+.mood-meter {
+    height: 12px;
+    width: 100%;
+    background: var(--shadow-clay-inset);
+    border-radius: 6px;
+    margin-top: 1rem;
+    overflow: hidden;
+}
+
+.mood-bar {
+    height: 100%;
+    transition: width 1s var(--ease);
+    background: var(--grad);
+}
+
+/* Color Swatch Grid */
+.swatch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.swatch-item {
+    background: var(--card-bg);
+    padding: 0.8rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-clay);
+    text-align: center;
+    transition: transform 0.3s var(--ease);
+}
+
+.swatch-item:hover {
+    transform: translateY(-5px);
+}
+
+.swatch-color {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    margin-bottom: 0.6rem;
+    box-shadow: var(--shadow-clay-inset);
+}
+
+.swatch-hex {
+    font-family: monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+/* Marketing Result Card */
+.marketing-preview {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 8px;
+    color: #333;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.8;
+    box-shadow: var(--shadow-clay);
+    border: 1px solid #eee;
+    max-width: 600px;
+    margin: 1.5rem auto;
+}
+
+[data-theme="dark"] .marketing-preview {
+    background: #1a1a2e;
+    color: #eee;
+    border-color: #333;
+}
+
+/* Brand Name Chip */
+.brand-chip {
+    display: inline-block;
+    padding: 0.6rem 1.2rem;
+    margin: 0.4rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 50px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-clay);
+    transition: all 0.2s var(--ease);
+    font-size: 0.9rem;
+}
+
+.brand-chip:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-clay-hover);
+    color: var(--primary-color);
+}
+
+/* Logo Frame */
+.logo-frame {
+    background: #f8f9fa;
+    padding: 2.5rem;
+    border-radius: var(--radius-lg);
+    display: flex;
+    justify-content: center;
+    box-shadow: var(--shadow-clay-inset);
+    margin-top: 1.5rem;
+}
+
+[data-theme="dark"] .logo-frame {
+    background: #111128;
+}
+
+.logo-frame img {
+    max-width: 320px;
+    border-radius: 16px;
+    box-shadow: 20px 20px 40px rgba(0, 0, 0, 0.3);
+}
