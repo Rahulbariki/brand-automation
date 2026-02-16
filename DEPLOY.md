@@ -12,9 +12,8 @@ The backend is containerized using Docker.
 
 1. **Push your code to GitHub/GitLab**.
 2. **Create a New Web Service on Render**:
-   - Connect your repository.
-   - Render should automatically detect the `render.yaml` file (Infrastructure as Code).
-   - If not, select "Docker" as the environment.
+   - **Root Directory**: `.` (Root) or `backend` if you want to be specific, but for Docker it usually uses the root context.
+   - The `render.yaml` sets the build context to `.` so keep Root Directory as repo root.
 
 3. **Database Setup**:
    - The `render.yaml` includes a PostgreSQL database definition (`bizforge-db`).
@@ -47,11 +46,9 @@ The frontend is a static site.
 1. **Import your repository to Vercel**.
 2. **Project Configuration**:
    - **Framework Preset**: Other (or None).
-   - **Root Directory**: `./` (Root of the repo).
-   - **Build Command**: None (It's static).
-   - **Output Directory**: `frontend` (or just leave default if Vercel detects it, but `vercel.json` handles the routing).
-   
-   *Actually, with the provided `vercel.json`, you can just deploy from the root and Vercel will serve files from `frontend/`.*
+   - **Root Directory**: `frontend` (Click "Edit" next to Root Directory and select the `frontend` folder).
+   - **Build Command**: None.
+   - **Output Directory**: Leave default (it will serve the root of `frontend`).
 
 3. **📢 CRITICAL STEP: Update API URL**:
    - Open `frontend/assets/js/api.js`.
