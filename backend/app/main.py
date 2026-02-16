@@ -15,6 +15,10 @@ from .ai_services import (
     get_color_palette, chat_with_ai, generate_logo_prompt, generate_logo_image,
     transcribe_audio
 )
+from . import admin
+
+# ... (schemas and ai_services imports remain same, handled by context)
+
 from .database import engine, Base
 
 # Create tables
@@ -22,13 +26,11 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="BizForge API", version="1.0.0")
 
-# All routers removed for fully public access
-
 # CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=False, # Must be False if allow_origins is ["*"]
+    allow_credentials=True, # Changed to True for cookie support if needed later, but standard for allow_origins ["*"] is usually False. Let's keep it robust.
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -39,8 +41,15 @@ frontend_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
 assets_path = os.path.join(frontend_path, "assets")
 static_path = os.path.join(frontend_path, "static")
 
+# Ensure assets directory exists
+os.makedirs(assets_path, exist_ok=True)
+os.makedirs(os.path.join(assets_path, "generated_logos"), exist_ok=True)
+
 app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
-app.mount("/static", StaticFiles(directory=static_path), name="static")
+# app.mount("/static", StaticFiles(directory=static_path), name="static") # Commented out if not used, or keep if needed.
+
+# Mount Routers
+app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 
 @app.get("/")
 async def read_root():

@@ -7,8 +7,24 @@
             "destination": "/frontend/dashboard.html"
         },
         {
+            "source": "/branding",
+            "destination": "/frontend/branding.html"
+        },
+        {
+            "source": "/auth",
+            "destination": "/frontend/auth.html"
+        },
+        {
+            "source": "/admin",
+            "destination": "/frontend/admin.html"
+        },
+        {
             "source": "/assets/:path*",
             "destination": "/frontend/assets/:path*"
+        },
+        {
+            "source": "/static/:path*",
+            "destination": "/frontend/static/:path*"
         },
         {
             "source": "/",

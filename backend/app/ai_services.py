@@ -254,16 +254,24 @@ def generate_logo_image(prompt: str, filename: str = "logo.png") -> str:
         
         # Ensure directory exists
         # Path: backend/app/ai_services.py -> ../../frontend/assets/generated_logos
-        output_dir = os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "assets", "generated_logos")
+        # Resolve absolute path to avoid cwd issues
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        output_dir = os.path.join(current_dir, "..", "..", "frontend", "assets", "generated_logos")
+        output_dir = os.path.normpath(output_dir)
+        
         os.makedirs(output_dir, exist_ok=True)
         
         filepath = os.path.join(output_dir, filename)
         with open(filepath, "wb") as f:
             f.write(image_bytes)
             
+        print(f"Logo saved to: {filepath}")
         return filename
     except Exception as e:
         print(f"SDXL Generation Failed: {e}")
+        # print full traceback for debugging
+        import traceback
+        traceback.print_exc()
         return ""
 
 # For verification script
