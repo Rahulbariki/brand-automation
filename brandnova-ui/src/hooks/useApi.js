@@ -1,4 +1,4 @@
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = import.meta.env.MODE === "development" ? "http://127.0.0.1:8000" : "";
 
 function getHeaders() {
     const token = localStorage.getItem("access_token");
