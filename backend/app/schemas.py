@@ -83,6 +83,19 @@ class TaglineRequest(BaseModel):
     brand_name: str
     industry: str
 
+# Startup Tools
+class PitchRequest(BaseModel):
+    product_name: str
+    problem: str
+    solution: str
+    audience: str
+
+class InvestorEmailRequest(BaseModel):
+    startup_name: str
+    investor_name: str
+    key_metrics: str # e.g. "10k MRR, 20% growth"
+    ask: str # e.g. "$500k seed"
+
 class StrategyRequest(BaseModel):
     brand_name: str
     industry: str

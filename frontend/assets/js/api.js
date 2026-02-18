@@ -6,9 +6,7 @@
 
 // Detect environment
 const IS_LOCAL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-const API_BASE_URL = IS_LOCAL
-    ? "http://localhost:8000/api"
-    : "https://bizforge-api.onrender.com/api";
+const API_BASE_URL = '/api';
 
 export const ASSET_BASE_URL = IS_LOCAL
     ? "http://localhost:8000"

@@ -1,24 +1,14 @@
 import requests
 import os
 import json
-import speech_recognition as sr
+# import speech_recognition as sr # Removed to save space on Vercel
 from groq import Groq
 
 # --- Activity 2.11: Voice Input Transcription ---
 def transcribe_audio(audio_file_path: str) -> str:
     """Transcribes audio file to text using Google Speech Recognition."""
-    recognizer = sr.Recognizer()
-    try:
-        with sr.AudioFile(audio_file_path) as source:
-            audio_data = recognizer.record(source)
-            text = recognizer.recognize_google(audio_data)
-            return text
-    except sr.UnknownValueError:
-        return "Could not understand audio"
-    except sr.RequestError as e:
-        return f"Could not request results; {e}"
-    except Exception as e:
-        return f"Error processing audio: {e}"
+    # Disabled for Vercel Serverless optimization (omitting large libraries)
+    return "Voice transcription is currently disabled in this lightweight deployment."
 from dotenv import load_dotenv
 from .schemas import (
     BrandNameRequest, TaglineRequest, StrategyRequest,
@@ -274,8 +264,43 @@ def generate_logo_image(prompt: str, filename: str = "logo.png") -> str:
         traceback.print_exc()
         return ""
 
-# For verification script
-def test_groq():
-    return generate_tagline(TaglineRequest(brand_name="TestBrand", industry="Tech"))
+# --- Startup Tools ---
+def generate_pitch(request) -> str:
+    prompt = f"""
+    Create a compelling 1-minute elevator pitch for a startup.
+    Product: {request.product_name}
+    Problem: {request.problem}
+    Solution: {request.solution}
+    Target Audience: {request.audience}
+    
+    Format:
+    1. Hook
+    2. The Pain (Problem)
+    3. The Gain (Solution)
+    4. Traction/Ask
+    """
+    
+    chat_completion = groq_client.chat.completions.create(
+        messages=[{"role": "user", "content": prompt}],
+        model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+    )
+    return chat_completion.choices[0].message.content.strip()
+
+def generate_investor_email(request) -> str:
+    prompt = f"""
+    Write a cold email to an investor.
+    Startup: {request.startup_name}
+    Investor: {request.investor_name}
+    Metrics: {request.key_metrics}
+    Ask: {request.ask}
+    
+    Keep it short, punchy, and professional. Focus on FOMO.
+    """
+    
+    chat_completion = groq_client.chat.completions.create(
+        messages=[{"role": "user", "content": prompt}],
+        model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+    )
+    return chat_completion.choices[0].message.content.strip()
 
 

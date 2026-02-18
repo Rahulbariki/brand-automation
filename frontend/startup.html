@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Startup Tools | BrandNova</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Reusing auth styles for simplicity but expanding width */
+        body.auth-body {
+            align-items: flex-start;
+            padding-top: 50px;
+            overflow-y: auto;
+            height: auto;
+        }
+
+        .tool-container {
+            width: 800px;
+            max-width: 95%;
+            margin: 0 auto 50px;
+            display: grid;
+            gap: 20px;
+        }
+
+        .tool-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-box {
+            background: #f4f4f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            display: none;
+            border: 1px solid #ddd;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #555;
+            display: block;
+            margin-top: 15px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            margin-top: 5px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        input {
+            margin-top: 5px;
+        }
+
+        .nav-back {
+            margin-bottom: 20px;
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body class="auth-body">
+
+    <div class="tool-container">
+        <a href="dashboard.html" class="nav-back">← Back to Dashboard</a>
+
+        <!-- Pitch Generator -->
+        <div class="tool-card">
+            <h2>🚀 Elevator Pitch Generator</h2>
+            <p>Generate a punchy 1-minute pitch for investors or customers.</p>
+            <form id="pitchForm">
+                <label>Product Name</label>
+                <input type="text" id="p_name" required placeholder="e.g. BrandNova" />
+
+                <label>The Problem</label>
+                <textarea id="p_problem" rows="2" required
+                    placeholder="e.g. Startups struggle to create professional branding quickly."></textarea>
+
+                <label>The Solution</label>
+                <textarea id="p_solution" rows="2" required
+                    placeholder="e.g. AI-powered platform that generates logos, pitch decks, and copy in seconds."></textarea>
+
+                <label>Target Audience</label>
+                <input type="text" id="p_audience" required placeholder="e.g. Early-stage founders" />
+
+                <button type="submit" class="primary-btn">Generate Pitch</button>
+            </form>
+            <div id="pitchResult" class="result-box"></div>
+        </div>
+
+        <!-- Investor Email -->
+        <div class="tool-card">
+            <h2>✉️ Investor Cold Email Writer</h2>
+            <p>Draft a high-conversion email to a VC or Angel investor.</p>
+            <form id="emailForm">
+                <label>Startup Name</label>
+                <input type="text" id="e_startup" required placeholder="e.g. BrandNova" />
+
+                <label>Investor Name</label>
+                <input type="text" id="e_investor" required placeholder="e.g. Sarah Jones" />
+
+                <label>Key Metrics</label>
+                <input type="text" id="e_metrics" required placeholder="e.g. $10k MRR, 20% MoM growth, 500 users" />
+
+                <label>The Ask</label>
+                <input type="text" id="e_ask" required placeholder="e.g. 15 mins advice on GTM strategy" />
+
+                <button type="submit" class="primary-btn">Draft Email</button>
+            </form>
+            <div id="emailResult" class="result-box"></div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        // Pitch Logic
+        document.getElementById('pitchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const resBox = document.getElementById('pitchResult');
+
+            btn.textContent = "Generating...";
+            btn.disabled = true;
+
+            try {
+                const token = getToken();
+                const res = await fetch(`${API_URL}/api/generate-pitch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                        product_name: document.getElementById('p_name').value,
+                        problem: document.getElementById('p_problem').value,
+                        solution: document.getElementById('p_solution').value,
+                        audience: document.getElementById('p_audience').value
+                    })
+                });
+
+                if (!res.ok) {
+                    if (res.status === 403) throw new Error("Usage Limit Reached. Upgrade to Pro!");
+                    throw new Error("Generation failed");
+                }
+
+                const data = await res.json();
+                resBox.textContent = data.pitch;
+                resBox.style.display = 'block';
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                btn.textContent = "Generate Pitch";
+                btn.disabled = false;
+            }
+        });
+
+        // Email Logic
+        document.getElementById('emailForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const resBox = document.getElementById('emailResult');
+
+            btn.textContent = "Writing...";
+            btn.disabled = true;
+
+            try {
+                const token = getToken();
+                const res = await fetch(`${API_URL}/api/generate-investor-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                        startup_name: document.getElementById('e_startup').value,
+                        investor_name: document.getElementById('e_investor').value,
+                        key_metrics: document.getElementById('e_metrics').value,
+                        ask: document.getElementById('e_ask').value
+                    })
+                });
+
+                if (!res.ok) {
+                    if (res.status === 403) throw new Error("Usage Limit Reached. Upgrade to Pro!");
+                    throw new Error("Generation failed");
+                }
+
+                const data = await res.json();
+                resBox.textContent = data.email;
+                resBox.style.display = 'block';
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                btn.textContent = "Draft Email";
+                btn.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+
+</html>

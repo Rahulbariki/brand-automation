@@ -1,1752 +1,251 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="cosmic">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BizForge — AI Branding Engine</title>
+    <title>BrandNova — AI Growth Assistant for Startups</title>
     <meta name="description"
-        content="Generate brand names, logos, content, and strategy in seconds with enterprise AI.">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-        /* ===== RESET & ROOT ===== */
-        *,
-        *::before,
-        *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box
-        }
-
-        :root {
-            --bg: #060611;
-            --bg2: #0d0d1a;
-            --text: #f0f0f4;
-            --muted: #6b6b80;
-            --primary: #6366f1;
-            --primary-glow: rgba(99, 102, 241, .25);
-            --surface: rgba(255, 255, 255, .04);
-            --border: rgba(255, 255, 255, .08);
-            --grad: linear-gradient(135deg, #667eea, #764ba2);
-            --grad2: linear-gradient(135deg, #f093fb, #f5576c);
-            --radius: 16px;
-            --ease: cubic-bezier(.4, 0, .2, 1);
-        }
-
-        html {
-            scroll-behavior: smooth;
-            overflow-x: hidden
-        }
-
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        a {
-            text-decoration: none;
-            color: inherit
-        }
-
-        /* ===== CANVAS & OVERLAYS ===== */
-        #stars {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none
-        }
-
-        .grain {
-            position: fixed;
-            inset: 0;
-            z-index: 1;
-            pointer-events: none;
-            opacity: .03;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-        }
-
-        .orbs {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden
-        }
-
-        .orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(130px);
-            opacity: .12
-        }
-
-        .orb-a {
-            width: 600px;
-            height: 600px;
-            background: #6366f1;
-            top: -15%;
-            left: -5%;
-            animation: drift 22s ease-in-out infinite
-        }
-
-        .orb-b {
-            width: 450px;
-            height: 450px;
-            background: #ec4899;
-            bottom: -10%;
-            right: -5%;
-            animation: drift 28s ease-in-out infinite reverse
-        }
-
-        .orb-c {
-            width: 350px;
-            height: 350px;
-            background: #14b8a6;
-            top: 45%;
-            left: 55%;
-            animation: drift 32s ease-in-out infinite 6s
-        }
-
-        @keyframes drift {
-
-            0%,
-            100% {
-                transform: translate(0, 0) scale(1)
-            }
-
-            33% {
-                transform: translate(60px, -50px) scale(1.08)
-            }
-
-            66% {
-                transform: translate(-40px, 60px) scale(.94)
-            }
-        }
-
-        /* ===== NAVBAR ===== */
-        nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.2rem clamp(1.5rem, 5vw, 4rem);
-            transition: all .4s var(--ease);
-        }
-
-        nav.scrolled {
-            background: rgba(6, 6, 17, .8);
-            backdrop-filter: blur(20px) saturate(180%);
-            border-bottom: 1px solid var(--border);
-            padding-block: .85rem;
-        }
-
-        .nav-logo {
-            display: flex;
-            align-items: center;
-            gap: .5rem
-        }
-
-        .nav-logo .icon {
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--grad);
-            border-radius: 10px;
-            color: #fff;
-            font-size: .95rem;
-        }
-
-        .nav-logo span {
-            font-size: 1.3rem;
-            font-weight: 800;
-            background: var(--grad);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent
-        }
-
-        .nav-mid {
-            display: flex;
-            gap: 2rem
-        }
-
-        .nav-mid a {
-            color: var(--muted);
-            font-weight: 500;
-            font-size: .9rem;
-            transition: color .3s
-        }
-
-        .nav-mid a:hover {
-            color: var(--text)
-        }
-
-        .nav-end {
-            display: flex;
-            align-items: center;
-            gap: 1rem
-        }
-
-        .nav-cta {
-            padding: .6rem 1.2rem;
-            background: var(--grad);
-            color: #fff;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: .88rem;
-            box-shadow: 0 4px 18px var(--primary-glow);
-            transition: all .3s var(--ease);
-            display: inline-flex;
-            align-items: center;
-            gap: .4rem;
-        }
-
-        .nav-cta:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 28px var(--primary-glow)
-        }
-
-        /* ===== HERO ===== */
-        .hero {
-            position: relative;
-            z-index: 10;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 7rem 1.5rem 5rem;
-        }
-
-        .hero-glow {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(99, 102, 241, .12), transparent 70%);
-            pointer-events: none;
-            animation: gPulse 5s ease-in-out infinite;
-        }
-
-        @keyframes gPulse {
-
-            0%,
-            100% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: .6
-            }
-
-            50% {
-                transform: translate(-50%, -50%) scale(1.3);
-                opacity: .9
-            }
-        }
-
-        .hero-inner {
-            max-width: 780px;
-            position: relative;
-            z-index: 5
-        }
-
-        .chip {
-            display: inline-flex;
-            align-items: center;
-            gap: .5rem;
-            padding: .5rem 1.1rem;
-            margin-bottom: 1.8rem;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 50px;
-            font-size: .82rem;
-            font-weight: 600;
-            color: var(--muted);
-            backdrop-filter: blur(10px);
-            animation: fadeUp .6s var(--ease) both;
-        }
-
-        .chip-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: #10b981;
-            box-shadow: 0 0 6px #10b981;
-            animation: blink 2s ease-in-out infinite
-        }
-
-        @keyframes blink {
-
-            0%,
-            100% {
-                opacity: 1
-            }
-
-            50% {
-                opacity: .3
-            }
-        }
-
-        .hero h1 {
-            font-size: clamp(2.5rem, 7vw, 4.5rem);
-            line-height: 1.08;
-            font-weight: 900;
-            letter-spacing: -.03em;
-            margin-bottom: 1.5rem;
-            animation: fadeUp .6s var(--ease) .15s both;
-        }
-
-        .grad {
-            background: var(--grad);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent
-        }
-
-        .typed-wrap {
-            display: inline
-        }
-
-        #typed {
-            background: var(--grad2);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent
-        }
-
-        .cursor {
-            font-weight: 200;
-            color: var(--primary);
-            animation: curBlink 1s step-end infinite
-        }
-
-        @keyframes curBlink {
-
-            0%,
-            100% {
-                opacity: 1
-            }
-
-            50% {
-                opacity: 0
-            }
-        }
-
-        .hero p {
-            font-size: clamp(1rem, 2vw, 1.18rem);
-            color: var(--muted);
-            margin-bottom: 2.5rem;
-            line-height: 1.7;
-            animation: fadeUp .6s var(--ease) .3s both;
-        }
-
-        .hero-btns {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            animation: fadeUp .6s var(--ease) .45s both;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: .6rem;
-            padding: .9rem 1.7rem;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: .95rem;
-            border: none;
-            cursor: pointer;
-            transition: all .3s var(--ease);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-p {
-            background: var(--grad);
-            color: #fff;
-            box-shadow: 0 8px 30px var(--primary-glow);
-        }
-
-        .btn-p::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .2), transparent);
-            transition: left .5s ease;
-        }
-
-        .btn-p:hover::after {
-            left: 100%
-        }
-
-        .btn-p:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 40px rgba(99, 102, 241, .35)
-        }
-
-        .btn-s {
-            background: var(--surface);
-            color: var(--text);
-            border: 1px solid var(--border);
-            backdrop-filter: blur(10px)
-        }
-
-        .btn-s:hover {
-            background: rgba(255, 255, 255, .08);
-            transform: translateY(-2px)
-        }
-
-        .btn-xl {
-            padding: 1.1rem 2.4rem;
-            font-size: 1.05rem
-        }
-
-        .metrics {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 2rem;
-            flex-wrap: wrap;
-            margin-top: 3rem;
-            animation: fadeUp .6s var(--ease) .6s both;
-        }
-
-        .met {
-            text-align: center
-        }
-
-        .met-val {
-            display: block;
-            font-size: 1.8rem;
-            font-weight: 800;
-            background: var(--grad);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .met-lab {
-            font-size: .78rem;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            font-weight: 500
-        }
-
-        .met-div {
-            width: 1px;
-            height: 36px;
-            background: var(--border)
-        }
-
-        /* Floating cards */
-        .fcards {
-            pointer-events: none
-        }
-
-        .fc {
-            position: absolute;
-            z-index: 2;
-            padding: 1.1rem 1.4rem;
-            background: var(--surface);
-            backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: .3rem;
-            font-weight: 600;
-            font-size: .82rem;
-        }
-
-        .fc i {
-            font-size: 1.3rem;
-            background: var(--grad);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent
-        }
-
-        .fc small {
-            font-size: .68rem;
-            color: var(--muted);
-            font-weight: 400
-        }
-
-        .fc1 {
-            top: 20%;
-            left: 7%;
-            animation: bob 7s ease-in-out infinite
-        }
-
-        .fc2 {
-            top: 28%;
-            right: 5%;
-            animation: bob 8s ease-in-out infinite 2s
-        }
-
-        .fc3 {
-            bottom: 16%;
-            left: 10%;
-            animation: bob 9s ease-in-out infinite 4s
-        }
-
-        @keyframes bob {
-
-            0%,
-            100% {
-                transform: translateY(0)
-            }
-
-            50% {
-                transform: translateY(-16px)
-            }
-        }
-
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(24px)
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0)
-            }
-        }
-
-        /* ===== TICKER ===== */
-        .ticker {
-            position: relative;
-            z-index: 10;
-            padding: 1.2rem 0;
-            overflow: hidden;
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-            background: var(--surface);
-            backdrop-filter: blur(10px);
-        }
-
-        .ticker-track {
-            display: flex;
-            white-space: nowrap;
-            animation: marquee 35s linear infinite
-        }
-
-        .ticker-item {
-            display: inline-flex;
-            align-items: center;
-            gap: .45rem;
-            padding: 0 2rem;
-            font-size: .85rem;
-            font-weight: 600;
-            color: var(--muted);
-            white-space: nowrap;
-        }
-
-        .ticker-item i {
-            color: var(--primary)
-        }
-
-        @keyframes marquee {
-            0% {
-                transform: translateX(0)
-            }
-
-            100% {
-                transform: translateX(-50%)
-            }
-        }
-
-        /* ===== SECTIONS SHARED ===== */
-        .sec {
-            position: relative;
-            z-index: 10;
-            padding: clamp(4rem, 10vw, 7rem) 0
-        }
-
-        .wrap {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1.5rem
-        }
-
-        .sec-label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: .75rem;
-            margin-bottom: .8rem;
-            font-size: .78rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--primary);
-        }
-
-        .sec-label .line {
-            width: 35px;
-            height: 1px;
-            background: var(--primary);
-            opacity: .4
-        }
-
-        .sec-title {
-            text-align: center;
-            font-size: clamp(1.8rem, 4.5vw, 3rem);
-            font-weight: 800;
-            letter-spacing: -.02em;
-            margin-bottom: .6rem
-        }
-
-        .sec-sub {
-            text-align: center;
-            font-size: 1.05rem;
-            color: var(--muted);
-            margin-bottom: 0
-        }
-
-        /* ===== FEATURES ===== */
-        .f-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
-            gap: 1.25rem;
-            margin-top: 2.5rem
-        }
-
-        .f-card {
-            position: relative;
-            padding: 2rem;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            transition: all .35s var(--ease);
-            overflow: hidden;
-        }
-
-        .f-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--grad);
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform .4s var(--ease);
-        }
-
-        .f-card:hover::before {
-            transform: scaleX(1)
-        }
-
-        .f-card:hover {
-            transform: translateY(-6px);
-            border-color: rgba(255, 255, 255, .12);
-            box-shadow: 0 16px 48px rgba(99, 102, 241, .06)
-        }
-
-        .f-icon {
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--grad);
-            border-radius: 12px;
-            color: #fff;
-            font-size: 1.25rem;
-            margin-bottom: 1.2rem;
-            transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
-        }
-
-        .f-card:hover .f-icon {
-            transform: scale(1.1) rotate(-5deg)
-        }
-
-        .f-card h3 {
-            font-size: 1.15rem;
-            font-weight: 700;
-            margin-bottom: .5rem
-        }
-
-        .f-card>p {
-            color: var(--muted);
-            line-height: 1.65;
-            margin-bottom: 1rem;
-            font-size: .92rem
-        }
-
-        .f-link {
-            display: inline-flex;
-            align-items: center;
-            gap: .35rem;
-            font-weight: 600;
-            font-size: .85rem;
-            color: var(--primary);
-            opacity: 0;
-            transform: translateX(-6px);
-            transition: all .3s var(--ease);
-        }
-
-        .f-card:hover .f-link {
-            opacity: 1;
-            transform: translateX(0)
-        }
-
-        /* ===== HOW IT WORKS ===== */
-        .steps {
-            max-width: 780px;
-            margin: 2.5rem auto 0;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            position: relative
-        }
-
-        .step-line {
-            position: absolute;
-            left: 36px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: linear-gradient(to bottom, var(--primary), transparent);
-            opacity: .15
-        }
-
-        .step {
-            display: flex;
-            align-items: flex-start;
-            gap: 1.5rem;
-            padding: 1.8rem;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            transition: all .35s var(--ease);
-        }
-
-        .step:hover {
-            transform: translateX(6px);
-            border-color: rgba(255, 255, 255, .12);
-            background: rgba(255, 255, 255, .06)
-        }
-
-        .step-num {
-            font-size: 1.8rem;
-            font-weight: 900;
-            min-width: 50px;
-            text-align: center;
-            background: var(--grad);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .step-body h3 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: .4rem
-        }
-
-        .step-body p {
-            color: var(--muted);
-            line-height: 1.65;
-            font-size: .9rem
-        }
-
-        /* ===== BROWSER MOCKUP ===== */
-        .browser {
-            max-width: 960px;
-            margin: 2.5rem auto 0;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            overflow: hidden;
-            box-shadow: 0 30px 70px rgba(0, 0, 0, .25);
-            transition: transform .4s var(--ease), box-shadow .4s var(--ease);
-        }
-
-        .browser:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 40px 90px rgba(0, 0, 0, .3)
-        }
-
-        .browser-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: .7rem 1rem;
-            border-bottom: 1px solid var(--border);
-            background: rgba(0, 0, 0, .3);
-        }
-
-        .b-dots {
-            display: flex;
-            gap: 6px
-        }
-
-        .b-dots span {
-            width: 11px;
-            height: 11px;
-            border-radius: 50%
-        }
-
-        .b-dots span:nth-child(1) {
-            background: #ff5f57
-        }
-
-        .b-dots span:nth-child(2) {
-            background: #ffbd2e
-        }
-
-        .b-dots span:nth-child(3) {
-            background: #28c840
-        }
-
-        .b-url {
-            display: flex;
-            align-items: center;
-            gap: .4rem;
-            padding: .35rem .8rem;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: .78rem;
-            color: var(--muted);
-            font-weight: 500;
-        }
-
-        .browser-body {
-            display: flex;
-            min-height: 380px
-        }
-
-        .mock-side {
-            width: 64px;
-            background: rgba(0, 0, 0, .2);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            gap: .4rem;
-            padding: .8rem 0;
-        }
-
-        .ms-item {
-            width: 40px;
-            height: 40px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            color: var(--muted);
-            font-size: .9rem;
-            transition: all .3s;
-            cursor: pointer;
-        }
-
-        .ms-item.on {
-            background: var(--grad);
-            color: #fff
-        }
-
-        .mock-content {
-            flex: 1;
-            padding: 1.5rem
-        }
-
-        .mc-head {
-            margin-bottom: 1.2rem
-        }
-
-        .mc-head h3 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: .2rem
-        }
-
-        .mc-head p {
-            font-size: .82rem;
-            color: var(--muted)
-        }
-
-        .mc-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: .8rem
-        }
-
-        .mc-card {
-            padding: 1rem;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            transition: all .3s var(--ease);
-        }
-
-        .mc-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px)
-        }
-
-        .mc-badge {
-            display: inline-block;
-            padding: .15rem .5rem;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 50px;
-            font-size: .68rem;
-            font-weight: 600;
-            margin-bottom: .5rem;
-        }
-
-        .mc-badge.hot {
-            background: rgba(239, 68, 68, .1);
-            border-color: rgba(239, 68, 68, .2);
-            color: #ef4444
-        }
-
-        .mc-card h4 {
-            font-size: 1.05rem;
-            font-weight: 700;
-            margin-bottom: .2rem
-        }
-
-        .mc-card p {
-            font-size: .78rem;
-            color: var(--muted)
-        }
-
-        /* ===== TESTIMONIALS ===== */
-        .t-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-            gap: 1.25rem;
-            margin-top: 2.5rem
-        }
-
-        .t-card {
-            padding: 1.8rem;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            transition: all .35s var(--ease)
-        }
-
-        .t-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(255, 255, 255, .12)
-        }
-
-        .t-stars {
-            display: flex;
-            gap: 2px;
-            margin-bottom: .8rem;
-            color: #fbbf24;
-            font-size: .85rem
-        }
-
-        .t-card>p {
-            font-size: .95rem;
-            line-height: 1.7;
-            margin-bottom: 1.2rem
-        }
-
-        .t-author {
-            display: flex;
-            align-items: center;
-            gap: .7rem
-        }
-
-        .t-av {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: .8rem;
-            color: #fff;
-        }
-
-        .t-author strong {
-            font-weight: 600;
-            font-size: .9rem
-        }
-
-        .t-author span {
-            font-size: .8rem;
-            color: var(--muted)
-        }
-
-        /* ===== FINAL CTA ===== */
-        .cta-sec {
-            text-align: center
-        }
-
-        .cta-box {
-            max-width: 620px;
-            margin: 0 auto;
-            padding: 3.5rem 2rem;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .cta-box::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, .08), transparent 50%);
-            pointer-events: none;
-        }
-
-        .cta-chip {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            gap: .5rem;
-            padding: .45rem 1rem;
-            background: rgba(16, 185, 129, .08);
-            border: 1px solid rgba(16, 185, 129, .2);
-            border-radius: 50px;
-            font-size: .78rem;
-            font-weight: 600;
-            color: #10b981;
-            margin-bottom: 1.3rem;
-        }
-
-        .cta-box h2 {
-            font-size: clamp(1.7rem, 4vw, 2.3rem);
-            font-weight: 800;
-            margin-bottom: .6rem;
-            line-height: 1.2
-        }
-
-        .cta-box>p {
-            color: var(--muted);
-            font-size: 1rem;
-            margin-bottom: 2rem
-        }
-
-        /* ===== FOOTER ===== */
-        footer {
-            position: relative;
-            z-index: 10;
-            border-top: 1px solid var(--border);
-            padding: 3rem 0 1.5rem
-        }
-
-        .f-grid-ft {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
-            gap: 2.5rem;
-            margin-bottom: 2rem
-        }
-
-        .ft-brand p {
-            color: var(--muted);
-            margin-top: .6rem;
-            max-width: 260px;
-            font-size: .9rem;
-            line-height: 1.6
-        }
-
-        .ft-socials {
-            display: flex;
-            gap: .6rem;
-            margin-top: .8rem
-        }
-
-        .ft-socials a {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--muted);
-            font-size: .85rem;
-            transition: all .3s;
-        }
-
-        .ft-socials a:hover {
-            background: var(--primary);
-            color: #fff;
-            border-color: transparent;
-            transform: translateY(-2px)
-        }
-
-        .ft-col h4 {
-            font-weight: 600;
-            margin-bottom: .8rem;
-            font-size: .88rem
-        }
-
-        .ft-col a {
-            display: block;
-            color: var(--muted);
-            margin-bottom: .5rem;
-            font-size: .85rem;
-            transition: color .3s
-        }
-
-        .ft-col a:hover {
-            color: var(--primary)
-        }
-
-        .ft-bottom {
-            text-align: center;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border);
-            color: var(--muted);
-            font-size: .82rem
-        }
-
-        /* ===== SCROLL REVEAL ===== */
-        [data-r] {
-            opacity: 0;
-            transform: translateY(24px);
-            transition: opacity .6s var(--ease), transform .6s var(--ease)
-        }
-
-        [data-r].v {
-            opacity: 1;
-            transform: translateY(0)
-        }
-
-        /* ===== CURSOR GLOW ===== */
-        .cursor-glow {
-            position: fixed;
-            width: 400px;
-            height: 400px;
-            border-radius: 50%;
-            pointer-events: none;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.07), transparent 70%);
-            transform: translate(-50%, -50%);
-            z-index: 9998;
-            opacity: 0;
-            transition: opacity 0.4s ease;
-        }
-
-        body:hover .cursor-glow {
-            opacity: 1;
-        }
-
-        /* ===== CLAYMORPHISM ===== */
-        .f-card {
-            box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.15), -4px -4px 12px rgba(255, 255, 255, 0.02);
-        }
-
-        .f-card:hover {
-            box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.2), -3px -3px 10px rgba(255, 255, 255, 0.03);
-        }
-
-        .f-card .card-glow {
-            position: absolute;
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            pointer-events: none;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.12), transparent 70%);
-            transform: translate(-50%, -50%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .f-card:hover .card-glow {
-            opacity: 1;
-        }
-
-        .step {
-            box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.12), -4px -4px 12px rgba(255, 255, 255, 0.02);
-        }
-
-        .step:hover {
-            box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.18), -3px -3px 10px rgba(255, 255, 255, 0.03);
-        }
-
-        .t-card {
-            box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.12), -4px -4px 12px rgba(255, 255, 255, 0.02);
-        }
-
-        .t-card:hover {
-            box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.18), -3px -3px 10px rgba(255, 255, 255, 0.03);
-        }
-
-        .browser {
-            box-shadow: 12px 12px 30px rgba(0, 0, 0, 0.25), -6px -6px 15px rgba(255, 255, 255, 0.02);
-        }
-
-        .browser:hover {
-            box-shadow: 10px 10px 24px rgba(0, 0, 0, 0.3), -5px -5px 12px rgba(255, 255, 255, 0.03);
-        }
-
-        .cta-box {
-            box-shadow: 10px 10px 24px rgba(0, 0, 0, 0.15), -5px -5px 12px rgba(255, 255, 255, 0.02);
-        }
-
-        /* Magnetic button hover */
-        .btn-p {
-            transition: all .3s var(--ease), box-shadow .3s var(--ease);
-        }
-
-        /* Interactive nav links glow on hover */
-        .nav-mid a:hover {
-            text-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
-        }
-
-        /* ===== RESPONSIVE ===== */
-        @media(max-width:1024px) {
-            .fcards {
-                display: none
-            }
-
-            .f-grid-ft {
-                grid-template-columns: 1fr 1fr
-            }
-        }
-
-        @media(max-width:768px) {
-            .nav-mid {
-                display: none
-            }
-
-            .hero h1 {
-                font-size: 2.2rem
-            }
-
-            .f-grid,
-            .t-grid {
-                grid-template-columns: 1fr
-            }
-
-            .mc-grid {
-                grid-template-columns: 1fr
-            }
-
-            .browser-body {
-                flex-direction: column
-            }
-
-            .mock-side {
-                flex-direction: row;
-                width: 100%;
-                border-right: none;
-                border-bottom: 1px solid var(--border)
-            }
-
-            .f-grid-ft {
-                grid-template-columns: 1fr
-            }
-
-            .metrics {
-                gap: 1.2rem
-            }
-
-            .met-div {
-                display: none
-            }
-
-            .steps {
-                gap: 1rem
-            }
-
-            .step {
-                flex-direction: column;
-                gap: 1rem
-            }
-
-            .step-line {
-                display: none
-            }
-        }
-    </style>
+        content="Build your entire brand identity in seconds. AI-powered name generation, logo design, pitch decks, and growth strategy. The creative universe for startups.">
+    <link rel="stylesheet" href="css/universe.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
-    <canvas id="stars"></canvas>
-    <div class="grain"></div>
-    <div class="orbs">
-        <div class="orb orb-a"></div>
-        <div class="orb orb-b"></div>
-        <div class="orb orb-c"></div>
-    </div>
 
-    <!-- NAV -->
-    <nav id="nav">
-        <a href="#" class="nav-logo">
-            <div class="icon"><i class="fas fa-cube"></i></div><span>BizForge</span>
+    <!-- ═══ Background Layers ═══ -->
+    <canvas id="universe-particles"></canvas>
+    <div class="universe-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="universe-grain"></div>
+    <div class="cursor-glow"></div>
+
+    <!-- ═══ Navbar ═══ -->
+    <nav class="universe-nav" id="mainNav">
+        <a href="/" class="nav-logo">
+            <span class="nav-logo-icon">✦</span>
+            <span class="nav-logo-text">BrandNova</span>
         </a>
-        <div class="nav-mid">
+        <div class="nav-links">
             <a href="#features">Features</a>
-            <a href="#howit">How It Works</a>
-            <a href="#showcase">Showcase</a>
-            <a href="#cta">Pricing</a>
+            <a href="#how">How It Works</a>
+            <a href="#pricing">Pricing</a>
         </div>
-        <div class="nav-end">
-            <a href="dashboard.html" class="nav-cta"><span>Launch App</span><i class="fas fa-arrow-right"></i></a>
+        <div class="nav-actions">
+            <div class="theme-toggle-wrap">
+                <button class="theme-toggle-btn" aria-label="Toggle Theme"><i class="fas fa-palette"></i></button>
+                <div class="theme-menu"></div>
+            </div>
+            <a href="login.html" class="ghost-btn" style="padding:.6rem 1.2rem;font-size:.88rem;">Login</a>
+            <a href="signup.html" class="glow-btn" style="padding:.6rem 1.4rem;font-size:.88rem;">Get Started Free</a>
         </div>
     </nav>
 
-    <!-- HERO -->
-    <section class="hero">
-        <div class="hero-glow"></div>
+    <!-- ═══ Hero Section ═══ -->
+    <section class="hero-section">
         <div class="hero-inner">
-            <div class="chip"><span class="chip-dot"></span> Open Access — No Login Required</div>
-            <h1>Build Your Brand<br><span class="typed-wrap"><span id="typed"></span><span
-                        class="cursor">|</span></span></h1>
-            <p>AI-powered brand name generation, logo creation, marketing copy, and strategic consulting — all in one
-                platform.</p>
+            <div class="hero-chip">
+                <span class="hero-chip-dot"></span>
+                Powered by LLaMA 70B &bull; SDXL &bull; Granite AI
+            </div>
+
+            <h1 class="hero-title">
+                Build Your Brand.<br>
+                From Idea to <span class="typed-text" id="heroTyped">Identity</span><span class="typed-cursor">|</span>
+            </h1>
+
+            <p class="hero-desc">
+                The AI-powered creative universe for startups. Generate brand names, logos,
+                pitch decks, investor emails, and growth strategies — all in seconds.
+            </p>
+
             <div class="hero-btns">
-                <a href="dashboard.html" class="btn btn-p"><span>Start Creating — Free</span><i
-                        class="fas fa-rocket"></i></a>
-                <a href="#features" class="btn btn-s"><i class="fas fa-play-circle"></i><span>See How It
-                        Works</span></a>
+                <a href="signup.html" class="glow-btn" style="padding:1rem 2.2rem;font-size:1.05rem;">
+                    <i class="fas fa-rocket"></i> Start Creating
+                </a>
+                <a href="#features" class="ghost-btn" style="padding:1rem 2rem;font-size:1.05rem;">
+                    <i class="fas fa-play"></i> See How
+                </a>
             </div>
-            <div class="metrics">
-                <div class="met"><span class="met-val" data-count="1247">0</span><span class="met-lab">Brands
-                        Created</span></div>
-                <div class="met-div"></div>
-                <div class="met"><span class="met-val" data-count="342">0</span><span class="met-lab">Logos
-                        Generated</span></div>
-                <div class="met-div"></div>
-                <div class="met"><span class="met-val" data-count="45000">0</span><span class="met-lab">Words
-                        Written</span></div>
+
+            <div class="hero-metrics">
+                <div>
+                    <span class="hero-met-val" data-count="1200">0</span>
+                    <div class="hero-met-label">Brands Created</div>
+                </div>
+                <span class="hero-met-div"></span>
+                <div>
+                    <span class="hero-met-val" data-count="45">0</span>
+                    <div class="hero-met-label">ms Avg Speed</div>
+                </div>
+                <span class="hero-met-div"></span>
+                <div>
+                    <span class="hero-met-val" data-count="6">0</span>
+                    <div class="hero-met-label">AI Models</div>
+                </div>
             </div>
-        </div>
-        <div class="fcards">
-            <div class="fc fc1"><i class="fas fa-lightbulb"></i><span>Brand Names</span><small>12 generated</small>
-            </div>
-            <div class="fc fc2"><i class="fas fa-paint-brush"></i><span>Logo Design</span><small>AI Powered</small>
-            </div>
-            <div class="fc fc3"><i class="fas fa-rocket"></i><span>Marketing</span><small>Auto Copy</small></div>
         </div>
     </section>
 
-    <!-- TICKER -->
-    <div class="ticker">
-        <div class="ticker-track">
-            <span class="ticker-item"><i class="fas fa-bolt"></i> Groq LPU Inference</span>
-            <span class="ticker-item"><i class="fas fa-brain"></i> IBM Granite</span>
-            <span class="ticker-item"><i class="fas fa-image"></i> Stable Diffusion XL</span>
-            <span class="ticker-item"><i class="fas fa-microchip"></i> FastAPI</span>
-            <span class="ticker-item"><i class="fas fa-shield-halved"></i> Enterprise Grade</span>
-            <span class="ticker-item"><i class="fas fa-gauge-high"></i> Sub-Second Latency</span>
-            <span class="ticker-item"><i class="fas fa-bolt"></i> Groq LPU Inference</span>
-            <span class="ticker-item"><i class="fas fa-brain"></i> IBM Granite</span>
-            <span class="ticker-item"><i class="fas fa-image"></i> Stable Diffusion XL</span>
-            <span class="ticker-item"><i class="fas fa-microchip"></i> FastAPI</span>
-            <span class="ticker-item"><i class="fas fa-shield-halved"></i> Enterprise Grade</span>
-            <span class="ticker-item"><i class="fas fa-gauge-high"></i> Sub-Second Latency</span>
-        </div>
-    </div>
+    <!-- ═══ Features Section ═══ -->
+    <section class="section" id="features">
+        <div class="container">
+            <div class="section-label"><span class="line"></span> FEATURES <span class="line"></span></div>
+            <h2 class="section-title">Your Entire Brand Stack.<br><span class="typed-text">AI-Powered.</span></h2>
+            <p class="section-sub">Everything you need from ideation to launch, orchestrated by multiple AI engines.</p>
 
-    <!-- FEATURES -->
-    <section class="sec" id="features">
-        <div class="wrap">
-            <div class="sec-label" data-r><span class="line"></span><span>Core Capabilities</span><span
-                    class="line"></span></div>
-            <h2 class="sec-title" data-r>Powered by Next-Gen AI</h2>
-            <p class="sec-sub" data-r>Six enterprise-grade tools. One unified platform.</p>
-            <div class="f-grid">
-                <div class="f-card" data-r>
-                    <div class="f-icon"><i class="fas fa-lightbulb"></i></div>
-                    <h3>Brand Name Generator</h3>
-                    <p>Industry-aware naming powered by Groq. Get 10 unique names in under 2 seconds.</p>
-                    <a href="dashboard.html" class="f-link">Try it <i class="fas fa-arrow-right"></i></a>
+            <div class="features-grid">
+                <div class="glass-card feature-card reveal-on-scroll">
+                    <div class="feature-icon">🧠</div>
+                    <h3>Brand Name AI</h3>
+                    <p>Generate unique, memorable brand names using LLaMA 70B with customizable tone, industry, and
+                        keywords.</p>
                 </div>
-                <div class="f-card" data-r>
-                    <div class="f-icon" style="background:linear-gradient(135deg,#f093fb,#f5576c)"><i
-                            class="fas fa-palette"></i></div>
+                <div class="glass-card feature-card reveal-on-scroll">
+                    <div class="feature-icon">🎨</div>
                     <h3>Logo Studio</h3>
-                    <p>SDXL-powered visual AI generates professional logos from simple text descriptions.</p>
-                    <a href="dashboard.html" class="f-link">Try it <i class="fas fa-arrow-right"></i></a>
+                    <p>Create stunning logos using SDXL Flux. Export in HD. Customize style, color palettes, and visual
+                        direction.</p>
                 </div>
-                <div class="f-card" data-r>
-                    <div class="f-icon" style="background:linear-gradient(135deg,#4facfe,#00f2fe)"><i
-                            class="fas fa-pen-nib"></i></div>
-                    <h3>Content Studio</h3>
-                    <p>Social captions, ad copy, product descriptions, and email newsletters in one click.</p>
-                    <a href="dashboard.html" class="f-link">Try it <i class="fas fa-arrow-right"></i></a>
+                <div class="glass-card feature-card reveal-on-scroll">
+                    <div class="feature-icon">🚀</div>
+                    <h3>Pitch Generator</h3>
+                    <p>Build an investor-ready pitch in one click. Hook, problem, solution, traction — formatted and
+                        polished.</p>
                 </div>
-                <div class="f-card" data-r>
-                    <div class="f-icon" style="background:linear-gradient(135deg,#43e97b,#38f9d7)"><i
-                            class="fas fa-chart-line"></i></div>
-                    <h3>Sentiment Intelligence</h3>
-                    <p>NLP-decoded customer emotions. Understand brand perception in real-time.</p>
-                    <a href="dashboard.html" class="f-link">Try it <i class="fas fa-arrow-right"></i></a>
+                <div class="glass-card feature-card reveal-on-scroll">
+                    <div class="feature-icon">✉️</div>
+                    <h3>Investor Outreach</h3>
+                    <p>Draft cold emails to VCs with FOMO-driven copy based on your startup's metrics and unique ask.
+                    </p>
                 </div>
-                <div class="f-card" data-r>
-                    <div class="f-icon" style="background:linear-gradient(135deg,#fa709a,#fee140)"><i
-                            class="fas fa-robot"></i></div>
-                    <h3>AI Strategy Consultant</h3>
-                    <p>Chat with IBM Granite for branding strategy, positioning, and market analysis.</p>
-                    <a href="dashboard.html" class="f-link">Try it <i class="fas fa-arrow-right"></i></a>
+                <div class="glass-card feature-card reveal-on-scroll">
+                    <div class="feature-icon">📊</div>
+                    <h3>Sentiment Analysis</h3>
+                    <p>Analyze customer reviews and feedback against your brand tone. Powered by contextual NLP.</p>
                 </div>
-                <div class="f-card" data-r>
-                    <div class="f-icon" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb)"><i
-                            class="fas fa-swatchbook"></i></div>
-                    <h3>Design System</h3>
-                    <p>Auto-generated color palettes, typography, and style guides for your brand.</p>
-                    <a href="dashboard.html" class="f-link">Try it <i class="fas fa-arrow-right"></i></a>
+                <div class="glass-card feature-card reveal-on-scroll">
+                    <div class="feature-icon">💬</div>
+                    <h3>AI Brand Consultant</h3>
+                    <p>Chat with IBM Granite for strategic branding advice. An AI co-founder available 24/7.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- HOW IT WORKS -->
-    <section class="sec" id="howit">
-        <div class="wrap">
-            <div class="sec-label" data-r><span class="line"></span><span>Simple Process</span><span
-                    class="line"></span></div>
-            <h2 class="sec-title" data-r>Three Steps to a Complete Brand</h2>
-            <div class="steps">
-                <div class="step-line"></div>
-                <div class="step" data-r>
-                    <div class="step-num">01</div>
-                    <div class="step-body">
-                        <h3>Describe Your Vision</h3>
-                        <p>Tell BizForge about your industry, target audience, and brand personality. Our AI understands
-                            context deeply.</p>
-                    </div>
-                </div>
-                <div class="step" data-r>
-                    <div class="step-num">02</div>
-                    <div class="step-body">
-                        <h3>AI Generates Everything</h3>
-                        <p>In under 3 seconds, get brand names, logos, color palettes, marketing copy, and strategic
-                            recommendations.</p>
-                    </div>
-                </div>
-                <div class="step" data-r>
-                    <div class="step-num">03</div>
-                    <div class="step-body">
-                        <h3>Launch Your Brand</h3>
-                        <p>Download assets, copy your content, and ship a professional brand identity — no design skills
-                            needed.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+    <!-- ═══ How It Works ═══ -->
+    <section class="section" id="how">
+        <div class="container">
+            <div class="section-label"><span class="line"></span> HOW IT WORKS <span class="line"></span></div>
+            <h2 class="section-title">Three Steps to Launch</h2>
+            <p class="section-sub">From zero to brand in under 60 seconds.</p>
 
-    <!-- SHOWCASE -->
-    <section class="sec" id="showcase">
-        <div class="wrap">
-            <div class="sec-label" data-r><span class="line"></span><span>Live Preview</span><span class="line"></span>
-            </div>
-            <h2 class="sec-title" data-r>See It in Action</h2>
-            <div class="browser" data-r>
-                <div class="browser-bar">
-                    <div class="b-dots"><span></span><span></span><span></span></div>
-                    <div class="b-url"><i class="fas fa-lock"></i> bizforge.app/dashboard</div>
-                    <div style="color:var(--muted)"><i class="fas fa-expand-alt"></i></div>
-                </div>
-                <div class="browser-body">
-                    <div class="mock-side">
-                        <div class="ms-item on"><i class="fas fa-home"></i></div>
-                        <div class="ms-item"><i class="fas fa-lightbulb"></i></div>
-                        <div class="ms-item"><i class="fas fa-palette"></i></div>
-                        <div class="ms-item"><i class="fas fa-pen-nib"></i></div>
-                        <div class="ms-item"><i class="fas fa-chart-line"></i></div>
-                        <div class="ms-item"><i class="fas fa-robot"></i></div>
+            <div style="max-width:700px;margin:3rem auto 0;display:flex;flex-direction:column;gap:1.2rem;">
+                <div class="glass-card reveal-on-scroll"
+                    style="display:flex;align-items:flex-start;gap:1.5rem;padding:2rem;">
+                    <div style="font-size:2rem;font-weight:900;min-width:50px;text-align:center;" class="typed-text">01
                     </div>
-                    <div class="mock-content">
-                        <div class="mc-head">
-                            <h3>Brand Name Generator</h3>
-                            <p>Generate unique, market-ready brand names</p>
-                        </div>
-                        <div class="mc-grid">
-                            <div class="mc-card"><span class="mc-badge hot">🔥 Top Pick</span>
-                                <h4>NovaBridge</h4>
-                                <p>Modern • Tech • SaaS</p>
-                            </div>
-                            <div class="mc-card"><span class="mc-badge">✨ Creative</span>
-                                <h4>Synthwave</h4>
-                                <p>Bold • Futuristic • AI</p>
-                            </div>
-                            <div class="mc-card"><span class="mc-badge">💎 Premium</span>
-                                <h4>Luminos</h4>
-                                <p>Elegant • Luxury • Clean</p>
-                            </div>
-                            <div class="mc-card"><span class="mc-badge">🚀 Startup</span>
-                                <h4>Vectron</h4>
-                                <p>Fast • Dynamic • Scale</p>
-                            </div>
-                        </div>
+                    <div>
+                        <h3 style="font-weight:700;margin-bottom:.3rem;">Describe Your Vision</h3>
+                        <p style="color:var(--text-secondary);font-size:.9rem;line-height:1.7;">Enter your industry,
+                            keywords, and tone. Our AI understands context, not just text.</p>
+                    </div>
+                </div>
+                <div class="glass-card reveal-on-scroll"
+                    style="display:flex;align-items:flex-start;gap:1.5rem;padding:2rem;">
+                    <div style="font-size:2rem;font-weight:900;min-width:50px;text-align:center;" class="typed-text">02
+                    </div>
+                    <div>
+                        <h3 style="font-weight:700;margin-bottom:.3rem;">AI Generates Everything</h3>
+                        <p style="color:var(--text-secondary);font-size:.9rem;line-height:1.7;">Multiple AI engines work
+                            in parallel — names, logos, copy, and strategy — all generated simultaneously.</p>
+                    </div>
+                </div>
+                <div class="glass-card reveal-on-scroll"
+                    style="display:flex;align-items:flex-start;gap:1.5rem;padding:2rem;">
+                    <div style="font-size:2rem;font-weight:900;min-width:50px;text-align:center;" class="typed-text">03
+                    </div>
+                    <div>
+                        <h3 style="font-weight:700;margin-bottom:.3rem;">Launch Your Brand</h3>
+                        <p style="color:var(--text-secondary);font-size:.9rem;line-height:1.7;">Export assets, download
+                            logos, and deploy your complete brand identity to the world.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- TESTIMONIALS -->
-    <section class="sec">
-        <div class="wrap">
-            <div class="sec-label" data-r><span class="line"></span><span>Social Proof</span><span class="line"></span>
-            </div>
-            <h2 class="sec-title" data-r>Loved by Builders Worldwide</h2>
-            <div class="t-grid">
-                <div class="t-card" data-r>
-                    <div class="t-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                            class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                    <p>"BizForge generated our entire brand identity in 15 minutes. Name, logo, color palette, and copy.
-                        We launched the same day."</p>
-                    <div class="t-author">
-                        <div class="t-av" style="background:var(--grad)">SC</div>
-                        <div><strong>Sarah Chen</strong><br><span>Founder, TechStream</span></div>
-                    </div>
+    <!-- ═══ Pricing Section ═══ -->
+    <section class="section" id="pricing">
+        <div class="container">
+            <div class="section-label"><span class="line"></span> PRICING <span class="line"></span></div>
+            <h2 class="section-title">Simple, Founder-Friendly Pricing</h2>
+            <p class="section-sub">Start free. Scale as you grow. Cancel anytime.</p>
+
+            <div class="pricing-grid">
+                <div class="glass-card pricing-card reveal-on-scroll">
+                    <div class="pricing-name">Bootstrapper</div>
+                    <div class="pricing-amount">Free</div>
+                    <ul class="pricing-features">
+                        <li>5 AI Generations / Day</li>
+                        <li>Brand Name Generator</li>
+                        <li>Pitch Drafts</li>
+                        <li>Basic Analytics</li>
+                    </ul>
+                    <a href="signup.html" class="ghost-btn" style="width:100%;justify-content:center;">Start Free</a>
                 </div>
-                <div class="t-card" data-r>
-                    <div class="t-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                            class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                    <p>"Like having an entire creative agency at your fingertips. The AI consultant alone saved us weeks
-                        of strategy work."</p>
-                    <div class="t-author">
-                        <div class="t-av" style="background:var(--grad2)">MJ</div>
-                        <div><strong>Marcus Johnson</strong><br><span>Marketing Consultant</span></div>
+                <div class="glass-card pricing-card featured reveal-on-scroll">
+                    <div class="pricing-name" style="color:var(--accent);">Growth <span
+                            style="background:var(--gradient-accent);padding:2px 8px;border-radius:50px;font-size:.7rem;color:#fff;margin-left:.5rem;">POPULAR</span>
                     </div>
+                    <div class="pricing-amount">$19<span>/mo</span></div>
+                    <ul class="pricing-features">
+                        <li>Unlimited AI Generations</li>
+                        <li>HD Logo Export (SDXL)</li>
+                        <li>Investor Email Writer</li>
+                        <li>Priority AI Queue</li>
+                        <li>Advanced Analytics</li>
+                    </ul>
+                    <a href="signup.html" class="glow-btn" style="width:100%;justify-content:center;">Upgrade to Pro</a>
                 </div>
-                <div class="t-card" data-r>
-                    <div class="t-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                            class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                    <p>"We've tried dozens of AI tools. BizForge is the only one that feels enterprise-grade while being
-                        dead simple to use."</p>
-                    <div class="t-author">
-                        <div class="t-av" style="background:linear-gradient(135deg,#4facfe,#00f2fe)">AR</div>
-                        <div><strong>Alex Rivera</strong><br><span>Agency Owner</span></div>
-                    </div>
+                <div class="glass-card pricing-card reveal-on-scroll">
+                    <div class="pricing-name">Enterprise</div>
+                    <div class="pricing-amount">$49<span>/mo</span></div>
+                    <ul class="pricing-features">
+                        <li>Everything in Growth</li>
+                        <li>Custom AI Fine-Tuning</li>
+                        <li>Team Collaboration</li>
+                        <li>White-Label Export</li>
+                        <li>Dedicated Support</li>
+                    </ul>
+                    <a href="signup.html" class="ghost-btn" style="width:100%;justify-content:center;">Contact Us</a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- CTA -->
-    <section class="sec cta-sec" id="cta">
-        <div class="wrap">
-            <div class="cta-box" data-r>
-                <div class="cta-chip"><span class="chip-dot"></span> 100% Free — No Credit Card</div>
-                <h2>Ready to Build Something<br><span class="grad">Extraordinary?</span></h2>
-                <p>Join the founders using BizForge to build category-defining brands with AI.</p>
-                <a href="dashboard.html" class="btn btn-p btn-xl"><span>Launch Dashboard Now</span><i
-                        class="fas fa-arrow-right"></i></a>
-            </div>
-        </div>
-    </section>
-
-    <!-- FOOTER -->
-    <footer>
-        <div class="wrap">
-            <div class="f-grid-ft">
-                <div class="ft-brand">
-                    <a href="#" class="nav-logo">
-                        <div class="icon"><i class="fas fa-cube"></i></div><span>BizForge</span>
-                    </a>
-                    <p>AI-powered branding for the next generation of builders and founders.</p>
-                    <div class="ft-socials">
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-github"></i></a>
-                        <a href="#"><i class="fab fa-linkedin"></i></a>
-                    </div>
-                </div>
-                <div class="ft-col">
-                    <h4>Product</h4><a href="#features">Features</a><a href="#howit">How It Works</a><a
-                        href="dashboard.html">Dashboard</a>
-                </div>
-                <div class="ft-col">
-                    <h4>Company</h4><a href="#">About</a><a href="#">Blog</a><a href="#">Careers</a>
-                </div>
-                <div class="ft-col">
-                    <h4>Legal</h4><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Security</a>
-                </div>
-            </div>
-            <div class="ft-bottom">
-                <p>&copy; 2025 BizForge. Built with AI. Designed for founders.</p>
-            </div>
-        </div>
+    <!-- ═══ Footer ═══ -->
+    <footer class="universe-footer">
+        <p>&copy; 2026 BrandNova AI. Crafted for the future of branding.</p>
     </footer>
 
+    <!-- ═══ Scripts ═══ -->
+    <script src="js/universe.js"></script>
     <script>
-        // ===== STARFIELD =====
-        (function () {
-            var c = document.getElementById('stars'), x = c.getContext('2d'), s = [];
-            function rz() { c.width = innerWidth; c.height = innerHeight }
-            function mk() { s = []; for (var i = 0; i < 160; i++)s.push({ x: Math.random() * c.width, y: Math.random() * c.height, r: Math.random() * 1.1 + .3, a: Math.random() * .5 + .2, d: (Math.random() - .5) * .12 }) }
-            function draw() {
-                x.clearRect(0, 0, c.width, c.height);
-                s.forEach(function (p) {
-                    x.beginPath(); x.arc(p.x, p.y, p.r, 0, 6.28);
-                    x.fillStyle = 'rgba(255,255,255,' + p.a + ')'; x.fill();
-                    p.a += (Math.random() - .5) * .008; p.a = Math.max(.15, Math.min(.65, p.a));
-                    p.y += p.d; p.x += p.d * .3;
-                    if (p.y > c.height + 5) p.y = -5; if (p.y < -5) p.y = c.height + 5;
-                    if (p.x > c.width + 5) p.x = -5; if (p.x < -5) p.x = c.width + 5;
-                });
-                requestAnimationFrame(draw);
-            }
-            rz(); mk(); draw();
-            addEventListener('resize', function () { rz(); mk() });
-        })();
-
-        // ===== TYPEWRITER =====
-        (function () {
-            var el = document.getElementById('typed');
-            if (!el) return;
-            var words = ['with AI.', 'in Seconds.', 'Like a Pro.', 'That Scales.'], wi = 0, ci = 0, del = false;
-            function type() {
-                var w = words[wi];
-                if (!del) {
-                    el.textContent = w.substring(0, ci + 1); ci++;
-                    if (ci === w.length) { del = true; setTimeout(type, 2200); return }
-                    setTimeout(type, 85);
-                } else {
-                    el.textContent = w.substring(0, ci - 1); ci--;
-                    if (ci === 0) { del = false; wi = (wi + 1) % words.length; setTimeout(type, 350); return }
-                    setTimeout(type, 45);
-                }
-            }
-            setTimeout(type, 700);
-        })();
-
-        // ===== SCROLL REVEAL =====
-        (function () {
-            var els = document.querySelectorAll('[data-r]');
-            var obs = new IntersectionObserver(function (entries) {
-                entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('v'); obs.unobserve(e.target) } });
-            }, { threshold: .08, rootMargin: '0px 0px -30px 0px' });
-            els.forEach(function (e) { obs.observe(e) });
-        })();
-
-        // ===== COUNTER =====
-        (function () {
-            var els = document.querySelectorAll('[data-count]');
-            function fmt(n) { return n >= 1e3 ? (n >= 1e4 ? Math.floor(n / 1e3) : (n / 1e3).toFixed(1)) + 'k' : n.toLocaleString() }
-            var obs = new IntersectionObserver(function (entries) {
-                entries.forEach(function (e) {
-                    if (e.isIntersecting) {
-                        var t = parseInt(e.target.getAttribute('data-count')), st = performance.now();
-                        (function step(now) {
-                            var p = Math.min((now - st) / 2e3, 1), eased = 1 - Math.pow(1 - p, 3);
-                            e.target.textContent = fmt(Math.floor(eased * t));
-                            if (p < 1) requestAnimationFrame(step);
-                        })(st);
-                        obs.unobserve(e.target);
-                    }
-                });
-            }, { threshold: .5 });
-            els.forEach(function (e) { obs.observe(e) });
-        })();
-
-        // ===== PARALLAX =====
-        (function () {
-            var cards = document.querySelectorAll('.fc');
-            if (!cards.length) return;
-            document.addEventListener('mousemove', function (e) {
-                var mx = e.clientX / innerWidth - .5, my = e.clientY / innerHeight - .5;
-                cards.forEach(function (c, i) {
-                    var sp = [.5, .35, .4][i] || .4;
-                    c.style.transform = 'translate(' + mx * 50 * sp + 'px,' + my * 50 * sp + 'px)';
-                });
-            });
-        })();
-
-        // ===== SMOOTH SCROLL =====
-        document.querySelectorAll('a[href^="#"]').forEach(function (a) {
-            a.addEventListener('click', function (e) {
-                e.preventDefault();
-                var t = document.querySelector(this.getAttribute('href'));
-                if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Hero Typed Words
+        document.addEventListener('DOMContentLoaded', () => {
+            typeWriter(document.getElementById('heroTyped'),
+                ['Identity', 'Strategy', 'Launch', 'Revenue', 'Growth'],
+                90, 50, 2200
+            );
+            // Animated Counters
+            document.querySelectorAll('.hero-met-val[data-count]').forEach(el => {
+                animateCounter(el, parseInt(el.dataset.count), 2000);
             });
         });
-
-        // ===== NAVBAR SCROLL =====
-        addEventListener('scroll', function () {
-            document.getElementById('nav').classList.toggle('scrolled', pageYOffset > 80);
-        });
-
-        // ===== CURSOR GLOW =====
-        (function () {
-            var glow = document.createElement('div');
-            glow.className = 'cursor-glow';
-            document.body.appendChild(glow);
-            document.addEventListener('mousemove', function (e) {
-                glow.style.left = e.clientX + 'px';
-                glow.style.top = e.clientY + 'px';
-            });
-        })();
-
-        // ===== CARD GLOW TRACKING =====
-        (function () {
-            document.querySelectorAll('.f-card').forEach(function (card) {
-                var glow = document.createElement('div');
-                glow.className = 'card-glow';
-                card.appendChild(glow);
-                card.addEventListener('mousemove', function (e) {
-                    var rect = card.getBoundingClientRect();
-                    glow.style.left = (e.clientX - rect.left) + 'px';
-                    glow.style.top = (e.clientY - rect.top) + 'px';
-                });
-            });
-        })();
-
-        // ===== MAGNETIC BUTTONS =====
-        (function () {
-            document.querySelectorAll('.btn-p, .nav-cta').forEach(function (btn) {
-                btn.addEventListener('mousemove', function (e) {
-                    var rect = btn.getBoundingClientRect();
-                    var x = e.clientX - rect.left - rect.width / 2;
-                    var y = e.clientY - rect.top - rect.height / 2;
-                    btn.style.transform = 'translate(' + x * 0.15 + 'px,' + y * 0.15 + 'px)';
-                });
-                btn.addEventListener('mouseleave', function () {
-                    btn.style.transform = '';
-                });
-            });
-        })();
-
-        // ===== TILT EFFECT ON CARDS =====
-        (function () {
-            var cards = document.querySelectorAll('.f-card, .t-card, .step');
-            cards.forEach(function (card) {
-                card.addEventListener('mousemove', function (e) {
-                    var rect = card.getBoundingClientRect();
-                    var x = (e.clientX - rect.left) / rect.width;
-                    var y = (e.clientY - rect.top) / rect.height;
-                    var tiltX = (y - 0.5) * 6;
-                    var tiltY = (x - 0.5) * -6;
-                    card.style.transform = 'perspective(600px) rotateX(' + tiltX + 'deg) rotateY(' + tiltY + 'deg) translateY(-4px)';
-                });
-                card.addEventListener('mouseleave', function () {
-                    card.style.transform = '';
-                });
-            });
-        })();
     </script>
 </body>
 

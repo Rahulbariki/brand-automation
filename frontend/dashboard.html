@@ -1,424 +1,742 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="cosmic">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BizForge Dashboard</title>
-    <link rel="stylesheet" href="assets/css/dashboard.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Creative World — BrandNova</title>
+    <link rel="stylesheet" href="css/universe.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script>
+        if (!localStorage.getItem('access_token')) window.location.href = 'login.html';
+    </script>
 </head>
 
 <body>
 
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <i class="fas fa-cube"></i> BizForge
+    <!-- ═══ Background Layers ═══ -->
+    <canvas id="universe-particles"></canvas>
+    <div class="universe-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="universe-grain"></div>
+    <div class="cursor-glow"></div>
+
+    <!-- ═══ Sidebar ═══ -->
+    <aside class="universe-sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <span class="sidebar-logo-icon">✦</span>
+            <span class="sidebar-logo-text">BrandNova</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="sidebar-link active" data-view="home">
+                <i class="fas fa-planet-ringed fa-fw"></i>
+                <i class="fas fa-home fa-fw"></i> Creative World
+            </a>
+            <a href="#" class="sidebar-link" data-view="names">
+                <i class="fas fa-lightbulb fa-fw"></i> Brand Names
+            </a>
+            <a href="#" class="sidebar-link" data-view="logo">
+                <i class="fas fa-paint-brush fa-fw"></i> Logo Studio
+            </a>
+            <a href="#" class="sidebar-link" data-view="marketing">
+                <i class="fas fa-pen-fancy fa-fw"></i> Marketing
+            </a>
+            <a href="#" class="sidebar-link" data-view="pitch">
+                <i class="fas fa-rocket fa-fw"></i> Startup Tools
+            </a>
+            <a href="#" class="sidebar-link" data-view="sentiment">
+                <i class="fas fa-heart fa-fw"></i> Sentiment
+            </a>
+            <a href="#" class="sidebar-link" data-view="chat">
+                <i class="fas fa-robot fa-fw"></i> AI Consultant
+            </a>
+            <a href="#" class="sidebar-link" data-view="admin" id="adminLink" style="display:none;">
+                <i class="fas fa-shield-halved fa-fw"></i> Admin Panel
+            </a>
+
+            <div style="margin-top:auto;padding-top:1rem;border-top:1px solid var(--border);">
+                <div class="sidebar-link"
+                    style="flex-direction:column;align-items:flex-start;gap:.4rem;padding:.8rem 1rem;">
+                    <div
+                        style="font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">
+                        Usage Today</div>
+                    <div style="font-size:.9rem;font-weight:700;" id="usageText">0 / 5</div>
+                    <div class="usage-bar-wrap" style="width:100%;">
+                        <div class="usage-bar-fill" id="usageBar" style="width:0%;"></div>
+                    </div>
                 </div>
             </div>
 
-            <nav class="nav-menu">
-                <div class="nav-item active" data-target="overview">
-                    <i class="fas fa-home"></i> Dashboard
-                </div>
-                <div class="nav-item" data-target="brand">
-                    <i class="fas fa-lightbulb"></i> Brand Names
-                </div>
-                <div class="nav-item" data-target="logo">
-                    <i class="fas fa-paint-brush"></i> Logo Creator
-                </div>
-                <div class="nav-item" data-target="content">
-                    <i class="fas fa-pen-fancy"></i> Marketing
-                </div>
-                <div class="nav-item" data-target="design">
-                    <i class="fas fa-palette"></i> Design System
-                </div>
-                <div class="nav-item" data-target="sentiment">
-                    <i class="fas fa-heart"></i> Sentiment
-                </div>
-                <div class="nav-item" data-target="chat">
-                    <i class="fas fa-robot"></i> AI Consultant
-                </div>
-                <div class="nav-item" data-target="logout" id="logoutBtn" style="margin-top: auto; color: #ef4444;">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </div>
-            </nav>
+            <div class="theme-toggle-wrap" style="padding:.5rem 1rem;">
+                <button class="theme-toggle-btn"
+                    style="width:100%;border-radius:var(--radius-sm);height:auto;padding:.6rem;">
+                    <i class="fas fa-palette"></i>&nbsp; Theme
+                </button>
+                <div class="theme-menu" style="bottom:calc(100% + 10px);top:auto;left:0;right:auto;"></div>
+            </div>
 
-            <!-- User Profile Removed for Public Access -->
-        </aside>
+            <a href="#" class="sidebar-link danger" id="logoutBtn">
+                <i class="fas fa-sign-out-alt fa-fw"></i> Logout
+            </a>
+        </nav>
+    </aside>
 
-        <!-- Main Content (Same as branding.html but protected) -->
-        <main class="main-content">
-            <!-- Top Header -->
-            <header class="top-header">
-                <div class="search-bar">
-                    <i class="fas fa-search" style="color: var(--text-muted);"></i>
-                    <input type="text" placeholder="Search for templates, projects...">
+    <!-- ═══ Main Content ═══ -->
+    <main class="universe-main" id="mainContent">
+
+        <!-- ═══ VIEW: Home (Creative World) ═══ -->
+        <div class="page-view" id="view-home">
+            <div class="universe-header">
+                <div>
+                    <h1 class="page-title">Welcome to the <span class="grad">Universe</span></h1>
+                    <p class="page-subtitle">Choose a module to begin creating.</p>
                 </div>
+            </div>
 
-                <div class="header-actions">
-                    <button class="icon-btn" id="themeToggle" title="Toggle Theme">
-                        <i class="fas fa-moon"></i>
+            <!-- Stat Cards -->
+            <div class="stat-grid">
+                <div class="glass-card stat-card">
+                    <h4>Total Creations</h4>
+                    <div class="stat-value" id="statTotal" data-count="0">0</div>
+                    <div class="stat-trend up"><i class="fas fa-arrow-up"></i> Session active</div>
+                </div>
+                <div class="glass-card stat-card">
+                    <h4>AI Speed</h4>
+                    <div class="stat-value">~45ms</div>
+                    <div class="stat-trend"><i class="fas fa-bolt"></i> Groq LLaMA</div>
+                </div>
+                <div class="glass-card stat-card">
+                    <h4>Plan</h4>
+                    <div class="stat-value" id="statPlan">Free</div>
+                    <div class="stat-trend"><i class="fas fa-gem"></i> <a href="#" onclick="showUpgradeModal()"
+                            style="color:var(--accent);">Upgrade</a></div>
+                </div>
+            </div>
+
+            <!-- Floating Module Cards -->
+            <div class="module-grid">
+                <div class="glass-card module-card" data-view="names">
+                    <div class="module-icon">🧠</div>
+                    <h3>Brand Name Generator</h3>
+                    <p>Generate unique, memorable brand names powered by LLaMA 70B AI.</p>
+                    <span class="module-tag"><i class="fas fa-zap"></i> AI Powered</span>
+                </div>
+                <div class="glass-card module-card" data-view="logo">
+                    <div class="module-icon">🎨</div>
+                    <h3>Logo Studio</h3>
+                    <p>Design stunning logos using Stable Diffusion XL. HD export included.</p>
+                    <span class="module-tag pro"><i class="fas fa-crown"></i> Pro Feature</span>
+                </div>
+                <div class="glass-card module-card" data-view="marketing">
+                    <div class="module-icon">✍️</div>
+                    <h3>Marketing Copy</h3>
+                    <p>Generate ad copy, social captions, product descriptions, and more.</p>
+                    <span class="module-tag"><i class="fas fa-zap"></i> AI Powered</span>
+                </div>
+                <div class="glass-card module-card" data-view="pitch">
+                    <div class="module-icon">🚀</div>
+                    <h3>Startup Tools</h3>
+                    <p>Elevator pitches, investor emails, competitor analysis for founders.</p>
+                    <span class="module-tag"><i class="fas fa-star"></i> New</span>
+                </div>
+                <div class="glass-card module-card" data-view="sentiment">
+                    <div class="module-icon">📊</div>
+                    <h3>Sentiment Analysis</h3>
+                    <p>Analyze customer reviews and align feedback with your brand tone.</p>
+                    <span class="module-tag"><i class="fas fa-zap"></i> AI Powered</span>
+                </div>
+                <div class="glass-card module-card" data-view="chat">
+                    <div class="module-icon">💬</div>
+                    <h3>AI Brand Consultant</h3>
+                    <p>Chat with IBM Granite for strategic branding and positioning advice.</p>
+                    <span class="module-tag"><i class="fas fa-microchip"></i> IBM Granite</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ VIEW: Brand Names ═══ -->
+        <div class="page-view" id="view-names" style="display:none;">
+            <div class="universe-header">
+                <div>
+                    <h1 class="page-title"><span class="grad">Brand Name</span> Generator</h1>
+                    <p class="page-subtitle">AI-powered brand naming with LLaMA 70B</p>
+                </div>
+                <button class="ghost-btn" onclick="showView('home')"><i class="fas fa-arrow-left"></i> Back</button>
+            </div>
+            <div class="glass-card" style="padding:2rem;max-width:700px;">
+                <form id="nameForm">
+                    <div class="float-input-group">
+                        <input class="float-input" id="n_industry" placeholder="Industry (e.g. FinTech, HealthCare)"
+                            required>
+                    </div>
+                    <div class="float-input-group">
+                        <input class="float-input" id="n_keywords" placeholder="Keywords (comma-separated)" required>
+                    </div>
+                    <div class="float-input-group">
+                        <input class="float-input" id="n_tone" placeholder="Tone (modern, playful, luxurious...)"
+                            value="modern">
+                    </div>
+                    <button type="submit" class="glow-btn" style="width:100%;justify-content:center;padding:1rem;">
+                        <i class="fas fa-sparkles"></i> Generate Names
                     </button>
-                    <div class="icon-btn">
-                        <i class="fas fa-bell"></i>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Content Area -->
-            <div class="content-area">
-
-                <!-- 1. Overview Dashboard -->
-                <div id="overview" class="feature-view active">
-                    <h1 class="page-title">Welcome back!</h1>
-                    <p class="page-subtitle">Here's what's happening with your brands today.</p>
-
-                    <div class="overview-grid">
-                        <div class="card stat-card">
-                            <div class="stat-info">
-                                <h3>Total Projects</h3>
-                                <div class="value">12</div>
-                            </div>
-                            <div class="trend"><i class="fas fa-arrow-up"></i> +2 this week</div>
-                            <i class="fas fa-folder stat-icon"></i>
-                        </div>
-                        <div class="card stat-card">
-                            <div class="stat-info">
-                                <h3>Words Generated</h3>
-                                <div class="value">45k</div>
-                            </div>
-                            <div class="trend"><i class="fas fa-bolt"></i> Speed: 45ms</div>
-                            <i class="fas fa-file-alt stat-icon"></i>
-                        </div>
-                        <div class="card stat-card">
-                            <div class="stat-info">
-                                <h3>Images Created</h3>
-                                <div class="value">156</div>
-                            </div>
-                            <div class="trend"><i class="fas fa-layer-group"></i> 85% success</div>
-                            <i class="fas fa-image stat-icon"></i>
-                        </div>
-                        <div class="card stat-card"
-                            style="background: linear-gradient(135deg, var(--primary-color), var(--primary-light)); color: white;">
-                            <div>
-                                <h3 style="color: rgba(255,255,255,0.8);">Pro Status</h3>
-                                <div class="value">Active</div>
-                            </div>
-                            <div style="font-size: 0.9rem; opacity: 0.9;">Next billing: Mar 1</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. Brand Names -->
-                <div id="brand" class="feature-view">
-                    <h1 class="page-title">Brand Name Generator</h1>
-                    <p class="page-subtitle">Generate unique, catchy names tailored to your industry.</p>
-
-                    <div class="card" style="max-width: 800px;">
-                        <div class="input-group">
-                            <label>Industry</label>
-                            <input type="text" id="brandIndustry" class="input-control"
-                                placeholder="e.g. SaaS, Coffee, Fashion">
-                        </div>
-                        <div class="input-group">
-                            <label>Keywords (comma separated)</label>
-                            <input type="text" id="brandKeywords" class="input-control"
-                                placeholder="e.g. fast, ai, smart">
-                        </div>
-                        <div class="input-group">
-                            <label>Tone</label>
-                            <select id="brandTone" class="input-control">
-                                <option value="modern">Modern</option>
-                                <option value="luxury">Luxury</option>
-                                <option value="playful">Playful</option>
-                                <option value="minimalist">Minimalist</option>
-                            </select>
-                        </div>
-                        <button class="primary-btn" onclick="generateBrandNames()">Generate Names</button>
-
-                        <div id="brandResult" class="result-card">Results will appear here...</div>
-                    </div>
-                </div>
-
-                <!-- 3. Logo Generator -->
-                <div id="logo" class="feature-view">
-                    <h1 class="page-title">Logo Creator</h1>
-                    <p class="page-subtitle">Create stunning professional logos with Stable Diffusion.</p>
-
-                    <div class="card" style="max-width: 800px;">
-                        <div class="input-group">
-                            <label>Brand Name</label>
-                            <input type="text" id="logoName" class="input-control" placeholder="e.g. BizForge">
-                        </div>
-                        <div class="input-group">
-                            <label>Industry</label>
-                            <input type="text" id="logoIndustry" class="input-control" placeholder="e.g. Technology">
-                        </div>
-                        <div class="input-group">
-                            <label>Style</label>
-                            <select id="logoStyle" class="input-control">
-                                <option value="minimalist">Minimalist</option>
-                                <option value="vintage">Vintage</option>
-                                <option value="abstract">Abstract</option>
-                                <option value="3d render">3D Render</option>
-                            </select>
-                        </div>
-                        <button class="primary-btn" onclick="generateLogo()">Generate Logo</button>
-
-                        <div id="logoResult" class="result-card">Logo will appear here...</div>
-                    </div>
-                </div>
-
-                <!-- 4. Marketing Content -->
-                <div id="content" class="feature-view">
-                    <h1 class="page-title">Marketing Content</h1>
-                    <p class="page-subtitle">Generate high-converting copy for social media and ads.</p>
-
-                    <div class="card" style="max-width: 800px;">
-                        <div class="input-group">
-                            <label>Brand Name</label>
-                            <input type="text" id="contentBrand" class="input-control" placeholder="e.g. BizForge">
-                        </div>
-                        <div class="input-group">
-                            <label>Content Type</label>
-                            <select id="contentType" class="input-control">
-                                <option value="social media caption">Social Media Caption</option>
-                                <option value="product description">Product Description</option>
-                                <option value="ad copy">Ad Copy</option>
-                                <option value="email newsletter">Email Newsletter</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label>Description/Topic</label>
-                            <textarea id="contentDesc" rows="4" class="input-control"
-                                placeholder="Briefly describe the topic..."></textarea>
-                        </div>
-                        <button class="primary-btn" onclick="generateContent()">Generate Content</button>
-
-                        <div id="contentResult" class="result-card" style="white-space: pre-wrap;">Content will appear
-                            here...</div>
-                    </div>
-                </div>
-
-                <!-- 5. Design System -->
-                <div id="design" class="feature-view">
-                    <h1 class="page-title">Design System</h1>
-                    <p class="page-subtitle">Get AI-curated color palettes and style guides.</p>
-
-                    <div class="card" style="max-width: 800px;">
-                        <div class="input-group">
-                            <label>Industry</label>
-                            <input type="text" id="designIndustry" class="input-control" placeholder="e.g. Health">
-                        </div>
-                        <div class="input-group">
-                            <label>Tone</label>
-                            <select id="designTone" class="input-control">
-                                <option value="trustworthy">Trustworthy</option>
-                                <option value="energetic">Energetic</option>
-                                <option value="elegant">Elegant</option>
-                                <option value="calm">Calm</option>
-                            </select>
-                        </div>
-                        <button class="primary-btn" onclick="generateDesign()">Get Palette</button>
-
-                        <div id="designResult" class="result-card">Palette will appear here...</div>
-                    </div>
-                </div>
-
-                <!-- 6. Sentiment Analysis -->
-                <div id="sentiment" class="feature-view">
-                    <h1 class="page-title">Sentiment Analysis</h1>
-                    <p class="page-subtitle">Analyze customer feedback to understand brand perception.</p>
-
-                    <div class="card" style="max-width: 800px;">
-                        <div class="input-group">
-                            <label>Customer Review</label>
-                            <textarea id="sentimentText" rows="4" class="input-control"
-                                placeholder="Paste the review text here..."></textarea>
-                        </div>
-                        <button class="primary-btn" onclick="analyzeSentiment()">Analyze</button>
-
-                        <div id="sentimentResult" class="result-card">Analysis will appear here...</div>
-                    </div>
-                </div>
-
-                <!-- 7. Chatbot -->
-                <div id="chat" class="feature-view">
-                    <h1 class="page-title">AI Branding Consultant</h1>
-                    <p class="page-subtitle">Chat with IBM Granite for strategic advice.</p>
-
-                    <div class="card" style="max-width: 800px; height: 60vh; display: flex; flex-direction: column;">
-                        <div id="chatHistory" class="result-card"
-                            style="flex: 1; overflow-y: auto; margin-top: 0; margin-bottom: 1rem; border: 1px solid var(--border-color);">
-                            <div
-                                style="background: rgba(79, 70, 229, 0.1); padding: 0.8rem; border-radius: var(--radius-md); margin-bottom: 0.5rem; max-width: 80%;">
-                                Hello! I am BizForge. How can I help with your brand today?
-                            </div>
-                        </div>
-                        <div class="input-group" style="display: flex; gap: 0.5rem; margin-bottom: 0;">
-                            <input type="text" id="chatInput" class="input-control" placeholder="Ask me anything..."
-                                onkeypress="if(event.key==='Enter') sendChat()">
-                            <button class="primary-btn" style="width: auto;" onclick="sendChat()">Send</button>
-                        </div>
-                    </div>
-                </div>
-
+                </form>
             </div>
-        </main>
+            <!-- AI Loader (hidden) -->
+            <div class="ai-loader" id="nameLoader" style="display:none;">
+                <div class="ai-loader-ring"></div>
+                <div class="ai-loader-dots"><span></span><span></span><span></span></div>
+                <div class="ai-loader-text">AI is thinking...</div>
+            </div>
+            <!-- Results -->
+            <div id="nameResults" style="margin-top:1.5rem;display:grid;gap:.8rem;"></div>
+        </div>
+
+        <!-- ═══ VIEW: Logo Studio ═══ -->
+        <div class="page-view" id="view-logo" style="display:none;">
+            <div class="universe-header">
+                <div>
+                    <h1 class="page-title"><span class="grad">Logo</span> Studio</h1>
+                    <p class="page-subtitle">AI image generation with Stable Diffusion XL</p>
+                </div>
+                <button class="ghost-btn" onclick="showView('home')"><i class="fas fa-arrow-left"></i> Back</button>
+            </div>
+            <div class="glass-card" style="padding:2rem;max-width:700px;">
+                <form id="logoForm">
+                    <div class="float-input-group">
+                        <input class="float-input" id="l_brand" placeholder="Brand Name" required>
+                    </div>
+                    <div class="float-input-group">
+                        <input class="float-input" id="l_industry" placeholder="Industry" required>
+                    </div>
+                    <div class="float-input-group">
+                        <input class="float-input" id="l_keywords" placeholder="Keywords (comma-separated)" required>
+                    </div>
+                    <div class="float-input-group">
+                        <input class="float-input" id="l_style" placeholder="Style (minimalist, abstract, vintage)"
+                            value="minimalist">
+                    </div>
+                    <button type="submit" class="glow-btn" style="width:100%;justify-content:center;padding:1rem;">
+                        <i class="fas fa-wand-magic-sparkles"></i> Generate Logo
+                    </button>
+                </form>
+            </div>
+            <div class="ai-loader" id="logoLoader" style="display:none;">
+                <div class="ai-loader-ring"></div>
+                <div class="ai-loader-dots"><span></span><span></span><span></span></div>
+                <div class="ai-loader-text">Creating your logo...</div>
+            </div>
+            <div id="logoResults" style="margin-top:1.5rem;text-align:center;"></div>
+        </div>
+
+        <!-- ═══ VIEW: Marketing ═══ -->
+        <div class="page-view" id="view-marketing" style="display:none;">
+            <div class="universe-header">
+                <div>
+                    <h1 class="page-title"><span class="grad">Marketing</span> Copy Engine</h1>
+                    <p class="page-subtitle">Generate ads, captions, product copy instantly</p>
+                </div>
+                <button class="ghost-btn" onclick="showView('home')"><i class="fas fa-arrow-left"></i> Back</button>
+            </div>
+            <div class="glass-card" style="padding:2rem;max-width:700px;">
+                <form id="marketingForm">
+                    <div class="float-input-group">
+                        <input class="float-input" id="m_brand" placeholder="Brand Name" required>
+                    </div>
+                    <div class="float-input-group">
+                        <textarea class="float-input float-textarea" id="m_desc" placeholder="Brand Description"
+                            required></textarea>
+                    </div>
+                    <div class="float-input-group">
+                        <select class="float-input" id="m_type">
+                            <option value="ad_copy">Ad Copy</option>
+                            <option value="product_desc">Product Description</option>
+                            <option value="caption">Social Caption</option>
+                            <option value="email">Email Campaign</option>
+                        </select>
+                    </div>
+                    <div class="float-input-group">
+                        <input class="float-input" id="m_tone" placeholder="Tone (bold, witty, premium...)"
+                            value="bold">
+                    </div>
+                    <button type="submit" class="glow-btn" style="width:100%;justify-content:center;padding:1rem;">
+                        <i class="fas fa-pen-nib"></i> Generate Copy
+                    </button>
+                </form>
+            </div>
+            <div class="ai-loader" id="marketingLoader" style="display:none;">
+                <div class="ai-loader-ring"></div>
+                <div class="ai-loader-dots"><span></span><span></span><span></span></div>
+                <div class="ai-loader-text">Writing brilliant copy...</div>
+            </div>
+            <div class="glass-card ai-result" id="marketingResult" style="display:none;max-width:700px;"></div>
+        </div>
+
+        <!-- ═══ VIEW: Startup Tools (Pitch + Email) ═══ -->
+        <div class="page-view" id="view-pitch" style="display:none;">
+            <div class="universe-header">
+                <div>
+                    <h1 class="page-title"><span class="grad">Startup</span> Tools</h1>
+                    <p class="page-subtitle">Pitch decks, investor outreach, growth strategy</p>
+                </div>
+                <button class="ghost-btn" onclick="showView('home')"><i class="fas fa-arrow-left"></i> Back</button>
+            </div>
+            <div style="display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));">
+                <!-- Pitch -->
+                <div class="glass-card" style="padding:2rem;">
+                    <h3 style="margin-bottom:1rem;"><span class="grad">🚀</span> Elevator Pitch Generator</h3>
+                    <form id="pitchForm">
+                        <div class="float-input-group"><input class="float-input" id="p_name" placeholder="Product Name"
+                                required></div>
+                        <div class="float-input-group"><textarea class="float-input float-textarea" id="p_problem"
+                                placeholder="The Problem" required></textarea></div>
+                        <div class="float-input-group"><textarea class="float-input float-textarea" id="p_solution"
+                                placeholder="The Solution" required></textarea></div>
+                        <div class="float-input-group"><input class="float-input" id="p_audience"
+                                placeholder="Target Audience" required></div>
+                        <button type="submit" class="glow-btn" style="width:100%;justify-content:center;"><i
+                                class="fas fa-bolt"></i> Generate Pitch</button>
+                    </form>
+                    <div class="ai-loader" id="pitchLoader" style="display:none;">
+                        <div class="ai-loader-ring"></div>
+                        <div class="ai-loader-dots"><span></span><span></span><span></span></div>
+                        <div class="ai-loader-text">Pitching...</div>
+                    </div>
+                    <div class="glass-card ai-result" id="pitchResult" style="display:none;margin-top:1rem;"></div>
+                </div>
+                <!-- Investor Email -->
+                <div class="glass-card" style="padding:2rem;">
+                    <h3 style="margin-bottom:1rem;"><span class="grad">✉️</span> Investor Email Writer</h3>
+                    <form id="emailForm">
+                        <div class="float-input-group"><input class="float-input" id="e_startup"
+                                placeholder="Startup Name" required></div>
+                        <div class="float-input-group"><input class="float-input" id="e_investor"
+                                placeholder="Investor Name" required></div>
+                        <div class="float-input-group"><input class="float-input" id="e_metrics"
+                                placeholder="Key Metrics (e.g. $10k MRR, 500 users)" required></div>
+                        <div class="float-input-group"><input class="float-input" id="e_ask"
+                                placeholder="Your Ask (e.g. 15 min call, $500k seed)" required></div>
+                        <button type="submit" class="glow-btn" style="width:100%;justify-content:center;"><i
+                                class="fas fa-envelope"></i> Draft Email</button>
+                    </form>
+                    <div class="ai-loader" id="emailLoader" style="display:none;">
+                        <div class="ai-loader-ring"></div>
+                        <div class="ai-loader-dots"><span></span><span></span><span></span></div>
+                        <div class="ai-loader-text">Drafting...</div>
+                    </div>
+                    <div class="glass-card ai-result" id="emailResult" style="display:none;margin-top:1rem;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ VIEW: Sentiment ═══ -->
+        <div class="page-view" id="view-sentiment" style="display:none;">
+            <div class="universe-header">
+                <div>
+                    <h1 class="page-title"><span class="grad">Sentiment</span> Analyzer</h1>
+                    <p class="page-subtitle">Analyze brand perception with NLP</p>
+                </div>
+                <button class="ghost-btn" onclick="showView('home')"><i class="fas fa-arrow-left"></i> Back</button>
+            </div>
+            <div class="glass-card" style="padding:2rem;max-width:700px;">
+                <form id="sentimentForm">
+                    <div class="float-input-group">
+                        <textarea class="float-input float-textarea" id="s_text" rows="4"
+                            placeholder="Paste a customer review or feedback..." required></textarea>
+                    </div>
+                    <div class="float-input-group">
+                        <input class="float-input" id="s_tone" placeholder="Brand Tone (professional, playful...)"
+                            value="professional">
+                    </div>
+                    <button type="submit" class="glow-btn" style="width:100%;justify-content:center;padding:1rem;">
+                        <i class="fas fa-chart-line"></i> Analyze
+                    </button>
+                </form>
+            </div>
+            <div class="ai-loader" id="sentimentLoader" style="display:none;">
+                <div class="ai-loader-ring"></div>
+                <div class="ai-loader-dots"><span></span><span></span><span></span></div>
+                <div class="ai-loader-text">Analyzing sentiment...</div>
+            </div>
+            <div id="sentimentResult" style="margin-top:1.5rem;max-width:700px;display:none;" class="glass-card"></div>
+        </div>
+
+        <!-- ═══ VIEW: AI Chat ═══ -->
+        <div class="page-view" id="view-chat" style="display:none;">
+            <div class="universe-header">
+                <div>
+                    <h1 class="page-title"><span class="grad">AI</span> Brand Consultant</h1>
+                    <p class="page-subtitle">IBM Granite strategic advisor</p>
+                </div>
+                <button class="ghost-btn" onclick="showView('home')"><i class="fas fa-arrow-left"></i> Back</button>
+            </div>
+            <div class="glass-card" style="padding:0;max-width:700px;overflow:hidden;">
+                <div id="chatMessages"
+                    style="height:400px;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:1rem;">
+                    <div
+                        style="padding:.8rem 1.2rem;background:var(--surface);border-radius:var(--radius-sm);max-width:85%;color:var(--text-secondary);font-size:.9rem;">
+                        👋 I'm your AI brand consultant. Ask me anything about branding, positioning, or growth
+                        strategy.
+                    </div>
+                </div>
+                <form id="chatForm" style="display:flex;border-top:1px solid var(--border);padding:.8rem;">
+                    <input class="float-input" id="chatInput" placeholder="Ask about branding strategy..." required
+                        style="border:none;background:transparent;border-radius:0;flex:1;">
+                    <button type="submit" class="glow-btn" style="border-radius:var(--radius-sm);padding:.7rem 1.2rem;">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ═══ VIEW: Admin ═══ -->
+        <div class="page-view" id="view-admin" style="display:none;">
+            <div class="universe-header">
+                <div>
+                    <h1 class="page-title"><span class="grad">Admin</span> Dashboard</h1>
+                    <p class="page-subtitle">Platform analytics & user management</p>
+                </div>
+                <button class="ghost-btn" onclick="showView('home')"><i class="fas fa-arrow-left"></i> Back</button>
+            </div>
+            <div class="stat-grid" id="adminStats"></div>
+            <div class="glass-card" style="padding:1.5rem;overflow-x:auto;">
+                <h3 style="margin-bottom:1rem;">User Management</h3>
+                <table class="admin-table" id="adminTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ═══ Upgrade Modal ═══ -->
+    <div class="modal-overlay" id="upgradeModal">
+        <div class="glass-card modal-content" style="text-align:center;">
+            <h2 style="margin-bottom:.5rem;">Upgrade to <span class="grad">Pro</span></h2>
+            <p style="color:var(--text-secondary);margin-bottom:2rem;">Unlock unlimited generations, HD logos, and
+                investor tools.</p>
+            <div class="pricing-amount" style="margin-bottom:1.5rem;">$19<span>/mo</span></div>
+            <button class="glow-btn" style="width:100%;justify-content:center;padding:1rem;margin-bottom:1rem;"
+                onclick="handleUpgrade()">
+                <i class="fas fa-crown"></i> Go Pro Now
+            </button>
+            <button class="ghost-btn" style="width:100%;justify-content:center;" onclick="closeUpgradeModal()">
+                Maybe Later
+            </button>
+        </div>
     </div>
 
-    <!-- Ambient Background -->
-    <div id="dashGlow" style="position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;">
-        <div
-            style="position:absolute;width:500px;height:500px;border-radius:50%;filter:blur(140px);opacity:.08;background:#6366f1;top:-10%;left:-5%;animation:dOrb 22s ease-in-out infinite;">
-        </div>
-        <div
-            style="position:absolute;width:400px;height:400px;border-radius:50%;filter:blur(140px);opacity:.06;background:#ec4899;bottom:-10%;right:-5%;animation:dOrb 28s ease-in-out infinite reverse;">
-        </div>
-    </div>
-
-    <style>
-        @keyframes dOrb {
-
-            0%,
-            100% {
-                transform: translate(0, 0) scale(1)
-            }
-
-            33% {
-                transform: translate(50px, -40px) scale(1.05)
-            }
-
-            66% {
-                transform: translate(-30px, 50px) scale(.95)
-            }
-        }
-
-        /* Cursor Glow */
-        .dash-cursor {
-            position: fixed;
-            width: 350px;
-            height: 350px;
-            border-radius: 50%;
-            pointer-events: none;
-            background: radial-gradient(circle, rgba(99, 102, 241, .06), transparent 70%);
-            transform: translate(-50%, -50%);
-            z-index: 9998;
-            opacity: 0;
-            transition: opacity .4s
-        }
-
-        body:hover .dash-cursor {
-            opacity: 1
-        }
-
-        /* Card inner glow on hover */
-        .card {
-            position: relative;
-            overflow: hidden
-        }
-
-        .card .clay-glow {
-            position: absolute;
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            pointer-events: none;
-            background: radial-gradient(circle, rgba(99, 102, 241, .1), transparent 70%);
-            transform: translate(-50%, -50%);
-            opacity: 0;
-            transition: opacity .3s
-        }
-
-        .card:hover .clay-glow {
-            opacity: 1
-        }
-
-        /* Stronger clay look for stat cards */
-        .stat-card {
-            border-radius: 20px;
-            border: 1px solid var(--border-color)
-        }
-
-        /* Input clay depth */
-        .input-control {
-            border-radius: 14px
-        }
-
-        /* Button pulse */
-        .primary-btn {
-            animation: clayPulse 3s ease-in-out infinite
-        }
-
-        @keyframes clayPulse {
-
-            0%,
-            100% {
-                box-shadow: 0 4px 16px rgba(99, 102, 241, .25)
-            }
-
-            50% {
-                box-shadow: 0 6px 28px rgba(99, 102, 241, .4)
-            }
-        }
-    </style>
-
-    <!-- Scripts -->
-    <script type="module" src="assets/js/dashboard.js"></script>
-
+    <!-- ═══ Scripts ═══ -->
+    <script src="js/universe.js"></script>
     <script>
-        // Cursor Glow
-        (function () {
-            var g = document.createElement('div');
-            g.className = 'dash-cursor';
-            document.body.appendChild(g);
-            document.addEventListener('mousemove', function (e) { g.style.left = e.clientX + 'px'; g.style.top = e.clientY + 'px' });
-        })();
+        const API_URL = '';
+        const TOKEN = localStorage.getItem('access_token');
+        const HEADERS = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` };
 
-        // Card glow tracking
-        (function () {
-            document.querySelectorAll('.card').forEach(function (c) {
-                var g = document.createElement('div');
-                g.className = 'clay-glow';
-                c.appendChild(g);
-                c.addEventListener('mousemove', function (e) {
-                    var r = c.getBoundingClientRect();
-                    g.style.left = (e.clientX - r.left) + 'px';
-                    g.style.top = (e.clientY - r.top) + 'px';
-                });
+        // ── View Navigation (SPA-like) ──
+        function showView(name) {
+            document.querySelectorAll('.page-view').forEach(v => {
+                v.style.display = 'none';
             });
-        })();
+            const target = document.getElementById('view-' + name);
+            if (target) {
+                target.style.display = 'block';
+                target.style.animation = 'none';
+                target.offsetHeight; // trigger reflow
+                target.style.animation = 'pageSlideIn 0.5s cubic-bezier(0.4,0,0.2,1) both';
+            }
+            // Update sidebar active
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            const activeLink = document.querySelector(`.sidebar-link[data-view="${name}"]`);
+            if (activeLink) activeLink.classList.add('active');
+        }
 
-        // 3D Tilt on cards
-        (function () {
-            document.querySelectorAll('.card').forEach(function (c) {
-                c.addEventListener('mousemove', function (e) {
-                    var r = c.getBoundingClientRect();
-                    var x = (e.clientX - r.left) / r.width;
-                    var y = (e.clientY - r.top) / r.height;
-                    c.style.transform = 'perspective(600px) rotateX(' + ((y - .5) * 5) + 'deg) rotateY(' + ((x - .5) * -5) + 'deg) translateY(-4px)';
-                });
-                c.addEventListener('mouseleave', function () { c.style.transform = '' });
+        // Sidebar clicks
+        document.querySelectorAll('.sidebar-link[data-view]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                showView(link.dataset.view);
             });
-        })();
+        });
 
-        // Magnetic nav items
-        (function () {
-            document.querySelectorAll('.nav-item').forEach(function (n) {
-                n.addEventListener('mousemove', function (e) {
-                    var r = n.getBoundingClientRect();
-                    var x = e.clientX - r.left - r.width / 2;
-                    n.style.transform = 'translateX(' + (x * 0.1 + 4) + 'px)';
-                });
-                n.addEventListener('mouseleave', function () { n.style.transform = '' });
+        // Module card clicks
+        document.querySelectorAll('.module-card[data-view]').forEach(card => {
+            card.addEventListener('click', () => showView(card.dataset.view));
+        });
+
+        // ── Logout ──
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                localStorage.removeItem('access_token');
+                window.location.href = 'login.html';
+            }, 500);
+        });
+
+        // ── Modal ──
+        function showUpgradeModal() { document.getElementById('upgradeModal').classList.add('open'); }
+        function closeUpgradeModal() { document.getElementById('upgradeModal').classList.remove('open'); }
+        function handleUpgrade() {
+            // In production: redirect to Stripe checkout
+            alert('Redirecting to Stripe checkout...');
+            closeUpgradeModal();
+        }
+
+        // ── API Helper ──
+        async function apiCall(endpoint, body) {
+            const res = await fetch(`${API_URL}${endpoint}`, {
+                method: 'POST', headers: HEADERS, body: JSON.stringify(body)
             });
-        })();
+            if (res.status === 403) {
+                const data = await res.json();
+                if (data.detail && data.detail.includes('Upgrade')) {
+                    showUpgradeModal();
+                    throw new Error(data.detail);
+                }
+                throw new Error(data.detail || 'Access denied');
+            }
+            if (!res.ok) { const d = await res.json(); throw new Error(d.detail || 'Request failed'); }
+            return res.json();
+        }
+
+        function showLoader(id) { document.getElementById(id).style.display = 'flex'; }
+        function hideLoader(id) { document.getElementById(id).style.display = 'none'; }
+
+        // ── Brand Names ──
+        document.getElementById('nameForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoader('nameLoader');
+            document.getElementById('nameResults').innerHTML = '';
+            try {
+                const data = await apiCall('/api/generate-brand', {
+                    industry: document.getElementById('n_industry').value,
+                    keywords: document.getElementById('n_keywords').value.split(',').map(k => k.trim()),
+                    tone: document.getElementById('n_tone').value
+                });
+                hideLoader('nameLoader');
+                const container = document.getElementById('nameResults');
+                data.names.forEach((name, i) => {
+                    const card = document.createElement('div');
+                    card.className = 'glass-card';
+                    card.style.cssText = `padding:1rem 1.5rem;animation:moduleEntrance 0.4s ease ${i * 0.05}s both;cursor:pointer;`;
+                    card.innerHTML = `<span style="font-weight:700;font-size:1.05rem;">${name}</span>`;
+                    card.addEventListener('click', () => {
+                        navigator.clipboard.writeText(name);
+                        card.innerHTML += `<span style="margin-left:.5rem;font-size:.75rem;color:var(--accent);">✓ Copied</span>`;
+                    });
+                    container.appendChild(card);
+                });
+            } catch (err) { hideLoader('nameLoader'); alert(err.message); }
+        });
+
+        // ── Logo ──
+        document.getElementById('logoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoader('logoLoader');
+            document.getElementById('logoResults').innerHTML = '';
+            try {
+                const data = await apiCall('/api/generate-logo', {
+                    brand_name: document.getElementById('l_brand').value,
+                    industry: document.getElementById('l_industry').value,
+                    keywords: document.getElementById('l_keywords').value.split(',').map(k => k.trim()),
+                    style: document.getElementById('l_style').value
+                });
+                hideLoader('logoLoader');
+                const c = document.getElementById('logoResults');
+                if (data.image_url) {
+                    c.innerHTML = `
+                        <div class="glass-card" style="padding:2rem;display:inline-block;">
+                            <img src="${data.image_url}" alt="Logo" style="max-width:400px;border-radius:var(--radius-sm);margin-bottom:1rem;">
+                            <br>
+                            <a href="${data.image_url}" download class="glow-btn"><i class="fas fa-download"></i> Download HD</a>
+                        </div>`;
+                } else {
+                    c.innerHTML = `<div class="glass-card" style="padding:1.5rem;color:var(--text-secondary);">Logo generation is processing. Try again in a moment.</div>`;
+                }
+            } catch (err) { hideLoader('logoLoader'); alert(err.message); }
+        });
+
+        // ── Marketing ──
+        document.getElementById('marketingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoader('marketingLoader');
+            document.getElementById('marketingResult').style.display = 'none';
+            try {
+                const data = await apiCall('/api/generate-content', {
+                    brand_name: document.getElementById('m_brand').value,
+                    description: document.getElementById('m_desc').value,
+                    content_type: document.getElementById('m_type').value,
+                    tone: document.getElementById('m_tone').value
+                });
+                hideLoader('marketingLoader');
+                const r = document.getElementById('marketingResult');
+                r.style.display = 'block';
+                typewriterReveal(r, data.content, 12);
+            } catch (err) { hideLoader('marketingLoader'); alert(err.message); }
+        });
+
+        // ── Pitch ──
+        document.getElementById('pitchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoader('pitchLoader');
+            document.getElementById('pitchResult').style.display = 'none';
+            try {
+                const data = await apiCall('/api/generate-pitch', {
+                    product_name: document.getElementById('p_name').value,
+                    problem: document.getElementById('p_problem').value,
+                    solution: document.getElementById('p_solution').value,
+                    audience: document.getElementById('p_audience').value
+                });
+                hideLoader('pitchLoader');
+                const r = document.getElementById('pitchResult');
+                r.style.display = 'block';
+                typewriterReveal(r, data.pitch, 12);
+            } catch (err) { hideLoader('pitchLoader'); alert(err.message); }
+        });
+
+        // ── Investor Email ──
+        document.getElementById('emailForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoader('emailLoader');
+            document.getElementById('emailResult').style.display = 'none';
+            try {
+                const data = await apiCall('/api/generate-investor-email', {
+                    startup_name: document.getElementById('e_startup').value,
+                    investor_name: document.getElementById('e_investor').value,
+                    key_metrics: document.getElementById('e_metrics').value,
+                    ask: document.getElementById('e_ask').value
+                });
+                hideLoader('emailLoader');
+                const r = document.getElementById('emailResult');
+                r.style.display = 'block';
+                typewriterReveal(r, data.email, 12);
+            } catch (err) { hideLoader('emailLoader'); alert(err.message); }
+        });
+
+        // ── Sentiment ──
+        document.getElementById('sentimentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoader('sentimentLoader');
+            document.getElementById('sentimentResult').style.display = 'none';
+            try {
+                const data = await apiCall('/api/analyze-sentiment', {
+                    text: document.getElementById('s_text').value,
+                    brand_tone: document.getElementById('s_tone').value
+                });
+                hideLoader('sentimentLoader');
+                const r = document.getElementById('sentimentResult');
+                r.style.display = 'block';
+                r.style.padding = '2rem';
+                const color = data.sentiment === 'Positive' ? '#10b981' : data.sentiment === 'Negative' ? '#ef4444' : '#f59e0b';
+                r.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+                        <div style="width:60px;height:60px;border-radius:50%;border:3px solid ${color};display:flex;align-items:center;justify-content:center;font-size:1.5rem;">${data.sentiment === 'Positive' ? '😊' : data.sentiment === 'Negative' ? '😞' : '😐'}</div>
+                        <div>
+                            <div style="font-weight:800;font-size:1.3rem;color:${color};">${data.sentiment}</div>
+                            <div style="color:var(--text-secondary);font-size:.85rem;">Confidence: ${(data.confidence * 100).toFixed(0)}%</div>
+                        </div>
+                    </div>
+                    <p style="color:var(--text-secondary);font-size:.9rem;line-height:1.7;">${data.tone_alignment}</p>`;
+            } catch (err) { hideLoader('sentimentLoader'); alert(err.message); }
+        });
+
+        // ── AI Chat ──
+        const chatBox = document.getElementById('chatMessages');
+        document.getElementById('chatForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+            // User bubble
+            chatBox.innerHTML += `<div style="align-self:flex-end;padding:.8rem 1.2rem;background:var(--gradient-accent);border-radius:var(--radius-sm) var(--radius-sm) 4px var(--radius-sm);max-width:85%;color:#fff;font-size:.9rem;">${msg}</div>`;
+            input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+            // Thinking indicator
+            const thinkId = 'think-' + Date.now();
+            chatBox.innerHTML += `<div id="${thinkId}" style="padding:.8rem 1.2rem;background:var(--surface);border-radius:var(--radius-sm);max-width:85%;display:flex;gap:4px;"><span class="ai-loader-dots" style="display:flex;gap:4px;"><span></span><span></span><span></span></span></div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const data = await apiCall('/api/chat', { message: msg });
+                document.getElementById(thinkId).remove();
+                const reply = document.createElement('div');
+                reply.style.cssText = 'padding:.8rem 1.2rem;background:var(--surface);border-radius:var(--radius-sm);max-width:85%;font-size:.9rem;color:var(--text-secondary);';
+                chatBox.appendChild(reply);
+                typewriterReveal(reply, data.response, 15);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } catch (err) {
+                document.getElementById(thinkId).remove();
+                chatBox.innerHTML += `<div style="padding:.8rem 1.2rem;background:rgba(239,68,68,.1);border-radius:var(--radius-sm);color:#ef4444;font-size:.85rem;">Error: ${err.message}</div>`;
+            }
+        });
+
+        // ── Admin ──
+        async function loadAdmin() {
+            try {
+                const stats = await fetch(`${API_URL}/api/admin/stats`, { headers: HEADERS }).then(r => r.json());
+                document.getElementById('adminStats').innerHTML = `
+                    <div class="glass-card stat-card"><h4>Total Users</h4><div class="stat-value">${stats.total_users}</div></div>
+                    <div class="glass-card stat-card"><h4>Active Users</h4><div class="stat-value">${stats.active_users}</div></div>
+                    <div class="glass-card stat-card"><h4>Pro Users</h4><div class="stat-value">${stats.pro_users}</div></div>
+                    <div class="glass-card stat-card"><h4>Generations</h4><div class="stat-value">${stats.total_generations}</div></div>
+                    <div class="glass-card stat-card"><h4>MRR</h4><div class="stat-value" data-prefix="$">${stats.mrr || 0}</div><div class="stat-trend up"><i class="fas fa-dollar-sign"></i> Monthly Revenue</div></div>
+                    <div class="glass-card stat-card"><h4>Conversion</h4><div class="stat-value">${stats.conversion_rate || 0}%</div><div class="stat-trend"><i class="fas fa-chart-line"></i> Pro / Total</div></div>
+                `;
+                const users = await fetch(`${API_URL}/api/admin/users`, { headers: HEADERS }).then(r => r.json());
+                document.getElementById('adminTableBody').innerHTML = users.map(u => `
+                    <tr>
+                        <td>${u.id}</td>
+                        <td>${u.email}</td>
+                        <td>${u.fullname || '—'}</td>
+                        <td><span style="color:${u.role === 'admin' ? 'var(--accent)' : 'var(--text-secondary)'}">${u.role}</span></td>
+                        <td><span style="color:${u.is_active ? '#10b981' : '#ef4444'}">${u.is_active ? 'Active' : 'Inactive'}</span></td>
+                        <td><button class="admin-btn" onclick="toggleRole(${u.id},'${u.role}')">${u.role === 'admin' ? 'Demote' : 'Promote'}</button></td>
+                    </tr>
+                `).join('');
+            } catch (err) { /* not admin */ }
+        }
+
+        async function toggleRole(id, currentRole) {
+            const newRole = currentRole === 'admin' ? 'user' : 'admin';
+            await fetch(`${API_URL}/api/admin/users/${id}/role`, {
+                method: 'PUT', headers: HEADERS,
+                body: JSON.stringify({ role: newRole })
+            });
+            loadAdmin();
+        }
+
+        // ── Init ──
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check if admin
+            try {
+                const res = await fetch(`${API_URL}/api/admin/stats`, { headers: HEADERS });
+                if (res.ok) document.getElementById('adminLink').style.display = '';
+            } catch (e) { }
+
+            loadAdmin();
+
+            // Re-init card effects after DOM is ready
+            setTimeout(() => {
+                initCardEffects();
+                initRippleButtons();
+                initMagneticLinks();
+            }, 100);
+        });
     </script>
 </body>
 

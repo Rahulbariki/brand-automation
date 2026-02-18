@@ -1,355 +1,277 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="cosmic">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BizForge — Admin Panel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/landing.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* Admin Specific Styles */
-        body {
-            background-color: var(--bg-color);
-        }
-
-        .admin-container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-
-        .stat-card h3 {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .stat-card .value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text-color);
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--card-bg);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-
-        .data-table th,
-        .data-table td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .data-table th {
-            background: rgba(0, 0, 0, 0.02);
-            font-weight: 600;
-            color: var(--text-muted);
-        }
-
-        .role-badge {
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .role-user {
-            background: #e0f2fe;
-            color: #0369a1;
-        }
-
-        .role-admin {
-            background: #fef3c7;
-            color: #b45309;
-        }
-
-        .role-superadmin {
-            background: #fee2e2;
-            color: #b91c1c;
-        }
-
-        .status-active {
-            color: #16a34a;
-        }
-
-        .status-inactive {
-            color: #dc2626;
-        }
-
-        .action-btn {
-            padding: 0.25rem 0.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            background: transparent;
-            cursor: pointer;
-            font-size: 0.8rem;
-            margin-right: 0.5rem;
-            color: var(--text-color);
-        }
-
-        .action-btn:hover {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: var(--card-bg);
-            padding: 2rem;
-            border-radius: 12px;
-            width: 400px;
-        }
-
-        .close {
-            float: right;
-            cursor: pointer;
-            font-size: 1.5rem;
-        }
-    </style>
+    <title>Admin — BrandNova</title>
+    <link rel="stylesheet" href="css/universe.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script>
+        if (!localStorage.getItem('access_token')) window.location.href = 'login.html';
+    </script>
 </head>
 
 <body>
 
-    <nav class="navbar">
-        <div class="logo">BizForge <span class="beta-tag">Admin</span></div>
-        <div class="nav-links">
-            <a href="dashboard.html">Back to App</a>
-            <a href="#" id="logoutBtn">Logout</a>
-            <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
+    <canvas id="universe-particles"></canvas>
+    <div class="universe-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="universe-grain"></div>
+
+    <!-- Sidebar -->
+    <aside class="universe-sidebar">
+        <div class="sidebar-logo">
+            <span class="sidebar-logo-icon">✦</span>
+            <span class="sidebar-logo-text">BrandNova</span>
         </div>
-    </nav>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home fa-fw"></i> Dashboard</a>
+            <a href="#" class="sidebar-link active"><i class="fas fa-shield-halved fa-fw"></i> Admin Panel</a>
 
-    <div class="admin-container">
+            <div style="margin-top:auto; padding-top:1rem; border-top:1px solid var(--border);">
+                <div class="theme-toggle-wrap" style="padding:.5rem 1rem;">
+                    <button class="theme-toggle-btn"
+                        style="width:100%;border-radius:var(--radius-sm);height:auto;padding:.6rem;">
+                        <i class="fas fa-palette"></i>&nbsp; Theme
+                    </button>
+                    <div class="theme-menu" style="bottom:calc(100% + 10px);top:auto;left:0;right:auto;"></div>
+                </div>
+            </div>
 
-        <!-- Stats -->
-        <div class="stats-grid" id="statsGrid">
-            <div class="stat-card">
-                <h3>Total Users</h3>
-                <div class="value" id="totalUsers">-</div>
+            <a href="#" class="sidebar-link danger" id="logoutBtn"><i class="fas fa-sign-out-alt fa-fw"></i> Logout</a>
+        </nav>
+    </aside>
+
+    <main class="universe-main page-view">
+        <div class="universe-header">
+            <div>
+                <h1 class="page-title"><span class="grad">Admin</span> Command Center</h1>
+                <p class="page-subtitle">Platform analytics & user management</p>
             </div>
-            <div class="stat-card">
-                <h3>Active Users</h3>
-                <div class="value" id="activeUsers">-</div>
+        </div>
+
+        <!-- Animated Stat Cards -->
+        <div class="stat-grid" id="adminStats">
+            <div class="glass-card stat-card">
+                <h4>Total Users</h4>
+                <div class="stat-value" id="cnt-users">—</div>
             </div>
-            <div class="stat-card">
-                <h3>AI Generations</h3>
-                <div class="value" id="totalGenerations">-</div>
+            <div class="glass-card stat-card">
+                <h4>Active Users</h4>
+                <div class="stat-value" id="cnt-active">—</div>
+            </div>
+            <div class="glass-card stat-card">
+                <h4>Pro Users</h4>
+                <div class="stat-value" id="cnt-pro">—</div>
+            </div>
+            <div class="glass-card stat-card">
+                <h4>Generations</h4>
+                <div class="stat-value" id="cnt-gens">—</div>
+            </div>
+            <div class="glass-card stat-card">
+                <h4>MRR</h4>
+                <div class="stat-value" id="cnt-mrr">—</div>
+                <div class="stat-trend up"><i class="fas fa-dollar-sign"></i> Monthly Revenue</div>
+            </div>
+            <div class="glass-card stat-card">
+                <h4>Conversion Rate</h4>
+                <div class="stat-value" id="cnt-conv">—</div>
+                <div class="stat-trend"><i class="fas fa-chart-line"></i> Pro/Total</div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div
+            style="display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:1.5rem;margin-bottom:2rem;">
+            <div class="glass-card" style="padding:1.5rem;">
+                <h3 style="margin-bottom:1rem;font-size:1rem;">User Growth</h3>
+                <canvas id="growthChart" height="220"></canvas>
+            </div>
+            <div class="glass-card" style="padding:1.5rem;">
+                <h3 style="margin-bottom:1rem;font-size:1rem;">Feature Usage</h3>
+                <canvas id="usageChart" height="220"></canvas>
             </div>
         </div>
 
         <!-- Users Table -->
-        <div class="section-header">
-            <h2>User Management</h2>
-            <button class="primary-btn" onclick="fetchUsers()">Refresh</button>
-        </div>
-
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="usersTableBody">
-                <!-- Populated by JS -->
-            </tbody>
-        </table>
-
-    </div>
-
-    <!-- Edit User Modal -->
-    <div id="editUserModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2>Edit User</h2>
-            <form id="editUserForm">
-                <input type="hidden" id="editUserId">
-
-                <div class="input-group" style="margin-bottom: 1rem;">
-                    <label>Role</label>
-                    <select id="editUserRole" class="input-field" style="width: 100%; padding: 0.5rem;">
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                    </select>
+        <div class="glass-card" style="padding:1.5rem;overflow-x:auto;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                <h3>User Management</h3>
+                <div class="float-input-group" style="margin:0;max-width:250px;">
+                    <input class="float-input" id="searchInput" placeholder="Search users..."
+                        style="padding:.6rem 1rem;font-size:.85rem;">
                 </div>
-
-                <div class="input-group" style="margin-bottom: 1rem;">
-                    <label>Status</label>
-                    <select id="editUserStatus" class="input-field" style="width: 100%; padding: 0.5rem;">
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="primary-btn" style="width: 100%;">Save Changes</button>
-            </form>
+            </div>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Email</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="adminTableBody"></tbody>
+            </table>
         </div>
-    </div>
+    </main>
 
-    <script src="assets/js/ui.js"></script>
+    <script src="js/universe.js"></script>
     <script>
-        // Detect environment
-        const IS_LOCAL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-        const API_BASE = IS_LOCAL
-            ? "http://localhost:8001/api"
-            : "https://bizforge-api.onrender.com/api"; // ✅ Updated with live Render URL
+        const API_URL = '';
+        const TOKEN = localStorage.getItem('access_token');
+        const HEADERS = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` };
+        let allUsers = [];
 
-        // Auth Check
-        async function checkAdminAuth() {
-            try {
-                const res = await fetch(`${API_BASE}/auth/me`);
-                if (!res.ok) throw new Error("Not authenticated");
-                const user = await res.json();
-                if (user.role !== 'admin' && user.role !== 'superadmin') {
-                    alert("Access Denied: Admins only.");
-                    window.location.href = "dashboard.html";
+        // Animated Charts (Chart.js)
+        function initCharts(stats) {
+            const style = getComputedStyle(document.documentElement);
+            const accent = style.getPropertyValue('--accent').trim();
+            const accent2 = style.getPropertyValue('--accent2').trim();
+
+            // Growth (mock trend)
+            new Chart(document.getElementById('growthChart'), {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                    datasets: [{
+                        label: 'Users',
+                        data: [2, 5, 12, 25, 45, 80, stats.total_users || 100],
+                        borderColor: accent,
+                        backgroundColor: accent + '22',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: accent
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#666' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                        y: { ticks: { color: '#666' }, grid: { color: 'rgba(255,255,255,0.04)' } }
+                    },
+                    animation: { duration: 1500, easing: 'easeOutQuart' }
                 }
-                loadDashboard();
-            } catch (e) {
-                window.location.href = "auth.html";
-            }
-        }
+            });
 
-        async function loadDashboard() {
-            fetchStats();
-            fetchUsers();
-        }
-
-        async function fetchStats() {
-            try {
-                const res = await fetch(`${API_BASE}/admin/stats`);
-                const data = await res.json();
-                document.getElementById('totalUsers').textContent = data.total_users;
-                document.getElementById('activeUsers').textContent = data.active_users;
-                document.getElementById('totalGenerations').textContent = data.total_generations;
-            } catch (e) {
-                console.error("Error fetching stats:", e);
-            }
-        }
-
-        async function fetchUsers() {
-            try {
-                const res = await fetch(`${API_BASE}/admin/users?limit=20`);
-                const users = await res.json();
-                const tbody = document.getElementById('usersTableBody');
-                tbody.innerHTML = '';
-
-                users.forEach(user => {
-                    const row = `
-                        <tr>
-                            <td>#${user.id}</td>
-                            <td>${user.fullname}</td>
-                            <td>${user.email}</td>
-                            <td><span class="role-badge role-${user.role}">${user.role}</span></td>
-                            <td><span class="${user.is_active ? 'status-active' : 'status-inactive'}">● ${user.is_active ? 'Active' : 'Inactive'}</span></td>
-                            <td>
-                                <button class="action-btn" onclick="openEditModal(${user.id}, '${user.role}', ${user.is_active})">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
-                });
-            } catch (e) {
-                console.error("Error fetching users:", e);
-            }
-        }
-
-        // Modal Logic
-        const modal = document.getElementById("editUserModal");
-
-        function openEditModal(id, role, isActive) {
-            document.getElementById('editUserId').value = id;
-            document.getElementById('editUserRole').value = role;
-            document.getElementById('editUserStatus').value = isActive.toString();
-            modal.style.display = "flex";
-        }
-
-        function closeModal() {
-            modal.style.display = "none";
-        }
-
-        document.getElementById('editUserForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('editUserId').value;
-            const role = document.getElementById('editUserRole').value;
-            const isActive = document.getElementById('editUserStatus').value === 'true';
-
-            try {
-                const res = await fetch(`${API_BASE}/admin/users/${id}/role`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ role, is_active: isActive })
-                });
-
-                if (res.ok) {
-                    closeModal();
-                    fetchUsers();
-                    fetchStats(); // Update active users count if changed
-                } else {
-                    alert("Failed to update user");
+            // Feature Usage
+            new Chart(document.getElementById('usageChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Brand Names', 'Logos', 'Marketing', 'Pitch', 'Sentiment', 'Chat'],
+                    datasets: [{
+                        data: [35, 15, 25, 10, 8, 7],
+                        backgroundColor: [accent, accent2, '#f59e0b', '#10b981', '#06b6d4', '#8b5cf6'],
+                        borderWidth: 0,
+                        spacing: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#888', padding: 15, font: { size: 12 } }
+                        }
+                    },
+                    animation: { animateRotate: true, duration: 1500 }
                 }
-            } catch (e) {
-                console.error(e);
+            });
+        }
+
+        // Load Stats
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_URL}/api/admin/stats`, { headers: HEADERS });
+                if (!res.ok) throw new Error('Not admin');
+                const s = await res.json();
+
+                animateCounter(document.getElementById('cnt-users'), s.total_users);
+                animateCounter(document.getElementById('cnt-active'), s.active_users);
+                animateCounter(document.getElementById('cnt-pro'), s.pro_users);
+                animateCounter(document.getElementById('cnt-gens'), s.total_generations);
+
+                const mrr = document.getElementById('cnt-mrr');
+                mrr.dataset.prefix = '$';
+                animateCounter(mrr, Math.round(s.mrr || 0));
+
+                const conv = document.getElementById('cnt-conv');
+                conv.dataset.suffix = '%';
+                animateCounter(conv, Math.round(s.conversion_rate || 0));
+
+                initCharts(s);
+            } catch (err) {
+                alert('Admin access required');
+                window.location.href = 'dashboard.html';
             }
+        }
+
+        // Load Users
+        async function loadUsers(filter = '') {
+            try {
+                const res = await fetch(`${API_URL}/api/admin/users`, { headers: HEADERS });
+                allUsers = await res.json();
+                renderUsers(filter);
+            } catch (e) { }
+        }
+
+        function renderUsers(filter = '') {
+            const f = filter.toLowerCase();
+            const filtered = f ? allUsers.filter(u =>
+                u.email.toLowerCase().includes(f) || (u.fullname || '').toLowerCase().includes(f)
+            ) : allUsers;
+
+            document.getElementById('adminTableBody').innerHTML = filtered.map((u, i) => `
+                <tr style="animation:moduleEntrance .4s ease ${i * 0.03}s both;">
+                    <td style="font-weight:600;color:var(--text-muted);">#${u.id}</td>
+                    <td>${u.email}</td>
+                    <td>${u.fullname || '—'}</td>
+                    <td><span style="padding:3px 10px;border-radius:50px;font-size:.78rem;font-weight:600;background:${u.role === 'admin' ? 'var(--accent-glow)' : 'var(--surface)'};color:${u.role === 'admin' ? 'var(--accent)' : 'var(--text-secondary)'};">${u.role}</span></td>
+                    <td><span style="color:${u.is_active ? '#10b981' : '#ef4444'}">● ${u.is_active ? 'Active' : 'Inactive'}</span></td>
+                    <td>
+                        <button class="admin-btn" onclick="toggleRole(${u.id}, '${u.role}')">
+                            ${u.role === 'admin' ? '<i class=\"fas fa-arrow-down\"></i> Demote' : '<i class=\"fas fa-arrow-up\"></i> Promote'}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function toggleRole(id, cur) {
+            await fetch(`${API_URL}/api/admin/users/${id}/role`, {
+                method: 'PUT', headers: HEADERS,
+                body: JSON.stringify({ role: cur === 'admin' ? 'user' : 'admin' })
+            });
+            loadStats();
+            loadUsers(document.getElementById('searchInput').value);
+        }
+
+        // Search
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            renderUsers(e.target.value);
         });
 
         // Logout
-        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
             e.preventDefault();
-            await fetch(`${API_BASE}/auth/logout`, { method: 'POST' });
-            window.location.href = "index.html";
+            localStorage.removeItem('access_token');
+            window.location.href = 'login.html';
         });
 
-        // Initialize
-        checkAdminAuth();
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadUsers();
+        });
     </script>
 </body>
 

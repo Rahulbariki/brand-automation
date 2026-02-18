@@ -53,32 +53,12 @@ function updateThemeIcon(icon, theme) {
 }
 
 function setupNavigation() {
-    const navItems = document.querySelectorAll('.nav-item');
-    const views = document.querySelectorAll('.feature-view');
-
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            const targetId = item.getAttribute('data-target');
-
-            if (targetId === 'logout') {
-                api.logout();
-                return;
-            }
-
-            // Update UI
-            navItems.forEach(nav => nav.classList.remove('active'));
-            item.classList.add('active');
-
-            views.forEach(view => {
-                view.classList.remove('active');
-                if (view.id === targetId) {
-                    view.classList.add('active');
-                }
-            });
-
-            state.setCurrentView(targetId);
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            api.logout();
         });
-    });
+    }
 }
 
 function setupGlobalEvents() {

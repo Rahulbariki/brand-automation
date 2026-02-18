@@ -1,42 +1,36 @@
-from fastapi import Depends, HTTPException, status, Request
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
 from sqlalchemy.orm import Session
-from .database import get_db
-from .models import User
-from .config import SECRET_KEY, ALGORITHM
+from app.database import get_db
+from app.utils.jwt_handler import verify_token
+from app.models import User
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
-def get_current_user_token(request: Request):
-    token = request.cookies.get("access_token")
-    if not token:
-        # Fallback to Authorization header
-        auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.split(" ")[1]
-    return token
-
-async def get_current_user(
-    request: Request,
-    db: Session = Depends(get_db)
-):
-    # Public access: Return a static mock user or None
-    return User(
-        id=1,
-        email="guest@example.com",
-        fullname="Guest User",
-        role="user",
-        subscription_plan="free"
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
     )
+    
+    payload = verify_token(token)
+    if payload is None:
+        raise credentials_exception
+        
+    email: str = payload.get("email") or payload.get("sub") # Handle both cases
+    if email is None:
+        raise credentials_exception
+        
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise credentials_exception
+    return user
 
-async def get_current_active_user(current_user: User = Depends(get_current_user)):
-    return current_user
-
-async def get_current_admin_user(current_user: User = Depends(get_current_active_user)):
-    if current_user.role != "admin":
+def require_pro(user: User = Depends(get_current_user)):
+    if user.subscription_plan not in ["pro", "enterprise", "admin"]: # Allow admins too
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 
-            detail="The user doesn't have enough privileges"
+            detail="Pro subscription required"
         )
-    return current_user
+    return user

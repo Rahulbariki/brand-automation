@@ -1,25 +1,11 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
-import shutil
+from fastapi.responses import FileResponse
 import os
 
-from .schemas import (
-    BrandNameRequest, TaglineRequest, StrategyRequest,
-    MarketingContentRequest, SentimentRequest, ColorPaletteRequest,
-    ChatRequest, LogoRequest
-)
-from .ai_services import (
-    generate_brand_names, generate_marketing_content, analyze_sentiment,
-    get_color_palette, chat_with_ai, generate_logo_prompt, generate_logo_image,
-    transcribe_audio
-)
-from . import admin
-
-# ... (schemas and ai_services imports remain same, handled by context)
-
-from .database import engine, Base
+from app.database import engine, Base
+from app.routes import auth_routes, admin_routes, branding_routes, stripe_routes
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -30,7 +16,7 @@ app = FastAPI(title="BizForge API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True, # Changed to True for cookie support if needed later, but standard for allow_origins ["*"] is usually False. Let's keep it robust.
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -39,21 +25,37 @@ app.add_middleware(
 # internal structure: backend/app/main.py -> ../../frontend
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
 assets_path = os.path.join(frontend_path, "assets")
-static_path = os.path.join(frontend_path, "static")
+css_path = os.path.join(frontend_path, "css")
+js_path = os.path.join(frontend_path, "js")
 
 # Ensure assets directory exists
 os.makedirs(assets_path, exist_ok=True)
 os.makedirs(os.path.join(assets_path, "generated_logos"), exist_ok=True)
+os.makedirs(css_path, exist_ok=True)
+os.makedirs(js_path, exist_ok=True)
 
 app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
-# app.mount("/static", StaticFiles(directory=static_path), name="static") # Commented out if not used, or keep if needed.
+app.mount("/css", StaticFiles(directory=css_path), name="css")
+app.mount("/js", StaticFiles(directory=js_path), name="js")
 
 # Mount Routers
-app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
+app.include_router(auth_routes.router, prefix="/api", tags=["Authentication"])
+app.include_router(admin_routes.router, prefix="/api/admin", tags=["Admin"])
+app.include_router(branding_routes.router, prefix="/api", tags=["Branding AI"])
+app.include_router(stripe_routes.router, prefix="/api/stripe", tags=["Stripe"])
 
+# Frontend Pages
 @app.get("/")
 async def read_root():
     return FileResponse(os.path.join(frontend_path, "index.html"))
+
+@app.get("/login.html")
+async def read_login():
+    return FileResponse(os.path.join(frontend_path, "login.html"))
+
+@app.get("/signup.html")
+async def read_signup():
+    return FileResponse(os.path.join(frontend_path, "signup.html"))
 
 @app.get("/branding.html")
 async def read_branding():
@@ -71,76 +73,34 @@ async def read_auth():
 async def read_admin():
     return FileResponse(os.path.join(frontend_path, "admin.html"))
 
+@app.get("/brand-names.html")
+async def read_brand_names():
+    return FileResponse(os.path.join(frontend_path, "brand-names.html"))
+
+@app.get("/logo-creator.html")
+async def read_logo_creator():
+    return FileResponse(os.path.join(frontend_path, "logo-creator.html"))
+
+@app.get("/marketing.html")
+async def read_marketing():
+    return FileResponse(os.path.join(frontend_path, "marketing.html"))
+
+@app.get("/design-system.html")
+async def read_design_system():
+    return FileResponse(os.path.join(frontend_path, "design-system.html"))
+
+@app.get("/sentiment.html")
+async def read_sentiment():
+    return FileResponse(os.path.join(frontend_path, "sentiment.html"))
+
+@app.get("/ai-consultant.html")
+async def read_ai_consultant():
+    return FileResponse(os.path.join(frontend_path, "ai-consultant.html"))
+
+@app.get("/startup.html")
+async def read_startup():
+    return FileResponse(os.path.join(frontend_path, "startup.html"))
+
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
-
-# --- Activity 2.5: Brand Name Generator ---
-@app.post("/api/generate-brand")
-async def api_generate_brand(request: BrandNameRequest):
-    names = generate_brand_names(request)
-    return {"names": names}
-
-# --- Activity 2.6: Marketing Content ---
-@app.post("/api/generate-content")
-async def api_generate_content(request: MarketingContentRequest):
-    content = generate_marketing_content(request)
-    return {"content": content}
-
-# --- Activity 2.7: Sentiment Analysis ---
-@app.post("/api/analyze-sentiment")
-async def api_analyze_sentiment(request: SentimentRequest):
-    result = analyze_sentiment(request)
-    return result
-
-# --- Activity 2.8: Color Palette ---
-@app.post("/api/get-colors")
-async def api_get_colors(request: ColorPaletteRequest):
-    colors = get_color_palette(request)
-    return {"colors": colors}
-
-# --- Activity 2.9: Chatbot ---
-@app.post("/api/chat")
-async def api_chat(request: ChatRequest):
-    response = chat_with_ai(request)
-    return {"response": response}
-
-# --- Activity 2.10: Logo Generation ---
-@app.post("/api/generate-logo")
-async def api_generate_logo(request: LogoRequest):
-    # 1. Generate Prompt
-    prompt = generate_logo_prompt(request)
-    
-    # 2. Generate Image
-    safe_name = "".join(x for x in request.brand_name if x.isalnum())
-    filename = f"{safe_name}_logo.png"
-    
-    image_file = generate_logo_image(prompt, filename)
-    
-    image_url = ""
-    if image_file:
-        image_url = f"/assets/generated_logos/{image_file}"
-    else:
-        # We need a placeholder. 
-        # Ideally we should serve one if it exists or return empty.
-        image_url = "" 
-        
-    return {
-        "prompt": prompt,
-        "image_url": image_url
-    }
-
-# --- Activity 2.11: Voice Transcription ---
-@app.post("/api/transcribe-voice")
-async def api_transcribe_voice(file: UploadFile = File(...)):
-    temp_filename = f"temp_{file.filename}"
-    try:
-        with open(temp_filename, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-            
-        text = transcribe_audio(temp_filename)
-        
-        return {"text": text}
-    finally:
-        if os.path.exists(temp_filename):
-            os.remove(temp_filename)
