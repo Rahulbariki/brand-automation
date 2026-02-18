@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.MODE === "development" ? "http://127.0.0.1:8000" : "";
+const isLocal = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+const API_BASE = isLocal ? "http://127.0.0.1:8000" : "";
 
 function getHeaders() {
     const token = localStorage.getItem("access_token");
