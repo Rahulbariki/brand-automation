@@ -5,8 +5,11 @@
             "use": "@vercel/python"
         },
         {
-            "src": "frontend/*",
-            "use": "@vercel/static"
+            "src": "brandnova-ui/package.json",
+            "use": "@vercel/static-build",
+            "config": {
+                "distDir": "dist"
+            }
         }
     ],
     "routes": [
@@ -16,11 +19,11 @@
         },
         {
             "src": "/assets/(.*)",
-            "dest": "frontend/assets/$1"
+            "dest": "brandnova-ui/dist/assets/$1"
         },
         {
             "src": "/(.*)",
-            "dest": "frontend/$1"
+            "dest": "brandnova-ui/dist/index.html"
         }
     ]
 }
