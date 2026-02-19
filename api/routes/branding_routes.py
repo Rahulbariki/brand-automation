@@ -81,12 +81,11 @@ async def api_chat(request: ChatRequest, db: Session = Depends(get_db), user: Us
 async def api_generate_logo(request: LogoRequest, db: Session = Depends(get_db), user: User = Depends(require_pro)):
     # Logo is strictly Pro, but we also log it
     prompt = generate_logo_prompt(request)
-    safe_name = "".join(x for x in request.brand_name if x.isalnum())
-    filename = f"{safe_name}_logo.png"
-    image_file = generate_logo_image(prompt, filename)
-    image_url = f"/assets/generated_logos/{image_file}" if image_file else ""
+    # Return Base64 data URI directly (no file system write)
+    image_url = generate_logo_image(prompt)
     
-    log_generation(db, user, "logo", image_url)
+    # We log the prompt or "Image Generated" instead of full base64 to save DB space
+    log_generation(db, user, "logo", f"Prompt: {prompt}")
     return {"prompt": prompt, "image_url": image_url}
 
 @router.post("/transcribe-voice")

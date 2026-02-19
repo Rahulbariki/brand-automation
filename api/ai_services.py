@@ -231,8 +231,11 @@ def generate_tagline(request: TaglineRequest) -> str:
     return chat_completion.choices[0].message.content.strip().replace('"', '')
 
 # --- Activity 2.10 (Part 2): Logo Image Generation (SDXL) ---
-def generate_logo_image(prompt: str, filename: str = "logo.png") -> str:
-    """Generates a logo image using SDXL via Hugging Face and saves it."""
+def generate_logo_image(prompt: str) -> str:
+    """Generates a logo image using SDXL via Hugging Face and returns it as a Base64 string."""
+    import base64
+    from io import BytesIO
+    
     # Use FLUX.1-schnell on the new HF Router for high reliability and speed
     MODEL_ID = "black-forest-labs/FLUX.1-schnell" 
     API_URL = f"https://router.huggingface.co/hf-inference/models/{MODEL_ID}"
@@ -243,25 +246,14 @@ def generate_logo_image(prompt: str, filename: str = "logo.png") -> str:
         response.raise_for_status()
         image_bytes = response.content
         
-        # Path: api/ai_services.py -> ../frontend/assets/generated_logos
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        output_dir = os.path.join(current_dir, "..", "frontend", "assets", "generated_logos")
-        output_dir = os.path.normpath(output_dir)
+        # Convert to Base64
+        base64_str = base64.b64encode(image_bytes).decode("utf-8")
+        return f"data:image/png;base64,{base64_str}"
         
-        os.makedirs(output_dir, exist_ok=True)
-        
-        filepath = os.path.join(output_dir, filename)
-        with open(filepath, "wb") as f:
-            f.write(image_bytes)
-            
-        print(f"Logo saved to: {filepath}")
-        return filename
     except Exception as e:
         print(f"SDXL Generation Failed: {e}")
         import traceback
         traceback.print_exc()
-        # Re-raise the exception so the route handler returns a 500 error with details
-        # instead of returning empty string which causes the frontend to show "Processing..."
         raise Exception(f"Logo generation failed: {str(e)}")
 
 # --- Startup Tools ---
