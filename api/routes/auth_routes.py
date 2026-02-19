@@ -38,7 +38,8 @@ def google_login(request: GoogleLoginRequest, db: Session = Depends(get_db)):
             email=email,
             fullname=google_user.get("user_metadata", {}).get("full_name"),
             provider="google",
-            hashed_password=None # No password for Google users
+            hashed_password=None,
+            is_active=True  # Ensure user is active by default
         )
         db.add(new_user)
         db.commit()

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User
-from config import STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+from config import STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, FRONTEND_URL
 from dependencies import get_current_user
 
 router = APIRouter()
@@ -41,8 +41,8 @@ async def create_checkout_session(
                 },
             ],
             mode='subscription',
-            success_url='http://localhost:8000/dashboard.html?success=true',
-            cancel_url='http://localhost:8000/dashboard.html?canceled=true',
+            success_url=f"{FRONTEND_URL}/dashboard?success=true",
+            cancel_url=f"{FRONTEND_URL}/dashboard?canceled=true",
             metadata={
                 "user_id": current_user.id,
                 "plan": plan

@@ -41,22 +41,7 @@ export async function apiGet(endpoint) {
 }
 
 export function login(email, password) {
-    // Backend uses OAuth2PasswordRequestForm which expects form-data with 'username' field
-    const formData = new URLSearchParams();
-    formData.append("username", email);
-    formData.append("password", password);
-
-    return fetch(`${API_BASE}/api/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData,
-    }).then(async (res) => {
-        if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            throw new Error(data.detail || "Login failed");
-        }
-        return res.json();
-    });
+    return apiPost("/api/login", { email, password });
 }
 
 export function signup(fullname, email, password) {

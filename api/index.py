@@ -28,6 +28,7 @@ def create_error_app(error_msg, stack_trace):
 
 try:
     from fastapi import FastAPI
+    from fastapi.staticfiles import StaticFiles
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import JSONResponse
     
@@ -79,6 +80,13 @@ try:
     app.include_router(branding_routes.router, prefix="/api", tags=["Branding AI"])
     app.include_router(stripe_routes.router, prefix="/api/stripe", tags=["Stripe"])
     app.include_router(debug_routes.router, prefix="/api/debug", tags=["Debug"])
+
+    # Serve Static Assets (Generated Logos)
+    assets_dir = os.path.join(api_dir, "..", "frontend", "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+    else:
+        print(f"Warning: Assets directory not found at {assets_dir}")
 
     @app.on_event("startup")
     def startup_event():

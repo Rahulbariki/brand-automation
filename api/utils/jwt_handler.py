@@ -2,7 +2,7 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta
 import os
 
-SECRET_KEY = os.getenv("JWT_SECRET", "super_secret_key_change_me")
+SECRET_KEY = os.getenv("JWT_SECRET", os.getenv("SECRET_KEY", "super_secret_key_change_me"))
 ALGORITHM = "HS256"
 
 def create_token(data: dict):

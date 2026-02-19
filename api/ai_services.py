@@ -30,7 +30,8 @@ groq_client = Groq(api_key=api_key)
 
 # IBM Granite (Hugging Face)
 HF_API_KEY = os.getenv("HF_API_KEY")
-IBM_MODEL = os.getenv("IBM_MODEL", "ibm-granite/granite-4.0-h-350m")
+# Using a more reliable endpoint for Granite
+IBM_MODEL = os.getenv("IBM_MODEL", "ibm-granite/granite-3.0-8b-instruct") 
 HF_API_URL = f"https://api-inference.huggingface.co/models/{IBM_MODEL}"
 HF_HEADERS = {"Authorization": f"Bearer {HF_API_KEY}"}
 
@@ -173,7 +174,7 @@ def chat_with_ai(request: ChatRequest) -> str:
     }
     
     try:
-        response = requests.post(ROUTER_URL, headers=HF_HEADERS, json=payload, timeout=10)
+        response = requests.post(ROUTER_URL, headers=HF_HEADERS, json=payload, timeout=5)
         response.raise_for_status()
         result = response.json()
         
@@ -257,10 +258,11 @@ def generate_logo_image(prompt: str, filename: str = "logo.png") -> str:
         return filename
     except Exception as e:
         print(f"SDXL Generation Failed: {e}")
-        # print full traceback for debugging
         import traceback
         traceback.print_exc()
-        return ""
+        # Re-raise the exception so the route handler returns a 500 error with details
+        # instead of returning empty string which causes the frontend to show "Processing..."
+        raise Exception(f"Logo generation failed: {str(e)}")
 
 # --- Startup Tools ---
 def generate_pitch(request) -> str:

@@ -18,3 +18,6 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 # Supabase
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+# Frontend
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
