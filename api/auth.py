@@ -8,13 +8,20 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 import os
 
-from .database import get_db
-from .models import User
+from database import get_db
+from models import User
 
 # Configuration
-SECRET_KEY = os.getenv("JWT_SECRET", "super_secret_key_change_me")
+SECRET_KEY = os.getenv("JWT_SECRET")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 24 hours
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 # Reduced from 24h to 60m for production security
+
+if not SECRET_KEY and os.getenv("ENV") == "production":
+    raise ValueError("JWT_SECRET must be set in production environment")
+
+# Fallback for development only
+if not SECRET_KEY:
+    SECRET_KEY = "super_secret_dev_key"
 
 # Password Hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

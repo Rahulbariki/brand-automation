@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 import requests
-from app.config import SUPABASE_URL, SUPABASE_KEY
+from config import SUPABASE_URL, SUPABASE_KEY
 
 def verify_google_token(token: str):
     """
@@ -18,6 +18,11 @@ def verify_google_token(token: str):
     )
 
     if response.status_code != 200:
-        raise HTTPException(status_code=401, detail="Invalid Google token")
+        error_detail = response.text
+        print(f"Supabase Auth Error: {response.status_code} - {error_detail}")
+        raise HTTPException(
+            status_code=response.status_code, 
+            detail=f"Supabase Auth Error: {error_detail}"
+        )
 
     return response.json()

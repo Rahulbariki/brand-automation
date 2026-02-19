@@ -7,8 +7,29 @@
     <title>Creative World — BrandNova</title>
     <link rel="stylesheet" href="css/universe.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="js/auth.js"></script>
+    <style>
+        .auth-loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0f172a;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: sans-serif;
+            flex-direction: column;
+            gap: 1rem;
+        }
+    </style>
     <script>
-        if (!localStorage.getItem('access_token')) window.location.href = 'login.html';
+        // We will run checkSession after the page starts loading
+        // to allow Supabase to catch the URL hash
     </script>
 </head>
 
@@ -442,7 +463,7 @@
     <!-- ═══ Scripts ═══ -->
     <script src="js/universe.js"></script>
     <script>
-        const API_URL = '';
+        // const API_URL = ''; // Already declared in auth.js
         const TOKEN = localStorage.getItem('access_token');
         const HEADERS = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` };
 
@@ -738,6 +759,39 @@
             }, 100);
         });
     </script>
-</body>
+    <div id="authLoader" class="auth-loader-overlay">
+        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <div id="authLoaderText">Initializing Universe...</div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loader = document.getElementById('authLoader');
+            const loaderText = document.getElementById('authLoaderText');
+            try {
+                // Give Supabase a moment to process the URL hash
+                // await new Promise(r => setTimeout(r, 500)); 
+                const token = await window.checkSession();
+
+                if (token) {
+                    // Valid session!
+                    loader.style.opacity = '0';
+                    loader.style.transition = 'opacity 0.5s';
+                    setTimeout(() => loader.remove(), 500);
+                } else {
+                    // No session found
+                    console.warn("No session found, redirecting to login.");
+                    loaderText.innerText = "Session check failed. Check console for details.";
+                    loaderText.style.color = "#ef4444";
+                    // Only redirect if NOT debug mode
+                    // window.location.href = 'login.html';
+                }
+            } catch (e) {
+                console.error("Auth check failed:", e);
+                loaderText.innerText = "Error: " + e.message;
+                loaderText.style.color = "#ef4444";
+                // window.location.href = 'login.html';
+            }
+        });
+    </script>
 
 </html>

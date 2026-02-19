@@ -6,32 +6,39 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
 // Ideally, these are fetched from an endpoint like /api/config
 // For now, we use placeholders or global window vars if injected
 const SUPABASE_URL = "https://eswlocdooykyaxqyphwu.supabase.co";
-const SUPABASE_KEY = "sb_publishable_cim3tSJLeK14tYV7PhEU0A_Gak6VS9a";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzd2xvY2Rvb3lreWF4cXlwaHd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0MjI3MjYsImV4cCI6MjA4Njk5ODcyNn0.BfvrsARoriYR_jKMvdzYA3CNY7fG9Tl6cTknTLvUJ8o";
 
 // --- Initialize Supabase ---
-let supabase = null;
-if (window.supabase) {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+function initSupabase() {
+    if (window.supabaseClient) return window.supabaseClient;
+
+    if (window.supabase) {
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        console.log("Supabase Client Initialized");
+    } else {
+        console.warn("Supabase library not yet loaded");
+    }
+    return window.supabaseClient;
 }
+
+// Global initialization
+initSupabase();
 
 // --- Auth Functions ---
 
 async function login(email, password) {
-    const formData = new URLSearchParams();
-    formData.append('username', email);
-    formData.append('password', password);
-
     const response = await fetch(`${API_URL}/api/login`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
         },
-        body: formData
+        body: JSON.stringify({ email, password })
     });
 
     if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.detail || 'Login failed');
+        const text = await response.text();
+        // If it's HTML, we'll see "The page cannot be found" in the error now
+        throw new Error(text.length > 100 ? text.substring(0, 100) + '...' : text);
     }
 
     const data = await response.json();
@@ -49,24 +56,25 @@ async function signup(email, password, fullname) {
     });
 
     if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.detail || 'Signup failed');
+        const text = await response.text();
+        throw new Error(text.length > 100 ? text.substring(0, 100) + '...' : text);
     }
 
-    // Auto-login or redirect
+    const data = await response.json();
+    // For signup, we might want to auto-login here or redirect to login
     return true;
 }
 
-async function googleLogin() {
-    if (!supabase) {
-        console.error("Supabase client not initialized");
-        return;
+window.googleLogin = async function () {
+    const client = initSupabase();
+    if (!client) {
+        throw new Error("Supabase client not initialized. Refresh page and try again.");
     }
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await client.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: window.location.origin + '/auth.html' // Intermediate page to handle token exchange
+            redirectTo: window.location.origin + '/dashboard.html'
         }
     });
 
@@ -75,8 +83,82 @@ async function googleLogin() {
     }
 }
 
+// --- Session Handling ---
+// --- Session Handling ---
+window.checkSession = function () {
+    return new Promise((resolve, reject) => {
+        // Wait for Supabase to initialize if needed
+        if (!window.supabaseClient) {
+            initSupabase();
+        }
+
+        // Check local storage first for speed
+        const localToken = localStorage.getItem('access_token');
+        if (localToken) {
+            resolve(localToken);
+            return;
+        }
+
+        // Helper to perform the token exchange
+        const exchangeToken = async (session) => {
+            try {
+                const res = await fetch(`${API_URL}/api/google-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: session.access_token })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    localStorage.setItem('access_token', data.access_token);
+                    return data.access_token;
+                } else {
+                    const errText = await res.text();
+                    console.error("Token exchange failed", errText);
+                    // Throw to be caught by checkSession promise
+                    throw new Error(`Auth Failed: ${res.status} ${res.statusText} - ${errText}`);
+                }
+            } catch (err) {
+                console.error("Token exchange error:", err);
+                throw err;
+            }
+        };
+
+        // Subscribe to auth state changes
+        const { data: { subscription } } = window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                try {
+                    const token = await exchangeToken(session);
+                    resolve(token);
+                } catch (e) {
+                    reject(e);
+                }
+            } else if (event === 'SIGNED_OUT') {
+                resolve(null);
+            }
+        });
+
+        // Fallback: Check getSession directly
+        setTimeout(() => {
+            window.supabaseClient.auth.getSession().then(async ({ data: { session } }) => {
+                if (session) {
+                    try {
+                        const token = await exchangeToken(session);
+                        resolve(token);
+                    } catch (e) {
+                        reject(e);
+                    }
+                } else {
+                    resolve(null);
+                }
+            });
+        }, 1000);
+    });
+};
+
 function logout() {
     localStorage.removeItem('access_token');
+    if (window.supabaseClient) window.supabaseClient.auth.signOut();
     window.location.href = 'login.html';
 }
 

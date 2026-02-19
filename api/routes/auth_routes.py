@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models import User
-from app.utils.hashing import hash_password, verify_password
-from app.utils.jwt_handler import create_token
-from app.dependencies import get_current_user
+from database import get_db
+from models import User
+from utils.hashing import hash_password, verify_password
+from utils.jwt_handler import create_token
+from dependencies import get_current_user
 from pydantic import BaseModel
 from typing import Optional
 
@@ -22,7 +22,7 @@ class GoogleLoginRequest(BaseModel):
 
 @router.post("/google-login")
 def google_login(request: GoogleLoginRequest, db: Session = Depends(get_db)):
-    from app.routes.google_auth import verify_google_token
+    from .google_auth import verify_google_token
     
     # Verify token with Supabase
     google_user = verify_google_token(request.token)
@@ -61,14 +61,26 @@ def signup(user_data: UserSignup, db: Session = Depends(get_db)):
         hashed_password=hashed,
         fullname=user_data.fullname
     )
-    db.add(new_user)
-    db.commit()
+    try:
+        db.add(new_user)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        # Check for integrity error (duplicate email)
+        if "unique constraint" in str(e).lower() or "integrityerror" in str(e).lower():
+            raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=500, detail=str(e))
+        
     return {"message": "User created successfully"}
 
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
 @router.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
+def login(user_data: UserLogin, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == user_data.email).first()
+    if not user or not verify_password(user_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
             detail="Invalid credentials",

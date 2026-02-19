@@ -82,7 +82,6 @@
     <script src="js/universe.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        const API_URL = window.API_URL || '';
         const errBox = document.getElementById('errorMsg');
 
         document.getElementById('signupForm').addEventListener('submit', async (e) => {
@@ -102,8 +101,27 @@
                         password: document.getElementById('password').value
                     })
                 });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.detail || 'Signup failed');
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error(text || 'Server Error');
+                }
+
+                if (!res.ok) {
+                    let msg = 'Signup failed';
+                    if (data.detail) {
+                        if (typeof data.detail === 'string') {
+                            msg = data.detail;
+                        } else if (Array.isArray(data.detail)) {
+                            msg = data.detail.map(e => e.msg || JSON.stringify(e)).join(', ');
+                        } else {
+                            msg = JSON.stringify(data.detail);
+                        }
+                    }
+                    throw new Error(msg);
+                }
                 localStorage.setItem('access_token', data.access_token);
                 document.body.style.opacity = '0';
                 document.body.style.transition = 'opacity 0.5s ease';
@@ -118,13 +136,7 @@
 
         document.getElementById('googleBtn').addEventListener('click', async () => {
             try {
-                if (typeof supabaseClient !== 'undefined') {
-                    const { data, error } = await supabaseClient.auth.signInWithOAuth({
-                        provider: 'google',
-                        options: { redirectTo: window.location.origin + '/dashboard.html' }
-                    });
-                    if (error) throw error;
-                }
+                await window.googleLogin();
             } catch (err) { errBox.textContent = err.message; errBox.classList.add('visible'); }
         });
     </script>

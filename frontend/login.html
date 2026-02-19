@@ -84,7 +84,6 @@
     <script src="js/universe.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        const API_URL = window.API_URL || '';
         const errBox = document.getElementById('errorMsg');
 
         function showError(msg) {
@@ -109,7 +108,19 @@
                     })
                 });
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.detail || 'Login failed');
+                if (!res.ok) {
+                    let msg = 'Login failed';
+                    if (data.detail) {
+                        if (typeof data.detail === 'string') {
+                            msg = data.detail;
+                        } else if (Array.isArray(data.detail)) {
+                            msg = data.detail.map(e => e.msg || JSON.stringify(e)).join(', ');
+                        } else {
+                            msg = JSON.stringify(data.detail);
+                        }
+                    }
+                    throw new Error(msg);
+                }
                 localStorage.setItem('access_token', data.access_token);
                 // Smooth transition out
                 document.body.style.opacity = '0';
@@ -125,13 +136,7 @@
         // Google Auth
         document.getElementById('googleBtn').addEventListener('click', async () => {
             try {
-                if (typeof supabaseClient !== 'undefined') {
-                    const { data, error } = await supabaseClient.auth.signInWithOAuth({
-                        provider: 'google',
-                        options: { redirectTo: window.location.origin + '/dashboard.html' }
-                    });
-                    if (error) throw error;
-                }
+                await window.googleLogin();
             } catch (err) {
                 showError(err.message);
             }

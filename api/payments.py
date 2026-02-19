@@ -1,10 +1,12 @@
 import stripe
-from fastapi import APIRouter, Depends, HTTPException, Request
+import json
+from fastapi import APIRouter, Depends, HTTPException, Request, Header, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models import User
-from app.config import STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
-from app.dependencies import get_current_user
+from database import get_db
+from models import User
+from config import STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+from dependencies import get_current_user
 
 router = APIRouter()
 
@@ -12,8 +14,10 @@ router = APIRouter()
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
 
+# Product Price IDs (You would typically get these from env or config)
+# Replace with actual Stripe Price IDs
 PRICING_PLANS = {
-    "pro": "price_1QmJ8...", # Placeholder
+    "pro": "price_1QmJ8...", # Example Price ID
     "enterprise": "price_1QmJ9..." 
 }
 
@@ -43,6 +47,7 @@ async def create_checkout_session(
             mode='subscription',
             success_url='http://localhost:8000/dashboard.html?success=true',
             cancel_url='http://localhost:8000/dashboard.html?canceled=true',
+            # Add metadata if needed
             metadata={
                 "user_id": current_user.id,
                 "plan": plan
@@ -65,14 +70,18 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             payload, sig_header, STRIPE_WEBHOOK_SECRET
         )
     except ValueError as e:
+        # Invalid payload
         raise HTTPException(status_code=400, detail="Invalid payload")
     except stripe.error.SignatureVerificationError as e:
+        # Invalid signature
         raise HTTPException(status_code=400, detail="Invalid signature")
 
+    # Handle the event
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
         await handle_checkout_completed(session, db)
     
+    # Handle other events like subscription updated/deleted
     elif event['type'] == 'customer.subscription.deleted':
         subscription = event['data']['object']
         await handle_subscription_deleted(subscription, db)
@@ -80,16 +89,24 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     return {"status": "success"}
 
 async def handle_checkout_completed(session, db: Session):
+    # Retrieve user via client_reference_id or metadata
     user_id = session.get("client_reference_id")
     if not user_id:
         return
         
     user = db.query(User).filter(User.id == int(user_id)).first()
     if user:
+        # Update user subscription
+        # In a real app, retrieve the subscription details to get the exact plan
+        # For now, we trust the metadata or just set to "pro" if plan id matches
         user.stripe_customer_id = session.get("customer")
         user.stripe_subscription_id = session.get("subscription")
+        
+        # Determine plan from session or metadata (if we passed it)
+        # Here we assume 'pro' for simplicity or read from metadata
         plan = session.get("metadata", {}).get("plan", "pro")
         user.subscription_plan = plan
+        
         db.commit()
 
 async def handle_subscription_deleted(subscription, db: Session):

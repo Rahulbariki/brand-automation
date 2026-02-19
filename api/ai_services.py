@@ -10,7 +10,7 @@ def transcribe_audio(audio_file_path: str) -> str:
     # Disabled for Vercel Serverless optimization (omitting large libraries)
     return "Voice transcription is currently disabled in this lightweight deployment."
 from dotenv import load_dotenv
-from .schemas import (
+from schemas import (
     BrandNameRequest, TaglineRequest, StrategyRequest,
     MarketingContentRequest, SentimentRequest, ColorPaletteRequest,
     ChatRequest, LogoRequest
@@ -242,11 +242,9 @@ def generate_logo_image(prompt: str, filename: str = "logo.png") -> str:
         response.raise_for_status()
         image_bytes = response.content
         
-        # Ensure directory exists
-        # Path: backend/app/ai_services.py -> ../../frontend/assets/generated_logos
-        # Resolve absolute path to avoid cwd issues
+        # Path: api/ai_services.py -> ../frontend/assets/generated_logos
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        output_dir = os.path.join(current_dir, "..", "..", "frontend", "assets", "generated_logos")
+        output_dir = os.path.join(current_dir, "..", "frontend", "assets", "generated_logos")
         output_dir = os.path.normpath(output_dir)
         
         os.makedirs(output_dir, exist_ok=True)

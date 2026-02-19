@@ -1,0 +1,105 @@
+/* Admin Dashboard Styles */
+body {
+    background-color: #0f172a;
+    color: #e2e8f0;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+.admin-container {
+    display: flex;
+    height: 100vh;
+}
+
+aside {
+    width: 250px;
+    background-color: #1e293b;
+    padding: 20px;
+    border-right: 1px solid #334155;
+}
+
+aside h2 {
+    color: #8b5cf6;
+    margin-bottom: 30px;
+}
+
+aside ul {
+    list-style: none;
+    padding: 0;
+}
+
+aside li {
+    padding: 12px 15px;
+    cursor: pointer;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    transition: background 0.2s;
+}
+
+aside li:hover,
+aside li.active {
+    background-color: #334155;
+    color: #fff;
+}
+
+main {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #1e293b;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th,
+td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #334155;
+}
+
+th {
+    background-color: #0f172a;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+button {
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    transition: opacity 0.2s;
+}
+
+.btn-primary {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #ef4444;
+    color: white;
+}
+
+.btn-success {
+    background-color: #10b981;
+    color: white;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+}

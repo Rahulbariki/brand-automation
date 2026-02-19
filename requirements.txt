@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+python-dotenv
+requests
+httpx
+groq
+psycopg2-binary
+sqlalchemy
+python-multipart
+python-multipart
+passlib
+bcrypt==4.0.1
+python-jose
+supabase
+stripe
+gunicorn
+google-auth

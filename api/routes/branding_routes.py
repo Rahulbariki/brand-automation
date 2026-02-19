@@ -5,15 +5,15 @@ from sqlalchemy import func
 import shutil
 import os
 
-from app.database import get_db
-from app.models import User, GeneratedContent
-from app.dependencies import get_current_user, require_pro
-from app.schemas import (
+from database import get_db
+from models import User, GeneratedContent
+from dependencies import get_current_user, require_pro
+from schemas import (
     BrandNameRequest, TaglineRequest, StrategyRequest,
     MarketingContentRequest, SentimentRequest, ColorPaletteRequest,
     ChatRequest, LogoRequest, PitchRequest, InvestorEmailRequest
 )
-from app.ai_services import (
+from ai_services import (
     generate_brand_names, generate_marketing_content, analyze_sentiment,
     get_color_palette, chat_with_ai, generate_logo_prompt, generate_logo_image,
     transcribe_audio, generate_pitch, generate_investor_email

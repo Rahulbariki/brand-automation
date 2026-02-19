@@ -1,278 +1,169 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="cosmic">
+<html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin — BrandNova</title>
-    <link rel="stylesheet" href="css/universe.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-    <script>
-        if (!localStorage.getItem('access_token')) window.location.href = 'login.html';
-    </script>
-</head>
-
-<body>
-
-    <canvas id="universe-particles"></canvas>
-    <div class="universe-orbs">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
-    </div>
-    <div class="universe-grain"></div>
-
-    <!-- Sidebar -->
-    <aside class="universe-sidebar">
-        <div class="sidebar-logo">
-            <span class="sidebar-logo-icon">✦</span>
-            <span class="sidebar-logo-text">BrandNova</span>
-        </div>
-        <nav class="sidebar-nav">
-            <a href="dashboard.html" class="sidebar-link"><i class="fas fa-home fa-fw"></i> Dashboard</a>
-            <a href="#" class="sidebar-link active"><i class="fas fa-shield-halved fa-fw"></i> Admin Panel</a>
-
-            <div style="margin-top:auto; padding-top:1rem; border-top:1px solid var(--border);">
-                <div class="theme-toggle-wrap" style="padding:.5rem 1rem;">
-                    <button class="theme-toggle-btn"
-                        style="width:100%;border-radius:var(--radius-sm);height:auto;padding:.6rem;">
-                        <i class="fas fa-palette"></i>&nbsp; Theme
-                    </button>
-                    <div class="theme-menu" style="bottom:calc(100% + 10px);top:auto;left:0;right:auto;"></div>
-                </div>
-            </div>
-
-            <a href="#" class="sidebar-link danger" id="logoutBtn"><i class="fas fa-sign-out-alt fa-fw"></i> Logout</a>
-        </nav>
-    </aside>
-
-    <main class="universe-main page-view">
-        <div class="universe-header">
-            <div>
-                <h1 class="page-title"><span class="grad">Admin</span> Command Center</h1>
-                <p class="page-subtitle">Platform analytics & user management</p>
-            </div>
-        </div>
-
-        <!-- Animated Stat Cards -->
-        <div class="stat-grid" id="adminStats">
-            <div class="glass-card stat-card">
-                <h4>Total Users</h4>
-                <div class="stat-value" id="cnt-users">—</div>
-            </div>
-            <div class="glass-card stat-card">
-                <h4>Active Users</h4>
-                <div class="stat-value" id="cnt-active">—</div>
-            </div>
-            <div class="glass-card stat-card">
-                <h4>Pro Users</h4>
-                <div class="stat-value" id="cnt-pro">—</div>
-            </div>
-            <div class="glass-card stat-card">
-                <h4>Generations</h4>
-                <div class="stat-value" id="cnt-gens">—</div>
-            </div>
-            <div class="glass-card stat-card">
-                <h4>MRR</h4>
-                <div class="stat-value" id="cnt-mrr">—</div>
-                <div class="stat-trend up"><i class="fas fa-dollar-sign"></i> Monthly Revenue</div>
-            </div>
-            <div class="glass-card stat-card">
-                <h4>Conversion Rate</h4>
-                <div class="stat-value" id="cnt-conv">—</div>
-                <div class="stat-trend"><i class="fas fa-chart-line"></i> Pro/Total</div>
-            </div>
-        </div>
-
-        <!-- Charts Row -->
-        <div
-            style="display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:1.5rem;margin-bottom:2rem;">
-            <div class="glass-card" style="padding:1.5rem;">
-                <h3 style="margin-bottom:1rem;font-size:1rem;">User Growth</h3>
-                <canvas id="growthChart" height="220"></canvas>
-            </div>
-            <div class="glass-card" style="padding:1.5rem;">
-                <h3 style="margin-bottom:1rem;font-size:1rem;">Feature Usage</h3>
-                <canvas id="usageChart" height="220"></canvas>
-            </div>
-        </div>
-
-        <!-- Users Table -->
-        <div class="glass-card" style="padding:1.5rem;overflow-x:auto;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-                <h3>User Management</h3>
-                <div class="float-input-group" style="margin:0;max-width:250px;">
-                    <input class="float-input" id="searchInput" placeholder="Search users..."
-                        style="padding:.6rem 1rem;font-size:.85rem;">
-                </div>
-            </div>
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Email</th>
-                        <th>Name</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="adminTableBody"></tbody>
-            </table>
-        </div>
-    </main>
-
-    <script src="js/universe.js"></script>
-    <script>
-        const API_URL = '';
-        const TOKEN = localStorage.getItem('access_token');
-        const HEADERS = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` };
-        let allUsers = [];
-
-        // Animated Charts (Chart.js)
-        function initCharts(stats) {
-            const style = getComputedStyle(document.documentElement);
-            const accent = style.getPropertyValue('--accent').trim();
-            const accent2 = style.getPropertyValue('--accent2').trim();
-
-            // Growth (mock trend)
-            new Chart(document.getElementById('growthChart'), {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-                    datasets: [{
-                        label: 'Users',
-                        data: [2, 5, 12, 25, 45, 80, stats.total_users || 100],
-                        borderColor: accent,
-                        backgroundColor: accent + '22',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: accent
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { ticks: { color: '#666' }, grid: { color: 'rgba(255,255,255,0.04)' } },
-                        y: { ticks: { color: '#666' }, grid: { color: 'rgba(255,255,255,0.04)' } }
-                    },
-                    animation: { duration: 1500, easing: 'easeOutQuart' }
-                }
-            });
-
-            // Feature Usage
-            new Chart(document.getElementById('usageChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Brand Names', 'Logos', 'Marketing', 'Pitch', 'Sentiment', 'Chat'],
-                    datasets: [{
-                        data: [35, 15, 25, 10, 8, 7],
-                        backgroundColor: [accent, accent2, '#f59e0b', '#10b981', '#06b6d4', '#8b5cf6'],
-                        borderWidth: 0,
-                        spacing: 3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { color: '#888', padding: 15, font: { size: 12 } }
-                        }
-                    },
-                    animation: { animateRotate: true, duration: 1500 }
-                }
-            });
+    <meta charset="UTF-8" />
+    <title>BrandNova Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Custom Scrollbar for Glass Effect */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
 
-        // Load Stats
-        async function loadStats() {
-            try {
-                const res = await fetch(`${API_URL}/api/admin/stats`, { headers: HEADERS });
-                if (!res.ok) throw new Error('Not admin');
-                const s = await res.json();
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
 
-                animateCounter(document.getElementById('cnt-users'), s.total_users);
-                animateCounter(document.getElementById('cnt-active'), s.active_users);
-                animateCounter(document.getElementById('cnt-pro'), s.pro_users);
-                animateCounter(document.getElementById('cnt-gens'), s.total_generations);
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
 
-                const mrr = document.getElementById('cnt-mrr');
-                mrr.dataset.prefix = '$';
-                animateCounter(mrr, Math.round(s.mrr || 0));
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
 
-                const conv = document.getElementById('cnt-conv');
-                conv.dataset.suffix = '%';
-                animateCounter(conv, Math.round(s.conversion_rate || 0));
-
-                initCharts(s);
-            } catch (err) {
-                alert('Admin access required');
-                window.location.href = 'dashboard.html';
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
             }
         }
 
-        // Load Users
-        async function loadUsers(filter = '') {
-            try {
-                const res = await fetch(`${API_URL}/api/admin/users`, { headers: HEADERS });
-                allUsers = await res.json();
-                renderUsers(filter);
-            } catch (e) { }
+        .animate-fadeIn {
+            animation: fadeIn 1s forwards;
         }
+    </style>
+</head>
 
-        function renderUsers(filter = '') {
-            const f = filter.toLowerCase();
-            const filtered = f ? allUsers.filter(u =>
-                u.email.toLowerCase().includes(f) || (u.fullname || '').toLowerCase().includes(f)
-            ) : allUsers;
+<body
+    class="bg-gradient-to-br from-[#0f172a] to-[#1e293b] text-white min-h-screen font-sans selection:bg-purple-500 selection:text-white">
 
-            document.getElementById('adminTableBody').innerHTML = filtered.map((u, i) => `
-                <tr style="animation:moduleEntrance .4s ease ${i * 0.03}s both;">
-                    <td style="font-weight:600;color:var(--text-muted);">#${u.id}</td>
-                    <td>${u.email}</td>
-                    <td>${u.fullname || '—'}</td>
-                    <td><span style="padding:3px 10px;border-radius:50px;font-size:.78rem;font-weight:600;background:${u.role === 'admin' ? 'var(--accent-glow)' : 'var(--surface)'};color:${u.role === 'admin' ? 'var(--accent)' : 'var(--text-secondary)'};">${u.role}</span></td>
-                    <td><span style="color:${u.is_active ? '#10b981' : '#ef4444'}">● ${u.is_active ? 'Active' : 'Inactive'}</span></td>
-                    <td>
-                        <button class="admin-btn" onclick="toggleRole(${u.id}, '${u.role}')">
-                            ${u.role === 'admin' ? '<i class=\"fas fa-arrow-down\"></i> Demote' : '<i class=\"fas fa-arrow-up\"></i> Promote'}
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
+    <div class="flex h-screen overflow-hidden">
 
-        async function toggleRole(id, cur) {
-            await fetch(`${API_URL}/api/admin/users/${id}/role`, {
-                method: 'PUT', headers: HEADERS,
-                body: JSON.stringify({ role: cur === 'admin' ? 'user' : 'admin' })
-            });
-            loadStats();
-            loadUsers(document.getElementById('searchInput').value);
-        }
+        <!-- Sidebar -->
+        <aside
+            class="w-64 bg-white/5 backdrop-blur-xl border-r border-white/10 flex flex-col justify-between transition-all duration-300 hover:w-72">
+            <div>
+                <div class="p-6">
+                    <h1
+                        class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600 whitespace-nowrap">
+                        BrandNova</h1>
+                    <p class="text-xs text-gray-500 mt-1 uppercase tracking-widest whitespace-nowrap">Admin Console</p>
+                </div>
 
-        // Search
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            renderUsers(e.target.value);
-        });
+                <nav class="px-4 space-y-2 mt-4">
+                    <button onclick="loadDashboard()" id="nav-dashboard"
+                        class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/5 hover:text-purple-400 transition flex items-center group whitespace-nowrap">
+                        <svg class="w-5 h-5 mr-3 text-gray-400 group-hover:text-purple-400 flex-shrink-0" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                            </path>
+                        </svg>
+                        Dashboard
+                    </button>
+                    <button onclick="loadUsers()" id="nav-users"
+                        class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/5 hover:text-purple-400 transition flex items-center group whitespace-nowrap">
+                        <svg class="w-5 h-5 mr-3 text-gray-400 group-hover:text-purple-400 flex-shrink-0" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                            </path>
+                        </svg>
+                        Users
+                    </button>
+                    <button onclick="loadUsage()" id="nav-usage"
+                        class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/5 hover:text-purple-400 transition flex items-center group whitespace-nowrap">
+                        <svg class="w-5 h-5 mr-3 text-gray-400 group-hover:text-purple-400 flex-shrink-0" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                            </path>
+                        </svg>
+                        Usage Logs
+                    </button>
+                    <button onclick="loadContent()" id="nav-content"
+                        class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/5 hover:text-purple-400 transition flex items-center group whitespace-nowrap">
+                        <svg class="w-5 h-5 mr-3 text-gray-400 group-hover:text-purple-400 flex-shrink-0" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                            </path>
+                        </svg>
+                        Content
+                    </button>
+                </nav>
+            </div>
 
-        // Logout
-        document.getElementById('logoutBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('access_token');
-            window.location.href = 'login.html';
-        });
+            <div class="p-6 border-t border-white/10">
+                <a href="dashboard.html"
+                    class="block w-full text-center py-2 px-4 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-gray-400 hover:text-white transition whitespace-nowrap">Exit
+                    to App</a>
+            </div>
+        </aside>
 
-        // Init
-        document.addEventListener('DOMContentLoaded', () => {
-            loadStats();
-            loadUsers();
-        });
-    </script>
+        <!-- Main -->
+        <main class="flex-1 p-10 overflow-y-auto">
+
+            <header class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 id="page-title" class="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
+                    <p id="page-subtitle" class="text-gray-400 mt-1">Real-time metrics and system health.</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span
+                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">
+                        <span class="w-2 h-2 mr-2 bg-green-500 rounded-full animate-pulse"></span>
+                        System Operational
+                    </span>
+                </div>
+            </header>
+
+            <!-- KPI Cards (Dashboard Only) -->
+            <div id="kpi-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                <!-- Loading Skeletons -->
+                <div
+                    class="bg-white/5 backdrop-blur-xl p-6 rounded-xl border border-white/10 shadow-lg shadow-purple-500/10 animate-pulse h-32">
+                </div>
+                <div
+                    class="bg-white/5 backdrop-blur-xl p-6 rounded-xl border border-white/10 shadow-lg shadow-purple-500/10 animate-pulse h-32">
+                </div>
+                <div
+                    class="bg-white/5 backdrop-blur-xl p-6 rounded-xl border border-white/10 shadow-lg shadow-purple-500/10 animate-pulse h-32">
+                </div>
+                <div
+                    class="bg-white/5 backdrop-blur-xl p-6 rounded-xl border border-white/10 shadow-lg shadow-purple-500/10 animate-pulse h-32">
+                </div>
+            </div>
+
+            <!-- Charts Area (Dashboard Only) -->
+            <div id="charts-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10 opacity-0 animate-fadeIn">
+                <div
+                    class="bg-white/5 backdrop-blur-xl p-6 rounded-xl border border-white/10 shadow-lg shadow-purple-500/10 hover:shadow-purple-500/20 transition duration-300">
+                    <h3 class="text-lg font-semibold mb-6 text-gray-200">Token Usage Trend</h3>
+                    <canvas id="usageChart"></canvas>
+                </div>
+
+                <div
+                    class="bg-white/5 backdrop-blur-xl p-6 rounded-xl border border-white/10 shadow-lg shadow-purple-500/10 hover:shadow-purple-500/20 transition duration-300">
+                    <h3 class="text-lg font-semibold mb-6 text-gray-200">User Growth</h3>
+                    <canvas id="usersChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Dynamic Content Area (Tables etc) -->
+            <div id="contentArea"
+                class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden min-h-[400px]">
+                <!-- Content injects here -->
+            </div>
+
+        </main>
+    </div>
+
+    <script src="assets/js/admin.js"></script>
+
 </body>
 
 </html>

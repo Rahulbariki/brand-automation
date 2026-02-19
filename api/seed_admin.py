@@ -10,15 +10,15 @@ Usage:
 import os
 import sys
 
-# Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add project root to path (adjusted for flat /api)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from dotenv import load_dotenv
 load_dotenv()
 
-from app.database import SessionLocal, engine, Base
-from app.models import User
-from app.auth import get_password_hash
+from database import SessionLocal, engine, Base
+from models import User
+from auth import get_password_hash
 
 # ═══ Admin Credentials ═══
 ADMIN_EMAIL = "rahulbariki24@gmail.com"

@@ -37,33 +37,21 @@ The backend is containerized using Docker.
    - Wait for the build to finish.
    - Once deployed, copy your **Backend URL** (e.g., `https://bizforge-api.onrender.com`).
 
----
+### ⚡ Vercel Deployment (Universal)
 
-## 🎨 Frontend Deployment (Vercel)
+The project is also optimized for a single-command deployment to Vercel (Backend + React Frontend).
 
-The frontend is a static site.
-
-1. **Import your repository to Vercel**.
-2. **Project Configuration**:
-   - **Framework Preset**: Other (or None).
-   - **Root Directory**: `frontend` (Click "Edit" next to Root Directory and select the `frontend` folder).
-   - **Build Command**: None.
-   - **Output Directory**: Leave default (it will serve the root of `frontend`).
-
-3. **📢 CRITICAL STEP: Update API URL**:
-   - Open `frontend/assets/js/api.js`.
-   - Find the line:
-     ```javascript
-     const API_BASE_URL = IS_LOCAL
-         ? "http://localhost:8000/api"
-         : "https://bizforge-api.onrender.com/api"; // UPDATE THIS!
-     ```
-   - Replace `https://bizforge-api.onrender.com` with your **actual Backend URL** from Render.
-   - Commit and push this change *before* deploying the frontend, or trigger a redeploy.
-
-4. **Deploy**:
-   - Click "Deploy".
-   - Your site will be live!
+1. **Prerequisites**: Ensure you have the [Vercel CLI](https://vercel.com/download) installed.
+2. **Setup Project ID**: I have already added `VERCEL_PROJECT_ID` to your `.env`.
+3. **Deployment**:
+   Run the following in your terminal:
+   ```bash
+   vercel link --project prj_0GY4RxdFE4WyDPLb8TbJ8dJnHDnp
+   vercel deploy --prod
+   ```
+4. **Configuration**:
+   - The `vercel.json` in the root directory manages both the Python API (`api/index.py`) and the React frontend (`brandnova-ui`).
+   - Environment variables (Groq, HF, Supabase, etc.) must be set in the Vercel Dashboard under **Project Settings > Environment Variables**.
 
 ---
 

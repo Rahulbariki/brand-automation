@@ -233,10 +233,38 @@
     </footer>
 
     <!-- ═══ Scripts ═══ -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="js/universe.js"></script>
+    <script src="js/auth.js"></script>
     <script>
         // Hero Typed Words
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check for Supabase Auth redirect (if misconfigured to root)
+            if (window.location.hash && window.location.hash.includes('access_token')) {
+                console.log("Detecting OAuth redirect...");
+                try {
+                    await window.checkSession();
+                    if (localStorage.getItem('access_token')) {
+                        window.location.href = 'dashboard.html';
+                    }
+                } catch (e) {
+                    console.error("Auth redirect failed:", e);
+                }
+            } else {
+                // Check if already logged in (optional auto-login)
+                const token = localStorage.getItem('access_token');
+                if (token) {
+                    // Update Login button to "Dashboard"
+                    const loginBtn = document.querySelector('a[href="login.html"]');
+                    if (loginBtn) {
+                        loginBtn.textContent = "Dashboard";
+                        loginBtn.href = "dashboard.html";
+                        loginBtn.classList.remove('ghost-btn');
+                        loginBtn.classList.add('glow-btn');
+                    }
+                }
+            }
+
             typeWriter(document.getElementById('heroTyped'),
                 ['Identity', 'Strategy', 'Launch', 'Revenue', 'Growth'],
                 90, 50, 2200
