@@ -94,9 +94,21 @@ try:
         
         # Sanitize and extract host for debugging
         db_host = "unknown"
-        if db_url and "@" in db_url:
+        db_user_debug = "unknown"
+        if db_url:
             try:
-                db_host = db_url.split("@")[1].split("/")[0]
+                # Simple parsing to avoid importing sqlalchemy just for this
+                if "@" in db_url:
+                    parts = db_url.split("@")
+                    db_host = parts[1].split("/")[0]
+                    
+                    # Extract user
+                    # format: protocol://user:pass@host
+                    user_part = parts[0].split("://")[1]
+                    if ":" in user_part:
+                        db_user_debug = user_part.split(":")[0]
+                    else:
+                        db_user_debug = user_part
             except:
                 pass
 
@@ -105,7 +117,8 @@ try:
             "env": ENV, 
             "db_configured": bool(db_url),
             "using_sqlite_fallback": bool(is_sqlite),
-            "db_connection_host": db_host # Critical for verifying IPv4/Pooler usage
+            "db_connection_host": db_host,
+            "db_user_hint": db_user_debug # CRITICAL: This will tell us if it's 'postgres' or 'postgres.proj...'
         }
 
 except Exception as e:
