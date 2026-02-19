@@ -97,5 +97,6 @@ def read_users_me(current_user: User = Depends(get_current_user)):
         "id": current_user.id,
         "email": current_user.email,
         "fullname": current_user.fullname,
-        "is_admin": current_user.is_admin
+        "is_admin": current_user.is_admin,
+        "subscription_plan": current_user.subscription_plan
     }

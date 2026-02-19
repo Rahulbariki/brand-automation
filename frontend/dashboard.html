@@ -751,6 +751,19 @@
 
             loadAdmin();
 
+            // Fetch current user details to update Plan UI
+            try {
+                const me = await fetch(`${API_URL}/api/auth/me`, { headers: HEADERS }).then(r => r.json());
+                if (me.subscription_plan && ['pro', 'enterprise', 'admin'].includes(me.subscription_plan)) {
+                    // Update Plan Text
+                    document.getElementById('statPlan').innerText = me.subscription_plan.charAt(0).toUpperCase() + me.subscription_plan.slice(1);
+                    // Hide Upgrade Link
+                    const upgradeLink = document.querySelector('#statPlan + .stat-trend a');
+                    if (upgradeLink) upgradeLink.parentElement.style.display = 'none';
+                    // Also hide the Upgrade Modal trigger generally? No, just the prompt.
+                }
+            } catch (e) { console.error("Failed to fetch user profile", e); }
+
             // Re-init card effects after DOM is ready
             setTimeout(() => {
                 initCardEffects();
