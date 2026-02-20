@@ -143,7 +143,7 @@
 
             try {
                 const token = getToken();
-                const res = await fetch(`${API_URL}/api/generate-pitch`, {
+                const res = await window.fetchWithRetry(`${API_URL}/api/generate-pitch`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({
@@ -181,7 +181,7 @@
 
             try {
                 const token = getToken();
-                const res = await fetch(`${API_URL}/api/generate-investor-email`, {
+                const res = await window.fetchWithRetry(`${API_URL}/api/generate-investor-email`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({
