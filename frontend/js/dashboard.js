@@ -12,13 +12,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        const response = await fetch('/api/me', {
+        const response = await window.fetchWithRetry('/api/me', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
 
-        if (!response.ok) {
+        if (!response || !response.ok) {
             throw new Error('Failed to fetch user profile'); // Likely expired token
         }
 

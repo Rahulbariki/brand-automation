@@ -10,21 +10,120 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="js/auth.js"></script>
     <style>
-        .auth-loader-overlay {
+        .auth-skeleton {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0f172a;
+            right: 0;
+            bottom: 0;
             z-index: 9999;
+            background: #0f172a;
             display: flex;
-            align-items: center;
-            justify-content: center;
             color: white;
             font-family: sans-serif;
+            transition: opacity 0.5s;
+        }
+
+        .skeleton-sidebar {
+            width: 260px;
+            background: rgba(255, 255, 255, 0.02);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 2rem 1rem;
+            display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 1.5rem;
+        }
+
+        .skeleton-item {
+            height: 48px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .skeleton-main {
+            flex: 1;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .skeleton-header {
+            height: 60px;
+            width: 40%;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .skeleton-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .skeleton-card {
+            height: 120px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInSidebar {
+            from {
+                transform: translateX(-100%);
+            }
+
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInMain {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .kpi-animate {
+            animation: scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .sidebar-animate {
+            animation: slideInSidebar 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .main-animate {
+            animation: fadeInMain 0.7s ease both;
         }
     </style>
     <script>
@@ -520,9 +619,9 @@
 
         // ── API Helper ──
         async function apiCall(endpoint, body) {
-            const res = await fetch(`${API_URL}${endpoint}`, {
+            const res = await window.fetchWithRetry(`${API_URL}${endpoint}`, {
                 method: 'POST', headers: HEADERS, body: JSON.stringify(body)
-            });
+            }, 3, 500);
             if (res.status === 403) {
                 const data = await res.json();
                 if (data.detail && data.detail.includes('Upgrade')) {
@@ -709,7 +808,7 @@
         // ── Admin ──
         async function loadAdmin() {
             try {
-                const stats = await fetch(`${API_URL}/api/admin/stats`, { headers: HEADERS }).then(r => r.json());
+                const stats = await window.fetchWithRetry(`${API_URL}/api/admin/stats`, { headers: HEADERS }, 3, 500).then(r => r.json());
                 document.getElementById('adminStats').innerHTML = `
                     <div class="glass-card stat-card"><h4>Total Users</h4><div class="stat-value">${stats.total_users}</div></div>
                     <div class="glass-card stat-card"><h4>Active Users</h4><div class="stat-value">${stats.active_users}</div></div>
@@ -718,7 +817,7 @@
                     <div class="glass-card stat-card"><h4>MRR</h4><div class="stat-value" data-prefix="$">${stats.mrr || 0}</div><div class="stat-trend up"><i class="fas fa-dollar-sign"></i> Monthly Revenue</div></div>
                     <div class="glass-card stat-card"><h4>Conversion</h4><div class="stat-value">${stats.conversion_rate || 0}%</div><div class="stat-trend"><i class="fas fa-chart-line"></i> Pro / Total</div></div>
                 `;
-                const users = await fetch(`${API_URL}/api/admin/users`, { headers: HEADERS }).then(r => r.json());
+                const users = await window.fetchWithRetry(`${API_URL}/api/admin/users`, { headers: HEADERS }, 3, 500).then(r => r.json());
                 document.getElementById('adminTableBody').innerHTML = users.map(u => `
                     <tr>
                         <td>${u.id}</td>
@@ -734,18 +833,18 @@
 
         async function toggleRole(id, currentRole) {
             const newRole = currentRole === 'admin' ? 'user' : 'admin';
-            await fetch(`${API_URL}/api/admin/users/${id}/role`, {
+            await window.fetchWithRetry(`${API_URL}/api/admin/users/${id}/role`, {
                 method: 'PUT', headers: HEADERS,
                 body: JSON.stringify({ role: newRole })
-            });
+            }, 3, 500);
             loadAdmin();
         }
 
-        // ── Init ──
-        document.addEventListener('DOMContentLoaded', async () => {
+        // ── Init Data Load ──
+        async function loadDashboardData() {
             // Check if admin
             try {
-                const res = await fetch(`${API_URL}/api/admin/stats`, { headers: HEADERS });
+                const res = await window.fetchWithRetry(`${API_URL}/api/admin/stats`, { headers: HEADERS }, 3, 500);
                 if (res.ok) document.getElementById('adminLink').style.display = '';
             } catch (e) { }
 
@@ -753,58 +852,83 @@
 
             // Fetch current user details to update Plan UI
             try {
-                const me = await fetch(`${API_URL}/api/auth/me`, { headers: HEADERS }).then(r => r.json());
+                const me = await window.fetchWithRetry(`${API_URL}/api/auth/me`, { headers: HEADERS }, 3, 500).then(r => r.json());
                 if (me.subscription_plan && ['pro', 'enterprise', 'admin'].includes(me.subscription_plan)) {
                     // Update Plan Text
                     document.getElementById('statPlan').innerText = me.subscription_plan.charAt(0).toUpperCase() + me.subscription_plan.slice(1);
                     // Hide Upgrade Link
                     const upgradeLink = document.querySelector('#statPlan + .stat-trend a');
                     if (upgradeLink) upgradeLink.parentElement.style.display = 'none';
-                    // Also hide the Upgrade Modal trigger generally? No, just the prompt.
                 }
             } catch (e) { console.error("Failed to fetch user profile", e); }
 
-            // Re-init card effects after DOM is ready
+            // Re-init card effects
             setTimeout(() => {
                 initCardEffects();
                 initRippleButtons();
                 initMagneticLinks();
             }, 100);
-        });
+        }
     </script>
-    <div id="authLoader" class="auth-loader-overlay">
-        <i class="fas fa-spinner fa-spin fa-2x"></i>
-        <div id="authLoaderText">Initializing Universe...</div>
+    <div id="authLoader" class="auth-skeleton">
+        <div class="skeleton-sidebar">
+            <div class="skeleton-item" style="height: 32px; width: 60%; margin-bottom: 2rem;"></div>
+            <div class="skeleton-item"></div>
+            <div class="skeleton-item"></div>
+            <div class="skeleton-item"></div>
+            <div class="skeleton-item"></div>
+            <div class="skeleton-item" style="margin-top: auto;"></div>
+        </div>
+        <div class="skeleton-main">
+            <div class="skeleton-header"></div>
+            <div class="skeleton-cards">
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+            </div>
+            <div
+                style="flex:1; background: rgba(255,255,255,0.02); border-radius: 12px; margin-top: 2rem; animation: pulse 1.5s infinite">
+            </div>
+        </div>
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            const loader = document.getElementById('authLoader');
-            const loaderText = document.getElementById('authLoaderText');
+        async function initDashboard() {
             try {
-                // Give Supabase a moment to process the URL hash
-                // await new Promise(r => setTimeout(r, 500)); 
                 const token = await window.checkSession();
+                if (!token) throw new Error("No session found");
 
-                if (token) {
-                    // Valid session!
-                    loader.style.opacity = '0';
-                    loader.style.transition = 'opacity 0.5s';
-                    setTimeout(() => loader.remove(), 500);
-                } else {
-                    // No session found
-                    console.warn("No session found, redirecting to login.");
-                    loaderText.innerText = "Session check failed. Check console for details.";
-                    loaderText.style.color = "#ef4444";
-                    // Only redirect if NOT debug mode
-                    // window.location.href = 'login.html';
-                }
+                // Route Guard: Explicitly wait for backend session validation
+                const sessionRes = await fetch(`${API_URL}/api/session-check`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!sessionRes.ok) throw new Error("Invalid session token");
+
+                // Session is verified, load data into UI elements
+                await loadDashboardData();
+
+                // Validation passed, initiate Motion Render Layer
+                const loader = document.getElementById('authLoader');
+                loader.style.opacity = '0';
+
+                document.getElementById('sidebar').classList.add('sidebar-animate');
+                document.getElementById('mainContent').classList.add('main-animate');
+
+                const statCards = document.querySelectorAll('.stat-card');
+                statCards.forEach((card, i) => {
+                    card.classList.add('kpi-animate');
+                    card.style.animationDelay = `${i * 0.1}s`;
+                });
+
+                setTimeout(() => loader.remove(), 500);
             } catch (e) {
-                console.error("Auth check failed:", e);
-                loaderText.innerText = "Error: " + e.message;
-                loaderText.style.color = "#ef4444";
-                // window.location.href = 'login.html';
+                console.warn("Dashboard Route Guard failed:", e);
+                localStorage.removeItem('access_token');
+                window.location.href = 'login.html';
             }
-        });
+        }
+
+        // We run initDashboard mapping natively to hook the load process
+        document.addEventListener('DOMContentLoaded', initDashboard);
     </script>
 
 </html>

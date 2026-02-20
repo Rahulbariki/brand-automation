@@ -43,7 +43,7 @@ async function login(email, password) {
 
     const data = await response.json();
     setToken(data.access_token);
-    window.location.href = 'dashboard.html';
+    await loginSuccessHandler();
 }
 
 async function signup(email, password, fullname) {
@@ -74,7 +74,7 @@ window.googleLogin = async function () {
     const { data, error } = await client.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: window.location.origin + '/dashboard.html'
+            redirectTo: window.location.origin + '/login.html'
         }
     });
 
@@ -179,3 +179,53 @@ function requireAuth() {
         window.location.href = 'login.html';
     }
 }
+
+window.fetchWithRetry = async function (url, options = {}, retries = 3, backoff = 1000) {
+    options.credentials = 'include';
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await fetch(url, options);
+            if (response.ok) return response;
+            // If response is not OK, we might want to retry
+            if (i === retries - 1) return response;
+        } catch (err) {
+            if (i === retries - 1) throw err;
+        }
+        await new Promise(r => setTimeout(r, backoff * Math.pow(2, i)));
+    }
+};
+
+window.loginSuccessHandler = async function () {
+    const delays = [200, 500, 1000];
+    let sessionValid = false;
+
+    for (let i = 0; i < delays.length; i++) {
+        try {
+            const response = await fetch(`${API_URL}/api/session-check`, {
+                headers: { 'Authorization': `Bearer ${getToken()}` },
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                sessionValid = true;
+                break;
+            }
+        } catch (e) {
+            console.warn('Session check polling error', e);
+        }
+
+        if (!sessionValid) {
+            await new Promise(r => setTimeout(r, delays[i]));
+        }
+    }
+
+    if (sessionValid) {
+        // Smooth transition out
+        document.body.style.opacity = '0';
+        document.body.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => window.location.href = 'dashboard.html', 500);
+    } else {
+        localStorage.removeItem('access_token');
+        throw new Error("Authentication session validation failed. Please try again.");
+    }
+};

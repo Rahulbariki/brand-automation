@@ -122,10 +122,7 @@
                     throw new Error(msg);
                 }
                 localStorage.setItem('access_token', data.access_token);
-                // Smooth transition out
-                document.body.style.opacity = '0';
-                document.body.style.transition = 'opacity 0.5s ease';
-                setTimeout(() => window.location.href = 'dashboard.html', 500);
+                await window.loginSuccessHandler();
             } catch (err) {
                 showError(err.message);
                 btn.innerHTML = '<i class="fas fa-arrow-right"></i> Sign In';
@@ -139,6 +136,29 @@
                 await window.googleLogin();
             } catch (err) {
                 showError(err.message);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.location.hash && window.location.hash.includes('access_token')) {
+                const btn = document.getElementById('googleBtn');
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+                    btn.disabled = true;
+                }
+                errBox.classList.remove('visible');
+                try {
+                    const token = await window.checkSession();
+                    if (token) {
+                        await window.loginSuccessHandler();
+                    }
+                } catch (err) {
+                    showError(err.message);
+                    if (btn) {
+                        btn.innerHTML = 'Continue with Google'; // Simplified original HTML content
+                        btn.disabled = false;
+                    }
+                }
             }
         });
     </script>
