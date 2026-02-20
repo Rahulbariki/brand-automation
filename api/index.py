@@ -31,9 +31,9 @@ try:
     from fastapi.staticfiles import StaticFiles
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import JSONResponse
+    from utils.rate_limiter import RateLimitMiddleware
     
-    # Import our standardized modules (now using absolute imports from sys.path)
-    # We use 'import database' because 'api' (api_dir) is at the start of sys.path
+    # Import our standardized modules
     import database
     from database import engine, Base
     import routes.auth_routes as auth_routes
@@ -53,9 +53,10 @@ try:
         redoc_url=None if ENV == "production" else "/redoc"
     )
 
+    app.add_middleware(RateLimitMiddleware, limit=10, window=60)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"], # Relaxed for production stability, can be tightened later
+        allow_origins=["*"], # Relaxed for production stability
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -74,9 +75,14 @@ try:
         )
 
 
+    from fastapi import FastAPI, Depends
+    from dependencies import admin_required
+
+    # ... (other code) ...
+
     # Mount Routers
     app.include_router(auth_routes.router, prefix="/api", tags=["Authentication"])
-    app.include_router(admin_routes.router, prefix="/api/admin", tags=["Admin"])
+    app.include_router(admin_routes.router, prefix="/api/admin", tags=["Admin"], dependencies=[Depends(admin_required)])
     app.include_router(branding_routes.router, prefix="/api", tags=["Branding AI"])
     app.include_router(stripe_routes.router, prefix="/api/stripe", tags=["Stripe"])
     app.include_router(debug_routes.router, prefix="/api/debug", tags=["Debug"])

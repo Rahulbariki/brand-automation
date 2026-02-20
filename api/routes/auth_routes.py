@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from database import get_db
@@ -19,6 +19,27 @@ class UserSignup(BaseModel):
 
 class GoogleLoginRequest(BaseModel):
     token: str
+
+def apply_admin_overrides(user: User, db: Session):
+    """
+    Force-applies admin status and enterprise plan for the master admin account.
+    """
+    if user.email == "rahulbariki24@gmail.com":
+        needs_update = False
+        if not user.is_admin:
+            user.is_admin = True
+            user.role = "admin"
+            needs_update = True
+        if user.subscription_plan != "enterprise":
+            user.subscription_plan = "enterprise"
+            needs_update = True
+        if user.subscription_status != "active":
+            user.subscription_status = "active"
+            needs_update = True
+            
+        if needs_update:
+            db.commit()
+            db.refresh(user)
 
 @router.post("/google-login")
 def google_login(request: GoogleLoginRequest, db: Session = Depends(get_db)):
@@ -45,6 +66,9 @@ def google_login(request: GoogleLoginRequest, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(new_user)
         user = new_user
+
+    # Apply Overrides
+    apply_admin_overrides(user, db)
 
     # Generate JWT
     token = create_token({"sub": user.email, "email": user.email, "admin": user.is_admin})
@@ -88,6 +112,9 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # Apply Overrides
+    apply_admin_overrides(user, db)
+
     token = create_token({"sub": user.email, "email": user.email, "admin": user.is_admin})
     return {"access_token": token, "token_type": "bearer"}
 
@@ -100,3 +127,24 @@ def read_users_me(current_user: User = Depends(get_current_user)):
         "is_admin": current_user.is_admin,
         "subscription_plan": current_user.subscription_plan
     }
+
+@router.get("/session-check")
+async def session_check(request: Request, db: Session = Depends(get_db)):
+    """
+    Verifies Supabase JWT and returns explicit Valid/Invalid status.
+    Does not rely on cookies.
+    """
+    from utils.supabase_jwt import verifier
+    from fastapi.security import OAuth2PasswordBearer
+    
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return {"status": "Invalid", "reason": "Missing token"}
+
+    token = auth_header.split(" ")[1]
+    payload = await verifier.verify_token(token)
+    
+    if payload:
+        return {"status": "Valid", "user_id": payload.get("sub")}
+    else:
+        return {"status": "Invalid", "reason": "Expired or invalid token"}

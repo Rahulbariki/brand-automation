@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User
-from config import STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, FRONTEND_URL
+from config import STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, FRONTEND_URL, STRIPE_PRO_PRICE_ID, STRIPE_ENTERPRISE_PRICE_ID
 from dependencies import get_current_user
 
 router = APIRouter()
@@ -13,8 +13,8 @@ if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
 
 PRICING_PLANS = {
-    "pro": "price_1QmJ8...", # Placeholder
-    "enterprise": "price_1QmJ9..." 
+    "pro": STRIPE_PRO_PRICE_ID,
+    "enterprise": STRIPE_ENTERPRISE_PRICE_ID
 }
 
 @router.post("/create-checkout-session")
@@ -45,10 +45,11 @@ async def create_checkout_session(
             cancel_url=f"{FRONTEND_URL}/dashboard?canceled=true",
             metadata={
                 "user_id": current_user.id,
+                "supabase_id": current_user.supabase_id,
                 "plan": plan
             }
         )
-        return {"url": checkout_session.url}
+        return {"checkout_url": checkout_session.url}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -19,7 +19,7 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-
+    supabase_id = Column(String, unique=True, index=True, nullable=True) # UUID from Supabase 'sub' claim
     email = Column(String, unique=True, index=True, nullable=False)
     # Hashed password for email auth, nullable for OAuth if we decide to enforce OAuth only, 
     # but based on requirements we have both.
@@ -37,8 +37,9 @@ class User(Base):
 
     is_active = Column(Boolean, default=True)
 
-    # Subscription tier (for Stripe later)
-    subscription_plan = Column(String, default="free")
+    # Subscription tier
+    subscription_plan = Column(String, default="free") # free, pro, enterprise
+    subscription_status = Column(String, default="inactive") # active, inactive
     
     # Stripe Integration
     stripe_customer_id = Column(String, nullable=True)
