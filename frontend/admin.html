@@ -62,6 +62,36 @@
             animation: fadeInMain 1s forwards;
         }
 
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes toastFadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
+        }
+
+        .toast-enter {
+            animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .toast-exit {
+            animation: toastFadeOut 0.3s ease forwards;
+        }
+
         .sidebar-animate {
             animation: slideInSidebar 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
@@ -322,6 +352,10 @@
             </div>
         </div>
     </div>
+
+    <!-- Global Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+
 </body>
 
 </html>

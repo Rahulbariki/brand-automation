@@ -7,7 +7,7 @@ if (!token) {
 }
 
 // Helper: Fetch with Auth
-async function api(path, method = "GET", body = null) {
+async function api(path, method = "GET", body = null, silent = false) {
     const options = {
         method,
         headers: {
@@ -22,7 +22,7 @@ async function api(path, method = "GET", body = null) {
 
         // Handle Auth Errors
         if (res.status === 403 || res.status === 401) {
-            alert("⛔ Admin Access Required. Please log in with an admin account.");
+            if (!silent) showToast("⛔ Admin Access Required or Session Expired.", "error");
             window.location.href = "dashboard.html";
             return null;
         }
@@ -32,13 +32,40 @@ async function api(path, method = "GET", body = null) {
             return JSON.parse(text);
         } catch (e) {
             console.error("Non-JSON Response:", text);
-            // alert("Server Error: " + text.substring(0, 100));
+            if (!silent) showToast("Server returned invalid data format.", "error");
             throw new Error(text);
         }
     } catch (err) {
         console.error("API Error:", err);
-        return null;
+        if (!silent) showToast(`Network or API Failure: ${err.message}`, "error", true);
+        return null; // Prevent crash, return null safely
     }
+}
+
+// Global Toast System (Error Boundary & Notifications)
+window.showToast = function (message, type = "info", offerRetry = false) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast-enter pointer-events-auto flex items-center p-4 mb-2 min-w-[300px] max-w-sm rounded-lg shadow-lg shadow-black/20 text-sm font-medium border ${type === 'error' ? 'bg-red-900/90 border-red-500/50 text-red-100' : 'bg-gray-800/90 border-white/10 text-white backdrop-blur-md'}`;
+
+    let icon = type === 'error' ? '⚠️' : '🔔';
+    if (message.toLowerCase().includes('signup')) icon = '🎉';
+    if (message.toLowerCase().includes('token spike')) icon = '🔥';
+
+    toast.innerHTML = `
+        <div class="mr-3 text-lg">${icon}</div>
+        <div class="flex-1">${message}</div>
+        ${offerRetry ? `<button onclick="window.location.reload()" class="ml-4 px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-xs transition">Retry</button>` : ''}
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.replace('toast-enter', 'toast-exit');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000); // 4 second auto-dismiss
 }
 
 // Helper: Set Active Nav
@@ -197,65 +224,70 @@ window.switchTimeframe = async function (frame) {
 }
 
 function renderCharts(stats) {
-    // If charts already exist, destroy them to update
-    if (usageChartInstance) usageChartInstance.destroy();
-    if (usersChartInstance) usersChartInstance.destroy();
+    try {
+        // If charts already exist, destroy them to update
+        if (usageChartInstance) usageChartInstance.destroy();
+        if (usersChartInstance) usersChartInstance.destroy();
 
-    // Usage Chart
-    const ctx1 = document.getElementById("usageChart").getContext('2d');
-    usageChartInstance = new Chart(ctx1, {
-        type: "line",
-        data: {
-            labels: stats.usage_labels,
-            datasets: [{
-                label: "Token Usage",
-                data: stats.usage_data,
-                borderColor: "#a855f7",
-                backgroundColor: "rgba(168, 85, 247, 0.1)",
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: "#a855f7"
-            }]
-        },
-        options: {
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
-                x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+        // Usage Chart
+        const ctx1 = document.getElementById("usageChart").getContext('2d');
+        usageChartInstance = new Chart(ctx1, {
+            type: "line",
+            data: {
+                labels: stats.usage_labels,
+                datasets: [{
+                    label: "Token Usage",
+                    data: stats.usage_data,
+                    borderColor: "#a855f7",
+                    backgroundColor: "rgba(168, 85, 247, 0.1)",
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: "#a855f7"
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                }
             }
-        }
-    });
+        });
 
-    // User Chart
-    const ctx2 = document.getElementById("usersChart").getContext('2d');
+        // User Chart
+        const ctx2 = document.getElementById("usersChart").getContext('2d');
 
-    // Add smooth animation delay on initial load
-    document.getElementById("usersChart").parentElement.classList.add('opacity-0', 'animate-[fadeInMain_0.6s_forwards]');
+        // Add smooth animation delay on initial load
+        document.getElementById("usersChart").parentElement.classList.add('opacity-0', 'animate-[fadeInMain_0.6s_forwards]');
 
-    usersChartInstance = new Chart(ctx2, {
-        type: "line",
-        data: {
-            labels: stats.user_labels,
-            datasets: [{
-                label: "New Users",
-                data: stats.user_data,
-                borderColor: "#3b82f6",
-                backgroundColor: "rgba(59, 130, 246, 0.1)",
-                borderWidth: 2,
-                fill: true,
-                tension: 0.3,
-                pointBackgroundColor: "#3b82f6"
-            }]
-        },
-        options: {
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
-                x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+        usersChartInstance = new Chart(ctx2, {
+            type: "line",
+            data: {
+                labels: stats.user_labels,
+                datasets: [{
+                    label: "New Users",
+                    data: stats.user_data,
+                    borderColor: "#3b82f6",
+                    backgroundColor: "rgba(59, 130, 246, 0.1)",
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: "#3b82f6"
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                }
             }
-        }
-    });
+        });
+    } catch (err) {
+        console.error("Chart Rendering Error Boundary Caught Event:", err);
+        showToast("Chart rendering engine failed.", "error", true);
+    }
 }
 
 // === LIVE KPI ENGINE ===
@@ -552,5 +584,56 @@ async function loadContent() {
         </table>`;
 }
 
+// === GLOBAL NOTIFICATION ENGINE ===
+let lastKnownLogDate = null;
+let liveNotificationsInterval = null;
+
+function startLiveNotifications() {
+    if (liveNotificationsInterval) clearInterval(liveNotificationsInterval);
+
+    liveNotificationsInterval = setInterval(async () => {
+        try {
+            const logs = await api("/usage", "GET", null, true); // silent polling
+            if (!logs || logs.length === 0) return;
+
+            const latestLog = logs[0]; // Assuming API returns descending order
+            const latestDate = new Date(latestLog.created_at).getTime();
+
+            if (!lastKnownLogDate) {
+                lastKnownLogDate = latestDate;
+                return;
+            }
+
+            if (latestDate > lastKnownLogDate) {
+                lastKnownLogDate = latestDate;
+
+                // Formulate Alert Logic
+                let msg = "";
+                const feature = latestLog.feature.toLowerCase();
+                const user = latestLog.user_email || latestLog.user_id || "User";
+
+                if (feature.includes("signup")) {
+                    msg = `New User Signup: ${user}`;
+                } else if (feature.includes("chat") || feature.includes("generate")) {
+                    msg = `${user} just generated content using ${feature}.`;
+                } else if (latestLog.tokens_used > 50) {
+                    msg = `Token Spike! ${user} consumed ${latestLog.tokens_used} tokens.`;
+                } else if (feature.includes("role") || feature.includes("admin")) {
+                    msg = `Role modified for ${user}.`;
+                } else {
+                    msg = `System Activity from ${user}: ${feature}`;
+                }
+
+                showToast(msg, "info");
+            }
+        } catch (e) {
+            // Ignore polling background errors
+        }
+    }, 5000); // 5 sec live polling
+}
+
 // Initial Load
-document.addEventListener("DOMContentLoaded", loadDashboard);
+document.addEventListener("DOMContentLoaded", () => {
+    loadDashboard();
+    startLiveNotifications();
+});
