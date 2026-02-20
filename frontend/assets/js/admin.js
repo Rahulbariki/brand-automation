@@ -123,6 +123,25 @@ async function loadDashboard() {
     const loader = document.getElementById('authLoader');
     if (loader) {
         loader.style.opacity = '0';
+
+        // Trigger Motion Rendering
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && !sidebar.classList.contains('sidebar-animate')) {
+            sidebar.classList.add('sidebar-animate');
+        }
+
+        const kpiCards = document.querySelectorAll('#kpi-grid > .group');
+        kpiCards.forEach((card, i) => {
+            card.classList.add('kpi-animate');
+            card.style.animationDelay = `${i * 0.1}s`;
+        });
+
+        const chartsGrid = document.getElementById('charts-grid');
+        if (chartsGrid) {
+            chartsGrid.classList.add('main-animate');
+            chartsGrid.style.animationDelay = '0.3s';
+        }
+
         setTimeout(() => loader.remove(), 500);
     }
 }

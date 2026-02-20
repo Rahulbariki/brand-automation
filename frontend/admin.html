@@ -26,14 +26,52 @@
             background: rgba(255, 255, 255, 0.2);
         }
 
-        @keyframes fadeIn {
+        @keyframes fadeInMain {
+            from {
+                opacity: 0;
+            }
+
             to {
                 opacity: 1;
             }
         }
 
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInSidebar {
+            from {
+                transform: translateX(-100%);
+            }
+
+            to {
+                transform: translateX(0);
+            }
+        }
+
         .animate-fadeIn {
-            animation: fadeIn 1s forwards;
+            animation: fadeInMain 1s forwards;
+        }
+
+        .sidebar-animate {
+            animation: slideInSidebar 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .kpi-animate {
+            animation: scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .main-animate {
+            animation: fadeInMain 0.7s ease both;
         }
 
         .auth-skeleton {
@@ -129,7 +167,7 @@
     <div class="flex h-screen overflow-hidden">
 
         <!-- Sidebar -->
-        <aside
+        <aside id="sidebar"
             class="w-64 bg-white/5 backdrop-blur-xl border-r border-white/10 flex flex-col justify-between transition-all duration-300 hover:w-72">
             <div>
                 <div class="p-6">
@@ -225,7 +263,7 @@
             </div>
 
             <!-- Charts Area (Dashboard Only) -->
-            <div id="charts-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10 opacity-0 animate-fadeIn">
+            <div id="charts-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
                 <div
                     class="bg-white/5 backdrop-blur-xl p-6 rounded-xl border border-white/10 shadow-lg shadow-purple-500/10 hover:shadow-purple-500/20 transition duration-300">
                     <h3 class="text-lg font-semibold mb-6 text-gray-200">Token Usage Trend</h3>
