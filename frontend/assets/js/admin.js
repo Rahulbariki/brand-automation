@@ -54,6 +54,11 @@ function setActiveNav(id) {
     }
 }
 
+// Global Chart References
+let usageChartInstance = null;
+let usersChartInstance = null;
+let liveUsageInterval = null;
+
 // === VIEW: DASHBOARD ===
 async function loadDashboard() {
     setActiveNav('nav-dashboard');
@@ -143,16 +148,20 @@ async function loadDashboard() {
         }
 
         setTimeout(() => loader.remove(), 500);
+
+        // Start Live Polling Engine
+        startLiveUsage();
     }
 }
 
 function renderCharts(stats) {
     // If charts already exist, destroy them to update
-    // (Skipping destroy logic for MVP, just monitoring memory)
+    if (usageChartInstance) usageChartInstance.destroy();
+    if (usersChartInstance) usersChartInstance.destroy();
 
     // Usage Chart
     const ctx1 = document.getElementById("usageChart").getContext('2d');
-    new Chart(ctx1, {
+    usageChartInstance = new Chart(ctx1, {
         type: "line",
         data: {
             labels: stats.usage_labels,
@@ -178,7 +187,7 @@ function renderCharts(stats) {
 
     // User Chart
     const ctx2 = document.getElementById("usersChart").getContext('2d');
-    new Chart(ctx2, {
+    usersChartInstance = new Chart(ctx2, {
         type: "bar",
         data: {
             labels: stats.user_labels,
@@ -197,6 +206,31 @@ function renderCharts(stats) {
             }
         }
     });
+}
+
+// === LIVE KPI ENGINE ===
+function startLiveUsage() {
+    if (liveUsageInterval) clearInterval(liveUsageInterval);
+
+    liveUsageInterval = setInterval(async () => {
+        // Stop polling if we navigated away from dashboard
+        if (document.getElementById('charts-grid').style.display === 'none') {
+            clearInterval(liveUsageInterval);
+            return;
+        }
+
+        try {
+            const data = await api("/live-usage", "GET");
+            if (data && usageChartInstance) {
+                // Update just the datasets (avoids flash & layout shift)
+                usageChartInstance.data.labels = data.usage_labels;
+                usageChartInstance.data.datasets[0].data = data.usage_data;
+                usageChartInstance.update('none'); // Update without full structural re-render
+            }
+        } catch (e) {
+            console.error("Live usage sync failed:", e);
+        }
+    }, 5000);
 }
 
 // === VIEW: USERS ===
