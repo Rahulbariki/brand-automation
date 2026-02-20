@@ -58,6 +58,8 @@ function setActiveNav(id) {
 let usageChartInstance = null;
 let usersChartInstance = null;
 let liveUsageInterval = null;
+let liveUsersInterval = null;
+let currentDashboardTimeframe = 'hourly';
 
 // === VIEW: DASHBOARD ===
 async function loadDashboard() {
@@ -68,7 +70,12 @@ async function loadDashboard() {
     document.getElementById('kpi-grid').style.display = 'grid';
     document.getElementById('charts-grid').style.display = 'grid';
 
-    const stats = await api("/dashboard");
+    // Timeframe toggle block
+    const toggleContainer = document.getElementById('timeframe-toggle');
+    if (toggleContainer) toggleContainer.style.display = 'flex';
+
+    const reqTimeframe = currentDashboardTimeframe === 'hourly' ? '24h' : '30d';
+    const stats = await api(`/dashboard?timeframe=${reqTimeframe}`);
     if (!stats) return;
 
     // Render KPIs
@@ -151,6 +158,41 @@ async function loadDashboard() {
 
         // Start Live Polling Engine
         startLiveUsage();
+        startLiveUsers();
+    }
+}
+
+window.switchTimeframe = async function (frame) {
+    if (currentDashboardTimeframe === frame) return;
+    currentDashboardTimeframe = frame;
+
+    // Update active button classes safely
+    const btnHourly = document.getElementById('btn-hourly');
+    const btnDaily = document.getElementById('btn-daily');
+    if (btnHourly && btnDaily) {
+        if (frame === 'hourly') {
+            btnHourly.className = 'px-3 py-1 text-xs font-medium rounded-md bg-purple-500 text-white shadow transition';
+            btnDaily.className = 'px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-white transition';
+        } else {
+            btnDaily.className = 'px-3 py-1 text-xs font-medium rounded-md bg-purple-500 text-white shadow transition';
+            btnHourly.className = 'px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-white transition';
+        }
+    }
+
+    // Refresh charts data natively without unmounting
+    const reqTimeframe = currentDashboardTimeframe === 'hourly' ? '24h' : '30d';
+    const data = await api(`/dashboard?timeframe=${reqTimeframe}`);
+    if (data) {
+        if (usageChartInstance) {
+            usageChartInstance.data.labels = data.usage_labels;
+            usageChartInstance.data.datasets[0].data = data.usage_data;
+            usageChartInstance.update();
+        }
+        if (usersChartInstance) {
+            usersChartInstance.data.labels = data.user_labels;
+            usersChartInstance.data.datasets[0].data = data.user_data;
+            usersChartInstance.update();
+        }
     }
 }
 
@@ -187,15 +229,23 @@ function renderCharts(stats) {
 
     // User Chart
     const ctx2 = document.getElementById("usersChart").getContext('2d');
+
+    // Add smooth animation delay on initial load
+    document.getElementById("usersChart").parentElement.classList.add('opacity-0', 'animate-[fadeInMain_0.6s_forwards]');
+
     usersChartInstance = new Chart(ctx2, {
-        type: "bar",
+        type: "line",
         data: {
             labels: stats.user_labels,
             datasets: [{
                 label: "New Users",
                 data: stats.user_data,
-                backgroundColor: "#3b82f6",
-                borderRadius: 4
+                borderColor: "#3b82f6",
+                backgroundColor: "rgba(59, 130, 246, 0.1)",
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: "#3b82f6"
             }]
         },
         options: {
@@ -233,6 +283,30 @@ function startLiveUsage() {
     }, 5000);
 }
 
+function startLiveUsers() {
+    if (liveUsersInterval) clearInterval(liveUsersInterval);
+
+    liveUsersInterval = setInterval(async () => {
+        if (document.getElementById('charts-grid').style.display === 'none') {
+            clearInterval(liveUsersInterval);
+            return;
+        }
+
+        try {
+            const reqTimeframe = currentDashboardTimeframe === 'hourly' ? '24h' : '30d';
+            const data = await api(`/dashboard?timeframe=${reqTimeframe}`);
+            if (data && usersChartInstance) {
+                // Update specific datasets array avoiding reflows
+                usersChartInstance.data.labels = data.user_labels;
+                usersChartInstance.data.datasets[0].data = data.user_data;
+                usersChartInstance.update('none');
+            }
+        } catch (e) {
+            console.error("Live user polling sync failed:", e);
+        }
+    }, 10000);
+}
+
 // === VIEW: USERS ===
 let allUsers = [];
 
@@ -242,6 +316,8 @@ async function loadUsers() {
     document.getElementById('page-subtitle').innerText = "Manage access, roles, and subscriptions.";
     document.getElementById('kpi-grid').style.display = 'none';
     document.getElementById('charts-grid').style.display = 'none';
+    const toggleContainer = document.getElementById('timeframe-toggle');
+    if (toggleContainer) toggleContainer.style.display = 'none';
     const contentArea = document.getElementById('contentArea');
     contentArea.style.display = 'block';
 
@@ -414,6 +490,8 @@ async function loadUsage() {
     document.getElementById('page-subtitle').innerText = "Live tracking of platform events and token usage.";
     document.getElementById('kpi-grid').style.display = 'none';
     document.getElementById('charts-grid').style.display = 'none';
+    const toggleContainer = document.getElementById('timeframe-toggle');
+    if (toggleContainer) toggleContainer.style.display = 'none';
     const contentArea = document.getElementById('contentArea');
     contentArea.style.display = 'block';
 
@@ -456,6 +534,13 @@ async function loadUsage() {
 async function loadContent() {
     setActiveNav('nav-content');
     document.getElementById('page-title').innerText = "Generated Content";
+    document.getElementById('kpi-grid').style.display = 'none';
+    document.getElementById('charts-grid').style.display = 'none';
+    const toggleContainer = document.getElementById('timeframe-toggle');
+    if (toggleContainer) toggleContainer.style.display = 'none';
+    const contentArea = document.getElementById('contentArea');
+    contentArea.style.display = 'block';
+
     const content = await api("/generated");
     if (!content) return;
     document.getElementById('contentArea').innerHTML = `

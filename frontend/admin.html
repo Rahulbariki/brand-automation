@@ -237,6 +237,17 @@
                     <p id="page-subtitle" class="text-gray-400 mt-1">Real-time metrics and system health.</p>
                 </div>
                 <div class="flex items-center space-x-4">
+                    <!-- Timeframe Toggle -->
+                    <div class="bg-gray-800 rounded-lg p-1 flex shadow-sm border border-gray-700" id="timeframe-toggle"
+                        style="display: none;">
+                        <button onclick="switchTimeframe('hourly')" id="btn-hourly"
+                            class="px-3 py-1 text-xs font-medium rounded-md bg-purple-500 text-white shadow transition">24h
+                            View</button>
+                        <button onclick="switchTimeframe('daily')" id="btn-daily"
+                            class="px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-white transition">30d
+                            View</button>
+                    </div>
+
                     <span
                         class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">
                         <span class="w-2 h-2 mr-2 bg-green-500 rounded-full animate-pulse"></span>
