@@ -63,3 +63,37 @@ def debug_hashing():
             "detail": "Likely missing libffi or bcrypt binary incompatibility",
             "traceback": traceback.format_exc()
         }
+
+@router.get("/migrate")
+def run_migration(db: Session = Depends(get_db)):
+    """One-time migration: add missing columns to users table."""
+    results = []
+    
+    columns_to_add = [
+        ("supabase_id",            "VARCHAR", None),
+        ("subscription_status",    "VARCHAR", "'inactive'"),
+        ("stripe_customer_id",     "VARCHAR", None),
+        ("stripe_subscription_id", "VARCHAR", None),
+    ]
+    
+    for col_name, col_type, default in columns_to_add:
+        try:
+            # Check if column exists
+            check = db.execute(text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name='users' AND column_name=:col"
+            ), {"col": col_name})
+            
+            if check.fetchone():
+                results.append({"column": col_name, "status": "already_exists"})
+                continue
+            
+            default_clause = f" DEFAULT {default}" if default else ""
+            sql = f"ALTER TABLE users ADD COLUMN {col_name} {col_type}{default_clause}"
+            db.execute(text(sql))
+            db.commit()
+            results.append({"column": col_name, "status": "added"})
+        except Exception as e:
+            results.append({"column": col_name, "status": "error", "detail": str(e)})
+    
+    return {"migration": "complete", "results": results}
