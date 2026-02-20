@@ -139,11 +139,28 @@ window.fetchWithRetry = async function (url, options = {}, retries = 3) {
 
 window.loginSuccessHandler = async function () {
     let sessionValid = false;
+    let token = null;
 
+    const delays = [200, 500, 1000];
+
+    for (let delay of delays) {
+        await new Promise(r => setTimeout(r, delay));
+        if (window.supabaseClient) {
+            const { data } = await window.supabaseClient.auth.getSession();
+            if (data && data.session && data.session.access_token) {
+                token = data.session.access_token;
+                break;
+            }
+        }
+    }
+
+    if (!token) {
+        localStorage.removeItem('access_token');
+        throw new Error("Authentication session validation failed against Supabase identity provider. Please try again.");
+    }
+
+    // Now securely pass to FastAPI layer via Auth Header
     try {
-        const token = await window.getSupabaseToken();
-        if (!token) throw new Error("No token returned by Supabase");
-
         const response = await window.fetchWithRetry(`${API_URL}/api/me`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` }
@@ -155,6 +172,7 @@ window.loginSuccessHandler = async function () {
     } catch (e) {
         console.warn('Session check polling error', e);
     }
+
     if (sessionValid) {
         // Smooth transition out
         document.body.style.opacity = '0';

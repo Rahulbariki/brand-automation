@@ -894,14 +894,23 @@
     <script>
         async function initDashboard() {
             try {
-                const token = await window.checkSession();
-                if (!token) throw new Error("No session found");
+                if (!window.supabaseClient) {
+                    throw new Error("Supabase client not initialized");
+                }
+
+                // Validate Supabase session using getSession()
+                const { data, error } = await window.supabaseClient.auth.getSession();
+                if (error || !data || !data.session || !data.session.access_token) {
+                    throw new Error("No active Supabase session found");
+                }
+
+                const token = data.session.access_token;
 
                 // Route Guard: Explicitly wait for backend session validation
                 const sessionRes = await window.fetchWithRetry(`${API_URL}/api/me`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }, 3);
-                if (!sessionRes.ok) throw new Error("Invalid session token");
+                if (!sessionRes.ok) throw new Error("Invalid session token against FastAPI backend");
 
                 // Session is verified, load data into UI elements
                 await loadDashboardData();
