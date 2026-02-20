@@ -231,6 +231,10 @@ function renderCharts(stats) {
 
         // Usage Chart
         const ctx1 = document.getElementById("usageChart").getContext('2d');
+
+        // Add smooth animation delay on initial load
+        document.getElementById("usageChart").parentElement.classList.add('opacity-0', 'animate-[fadeInMain_0.6s_forwards]');
+
         usageChartInstance = new Chart(ctx1, {
             type: "line",
             data: {
