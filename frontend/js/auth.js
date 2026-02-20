@@ -26,42 +26,42 @@ initSupabase();
 
 // --- Auth Functions ---
 
-async function login(email, password) {
-    const response = await fetch(`${API_URL}/api/login`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password })
+window.login = async function (email, password) {
+    const client = initSupabase();
+    if (!client) throw new Error("Supabase client not initialized.");
+
+    const { data, error } = await client.auth.signInWithPassword({
+        email,
+        password
     });
 
-    if (!response.ok) {
-        const text = await response.text();
-        // If it's HTML, we'll see "The page cannot be found" in the error now
-        throw new Error(text.length > 100 ? text.substring(0, 100) + '...' : text);
+    if (error) {
+        throw new Error(error.message);
     }
 
-    const data = await response.json();
-    setToken(data.access_token);
-    await loginSuccessHandler();
+    await window.loginSuccessHandler();
 }
 
-async function signup(email, password, fullname) {
-    const response = await fetch(`${API_URL}/api/signup`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, fullname })
+window.signup = async function (email, password, fullname) {
+    const client = initSupabase();
+    if (!client) throw new Error("Supabase client not initialized.");
+
+    const { data, error } = await client.auth.signUp({
+        email,
+        password,
+        options: {
+            data: {
+                full_name: fullname
+            }
+        }
     });
 
-    if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text.length > 100 ? text.substring(0, 100) + '...' : text);
+    if (error) {
+        throw new Error(error.message);
     }
 
-    const data = await response.json();
-    // For signup, we might want to auto-login here or redirect to login
+    // Auto-login or redirect typically happens 
+    // Wait for the auth state changes logic to resolve
     return true;
 }
 

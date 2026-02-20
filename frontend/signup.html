@@ -91,39 +91,12 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
             btn.disabled = true;
             errBox.classList.remove('visible');
-
             try {
-                const res = await fetch(`${API_URL}/api/signup`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        fullname: document.getElementById('fullname').value,
-                        email: document.getElementById('email').value,
-                        password: document.getElementById('password').value
-                    })
-                });
-                const text = await res.text();
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    throw new Error(text || 'Server Error');
-                }
-
-                if (!res.ok) {
-                    let msg = 'Signup failed';
-                    if (data.detail) {
-                        if (typeof data.detail === 'string') {
-                            msg = data.detail;
-                        } else if (Array.isArray(data.detail)) {
-                            msg = data.detail.map(e => e.msg || JSON.stringify(e)).join(', ');
-                        } else {
-                            msg = JSON.stringify(data.detail);
-                        }
-                    }
-                    throw new Error(msg);
-                }
-                localStorage.setItem('access_token', data.access_token);
+                await window.signup(
+                    document.getElementById('email').value,
+                    document.getElementById('password').value,
+                    document.getElementById('fullname').value
+                );
                 document.body.style.opacity = '0';
                 document.body.style.transition = 'opacity 0.5s ease';
                 setTimeout(() => window.location.href = 'dashboard.html', 500);
