@@ -24,6 +24,23 @@ function initSupabase() {
 // Global initialization
 initSupabase();
 
+window.getSupabaseToken = async function () {
+    const client = initSupabase();
+    if (!client) return null;
+    const { data } = await client.auth.getSession();
+    return data?.session?.access_token || null;
+};
+
+window.checkSession = async function () {
+    const token = await window.getSupabaseToken();
+    if (token) {
+        localStorage.setItem('access_token', token);
+    } else {
+        localStorage.removeItem('access_token');
+    }
+    return token;
+};
+
 // --- Auth Functions ---
 
 window.login = async function (email, password) {

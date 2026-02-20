@@ -39,7 +39,22 @@ async def get_current_user(request: Request, token: str = Depends(oauth2_scheme)
             db.refresh(user)
 
     if user is None:
-        raise credentials_exception
+        # Auto-create user from Supabase identity
+        # This handles Google OAuth users correctly when they first hit the dashboard
+        user = User(
+            email=email,
+            supabase_id=supabase_id,
+            fullname=payload.get("user_metadata", {}).get("full_name"),
+            provider="supabase",
+            is_active=True
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    
+    # Ensure admin/subscription overrides are applied (e.g. for rahulbariki24@gmail.com)
+    from utils.auth_utils import apply_admin_overrides
+    apply_admin_overrides(user, db)
     
     # Attach to request context (state) as per requirements
     request.state.user = user
