@@ -1,10 +1,8 @@
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://127.0.0.1:8000'
-    : ''; // Empty string for production means relative path or handled by proxy/Vercel
+    : ''; // Empty string for production means relative path
 
-// --- Config (To be populated or fetched) ---
-// Ideally, these are fetched from an endpoint like /api/config
-// For now, we use placeholders or global window vars if injected
+// --- Config ---
 const SUPABASE_URL = "https://eswlocdooykyaxqyphwu.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzd2xvY2Rvb3lreWF4cXlwaHd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0MjI3MjYsImV4cCI6MjA4Njk5ODcyNn0.BfvrsARoriYR_jKMvdzYA3CNY7fG9Tl6cTknTLvUJ8o";
 
@@ -13,7 +11,13 @@ function initSupabase() {
     if (window.supabaseClient) return window.supabaseClient;
 
     if (window.supabase) {
-        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+            auth: {
+                detectSessionInUrl: true,   // Auto-detect OAuth tokens/code in URL
+                persistSession: true,       // Persist session in localStorage
+                autoRefreshToken: true      // Auto-refresh expiring tokens
+            }
+        });
         console.log("Supabase Client Initialized");
     } else {
         console.warn("Supabase library not yet loaded");
@@ -23,6 +27,40 @@ function initSupabase() {
 
 // Global initialization
 initSupabase();
+
+// ──────────────────────────────────────────────────
+//  Core: Wait for Supabase to fully establish a session
+//  This handles OAuth callbacks, token refresh, etc.
+// ──────────────────────────────────────────────────
+window.waitForSupabaseSession = function (timeoutMs = 5000) {
+    return new Promise((resolve) => {
+        const client = initSupabase();
+        if (!client) { resolve(null); return; }
+
+        // Check if we already have a session
+        client.auth.getSession().then(({ data }) => {
+            if (data?.session) {
+                resolve(data.session);
+                return;
+            }
+
+            // No session yet — might be processing an OAuth redirect.
+            // Listen for auth state changes (fires when code exchange completes).
+            const { data: listener } = client.auth.onAuthStateChange((event, session) => {
+                if (session) {
+                    listener.subscription.unsubscribe();
+                    resolve(session);
+                }
+            });
+
+            // Timeout fallback — don't hang forever
+            setTimeout(() => {
+                listener.subscription.unsubscribe();
+                resolve(null);
+            }, timeoutMs);
+        });
+    });
+};
 
 window.getSupabaseToken = async function () {
     const client = initSupabase();
@@ -41,26 +79,23 @@ window.checkSession = async function () {
     return token;
 };
 
-// --- Auth Functions ---
-
+// ──────────────────────────────────────────────────
+//  Login: Email/Password (Supabase-first with local fallback)
+// ──────────────────────────────────────────────────
 window.login = async function (email, password) {
     const client = initSupabase();
     if (!client) throw new Error("Supabase client not initialized.");
 
     // 1. Try Supabase auth first
-    const { data, error } = await client.auth.signInWithPassword({
-        email,
-        password
-    });
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
 
-    if (!error) {
-        // Supabase login succeeded
+    if (!error && data?.session) {
         await window.loginSuccessHandler();
         return;
     }
 
-    // 2. Fallback: Try local backend auth (for users created before Supabase migration)
-    console.log("Supabase login failed, trying local backend...");
+    // 2. Fallback: Try local backend auth
+    console.log("Supabase login failed, trying local backend auth...");
     try {
         const res = await fetch(`${API_URL}/api/login`, {
             method: 'POST',
@@ -75,22 +110,18 @@ window.login = async function (email, password) {
 
         const tokenData = await res.json();
 
-        // 3. Try to create the user in Supabase so future logins are unified
-        try {
-            await client.auth.signUp({ email, password });
-        } catch (_) { /* ignore if already exists */ }
+        // 3. Try to register in Supabase so future logins are unified
+        try { await client.auth.signUp({ email, password }); } catch (_) { }
 
-        // 4. Try Supabase sign-in again (may work now after signUp)
-        const { data: retryData, error: retryError } = await client.auth.signInWithPassword({
-            email, password
-        });
+        // 4. Retry Supabase sign-in
+        const { data: retryData, error: retryError } = await client.auth.signInWithPassword({ email, password });
 
         if (!retryError && retryData?.session) {
             await window.loginSuccessHandler();
             return;
         }
 
-        // 5. If Supabase still fails, redirect with the local JWT token
+        // 5. Last resort — use local JWT
         localStorage.setItem('access_token', tokenData.access_token);
         document.body.style.opacity = '0';
         document.body.style.transition = 'opacity 0.5s ease';
@@ -98,8 +129,11 @@ window.login = async function (email, password) {
     } catch (backendErr) {
         throw new Error(backendErr.message || "Invalid login credentials");
     }
-}
+};
 
+// ──────────────────────────────────────────────────
+//  Signup
+// ──────────────────────────────────────────────────
 window.signup = async function (email, password, fullname) {
     const client = initSupabase();
     if (!client) throw new Error("Supabase client not initialized.");
@@ -107,27 +141,19 @@ window.signup = async function (email, password, fullname) {
     const { data, error } = await client.auth.signUp({
         email,
         password,
-        options: {
-            data: {
-                full_name: fullname
-            }
-        }
+        options: { data: { full_name: fullname } }
     });
 
-    if (error) {
-        throw new Error(error.message);
-    }
-
-    // Auto-login or redirect typically happens 
-    // Wait for the auth state changes logic to resolve
+    if (error) throw new Error(error.message);
     return true;
-}
+};
 
+// ──────────────────────────────────────────────────
+//  Google OAuth Login
+// ──────────────────────────────────────────────────
 window.googleLogin = async function () {
     const client = initSupabase();
-    if (!client) {
-        throw new Error("Supabase client not initialized. Refresh page and try again.");
-    }
+    if (!client) throw new Error("Supabase client not initialized. Refresh page and try again.");
 
     const { data, error } = await client.auth.signInWithOAuth({
         provider: 'google',
@@ -136,18 +162,17 @@ window.googleLogin = async function () {
         }
     });
 
-    if (error) {
-        throw error;
-    }
-}
+    if (error) throw error;
+};
 
-// --- Session Handling ---
+// ──────────────────────────────────────────────────
+//  Session Handling
+// ──────────────────────────────────────────────────
 async function logout() {
     const client = initSupabase();
-    if (client) {
-        await client.auth.signOut();
-    }
-    localStorage.removeItem('impersonated_user'); // Clear impersonation if any
+    if (client) await client.auth.signOut();
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('impersonated_user');
     window.location.href = 'login.html';
 }
 
@@ -161,13 +186,13 @@ async function requireAuth() {
     }
 }
 
+// ──────────────────────────────────────────────────
+//  fetchWithRetry — auto-attaches Supabase token
+// ──────────────────────────────────────────────────
 window.fetchWithRetry = async function (url, options = {}, retries = 3) {
     const impUser = localStorage.getItem('impersonated_user');
     if (impUser && (url.includes('/api/me') || url.includes('/api/auth/me') || url.includes('/api/session-check'))) {
-        return {
-            ok: true,
-            json: async () => JSON.parse(impUser)
-        };
+        return { ok: true, json: async () => JSON.parse(impUser) };
     }
 
     options.credentials = 'include';
@@ -175,7 +200,6 @@ window.fetchWithRetry = async function (url, options = {}, retries = 3) {
     let lastResponse = null;
 
     for (let i = 0; i < retries; i++) {
-        // Fetch token natively on each retry attempt in case it was refreshed
         const token = await window.getSupabaseToken();
         if (token) {
             options.headers = {
@@ -187,13 +211,10 @@ window.fetchWithRetry = async function (url, options = {}, retries = 3) {
         try {
             const response = await fetch(url, options);
             lastResponse = response;
-
             if (response.ok) return response;
 
-            // If response guarantees auth rejection, surface it after retries
             if (i === retries - 1) {
                 if (response.status === 401 || response.status === 403) {
-                    // Only show session failure after all retries successfully exhaust.
                     if (window.showToast) window.showToast("Session expired. Please log in again.", "error");
                 }
                 return response;
@@ -212,17 +233,20 @@ window.fetchWithRetry = async function (url, options = {}, retries = 3) {
     return lastResponse;
 };
 
+// ──────────────────────────────────────────────────
+//  loginSuccessHandler — validates against backend
+// ──────────────────────────────────────────────────
 window.loginSuccessHandler = async function () {
     let sessionValid = false;
     let token = null;
 
+    // Poll for Supabase session (handles async token exchange)
     const delays = [200, 500, 1000];
-
     for (let delay of delays) {
         await new Promise(r => setTimeout(r, delay));
         if (window.supabaseClient) {
             const { data } = await window.supabaseClient.auth.getSession();
-            if (data && data.session && data.session.access_token) {
+            if (data?.session?.access_token) {
                 token = data.session.access_token;
                 break;
             }
@@ -231,10 +255,10 @@ window.loginSuccessHandler = async function () {
 
     if (!token) {
         localStorage.removeItem('access_token');
-        throw new Error("Authentication session validation failed against Supabase identity provider. Please try again.");
+        throw new Error("Authentication failed. Could not establish session with Supabase.");
     }
 
-    // Now securely pass to FastAPI layer via Auth Header
+    // Validate against FastAPI backend
     try {
         const response = await window.fetchWithRetry(`${API_URL}/api/me`, {
             method: 'GET',
@@ -245,21 +269,22 @@ window.loginSuccessHandler = async function () {
             sessionValid = true;
         }
     } catch (e) {
-        console.warn('Session check polling error', e);
+        console.warn('Session check error:', e);
     }
 
     if (sessionValid) {
-        // Smooth transition out
         document.body.style.opacity = '0';
         document.body.style.transition = 'opacity 0.5s ease';
         setTimeout(() => window.location.href = 'dashboard.html', 500);
     } else {
         localStorage.removeItem('access_token');
-        throw new Error("Authentication session validation failed against FastAPI backend. Please check configuration.");
+        throw new Error("Backend session validation failed. Please check server configuration.");
     }
 };
 
-// Impersonation Banner Logic
+// ──────────────────────────────────────────────────
+//  Impersonation Banner
+// ──────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
     const impUserStr = localStorage.getItem('impersonated_user');
     if (impUserStr && !window.location.pathname.includes('admin.html')) {

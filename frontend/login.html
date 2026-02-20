@@ -119,7 +119,10 @@
         });
 
         document.addEventListener('DOMContentLoaded', async () => {
-            if (window.location.hash && window.location.hash.includes('access_token')) {
+            const hasAuthParams = (window.location.hash && window.location.hash.includes('access_token'))
+                || window.location.search.includes('code=');
+
+            if (hasAuthParams) {
                 const btn = document.getElementById('googleBtn');
                 if (btn) {
                     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
@@ -127,14 +130,16 @@
                 }
                 errBox.classList.remove('visible');
                 try {
-                    const token = await window.checkSession();
-                    if (token) {
+                    const session = await window.waitForSupabaseSession(6000);
+                    if (session) {
                         await window.loginSuccessHandler();
+                    } else {
+                        showError("Authentication timed out. Please try again.");
                     }
                 } catch (err) {
                     showError(err.message);
                     if (btn) {
-                        btn.innerHTML = 'Continue with Google'; // Simplified original HTML content
+                        btn.innerHTML = 'Continue with Google';
                         btn.disabled = false;
                     }
                 }

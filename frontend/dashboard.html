@@ -898,24 +898,28 @@
                     throw new Error("Supabase client not initialized");
                 }
 
-                // Validate Supabase session using getSession()
-                const { data, error } = await window.supabaseClient.auth.getSession();
-                if (error || !data || !data.session || !data.session.access_token) {
+                // ── KEY FIX: Wait for OAuth callback to complete ──
+                // After Google login redirects here, Supabase needs time
+                // to exchange the code/token from the URL.
+                // waitForSupabaseSession handles this gracefully.
+                const session = await window.waitForSupabaseSession(6000);
+
+                if (!session || !session.access_token) {
                     throw new Error("No active Supabase session found");
                 }
 
-                const token = data.session.access_token;
+                const token = session.access_token;
 
-                // Route Guard: Explicitly wait for backend session validation
+                // Route Guard: Validate against backend
                 const sessionRes = await window.fetchWithRetry(`${API_URL}/api/me`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }, 3);
                 if (!sessionRes.ok) throw new Error("Invalid session token against FastAPI backend");
 
-                // Session is verified, load data into UI elements
+                // Session verified — load dashboard data
                 await loadDashboardData();
 
-                // Validation passed, initiate Motion Render Layer
+                // Animate in
                 const loader = document.getElementById('authLoader');
                 loader.style.opacity = '0';
 
@@ -936,7 +940,6 @@
             }
         }
 
-        // We run initDashboard mapping natively to hook the load process
         document.addEventListener('DOMContentLoaded', initDashboard);
     </script>
 

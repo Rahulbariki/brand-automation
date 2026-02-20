@@ -239,22 +239,25 @@
     <script>
         // Hero Typed Words
         document.addEventListener('DOMContentLoaded', async () => {
-            // Check for Supabase Auth redirect (if misconfigured to root)
-            if (window.location.hash && window.location.hash.includes('access_token')) {
-                console.log("Detecting OAuth redirect...");
+            // Handle OAuth redirect (if Supabase redirects to root instead of dashboard)
+            const hasAuthParams = window.location.hash.includes('access_token')
+                || window.location.search.includes('code=');
+
+            if (hasAuthParams) {
+                console.log("Detecting OAuth redirect on landing page...");
                 try {
-                    await window.checkSession();
-                    if (localStorage.getItem('access_token')) {
+                    const session = await window.waitForSupabaseSession(6000);
+                    if (session) {
                         window.location.href = 'dashboard.html';
+                        return;
                     }
                 } catch (e) {
                     console.error("Auth redirect failed:", e);
                 }
             } else {
-                // Check if already logged in (optional auto-login)
-                const token = localStorage.getItem('access_token');
+                // Check if already logged in
+                const token = await window.getSupabaseToken();
                 if (token) {
-                    // Update Login button to "Dashboard"
                     const loginBtn = document.querySelector('a[href="login.html"]');
                     if (loginBtn) {
                         loginBtn.textContent = "Dashboard";
