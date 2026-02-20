@@ -118,6 +118,13 @@ async function loadDashboard() {
     `;
 
     renderCharts(stats);
+
+    // Global Loading State Manager - Remove skeleton
+    const loader = document.getElementById('authLoader');
+    if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.remove(), 500);
+    }
 }
 
 function renderCharts(stats) {

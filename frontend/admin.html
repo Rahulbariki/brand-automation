@@ -35,6 +35,91 @@
         .animate-fadeIn {
             animation: fadeIn 1s forwards;
         }
+
+        .auth-skeleton {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 9999;
+            background: #0f172a;
+            display: flex;
+            color: white;
+            font-family: sans-serif;
+            transition: opacity 0.5s;
+        }
+
+        .skeleton-sidebar {
+            width: 256px;
+            background: rgba(255, 255, 255, 0.02);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .skeleton-item {
+            height: 48px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .skeleton-main {
+            flex: 1;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .skeleton-header {
+            height: 60px;
+            width: 40%;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .skeleton-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        .skeleton-card {
+            height: 128px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .skeleton-charts {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            flex: 1;
+        }
+
+        .skeleton-chart {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .5;
+            }
+        }
     </style>
 </head>
 
@@ -165,6 +250,29 @@
 
     <script src="assets/js/admin.js"></script>
 
+    <div id="authLoader" class="auth-skeleton">
+        <div class="skeleton-sidebar">
+            <div class="skeleton-item" style="height: 32px; width: 60%; margin-bottom: 2rem;"></div>
+            <div class="skeleton-item"></div>
+            <div class="skeleton-item"></div>
+            <div class="skeleton-item"></div>
+            <div class="skeleton-item"></div>
+            <div class="skeleton-item" style="margin-top: auto;"></div>
+        </div>
+        <div class="skeleton-main">
+            <div class="skeleton-header"></div>
+            <div class="skeleton-cards">
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+            </div>
+            <div class="skeleton-charts">
+                <div class="skeleton-chart"></div>
+                <div class="skeleton-chart"></div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

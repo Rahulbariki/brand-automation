@@ -236,9 +236,9 @@ def generate_logo_image(prompt: str) -> str:
     import base64
     from io import BytesIO
     
-    # Use FLUX.1-schnell on the new HF Router for high reliability and speed
-    MODEL_ID = "black-forest-labs/FLUX.1-schnell" 
-    API_URL = f"https://router.huggingface.co/hf-inference/models/{MODEL_ID}"
+    # Use stabilityai SDXL on standard free API inference
+    MODEL_ID = "stabilityai/stable-diffusion-xl-base-1.0" 
+    API_URL = f"https://api-inference.huggingface.co/models/{MODEL_ID}"
     
     payload = {"inputs": prompt}
     try:
