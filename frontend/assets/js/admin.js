@@ -234,6 +234,8 @@ function startLiveUsage() {
 }
 
 // === VIEW: USERS ===
+let allUsers = [];
+
 async function loadUsers() {
     setActiveNav('nav-users');
     document.getElementById('page-title').innerText = "User Management";
@@ -245,64 +247,147 @@ async function loadUsers() {
 
     const users = await api("/users");
     if (!users) return;
+    allUsers = users;
 
     contentArea.innerHTML = `
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-gray-400">
-                <thead class="bg-white/5 text-gray-200 uppercase font-medium">
-                    <tr>
-                        <th class="px-6 py-4">User</th>
-                        <th class="px-6 py-4">Role</th>
-                        <th class="px-6 py-4">Status</th>
-                        <th class="px-6 py-4">Plan</th>
-                        <th class="px-6 py-4 text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-white/10">
-                    ${users.map(u => `
-                        <tr class="hover:bg-white/5 transition">
-                            <td class="px-6 py-4">
-                                <p class="text-white font-medium">${u.email}</p>
-                                <p class="text-xs text-gray-500">ID: ${u.id}</p>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-2 py-1 rounded-full text-xs font-semibold ${u.is_admin ? 'bg-purple-500/20 text-purple-400' : 'bg-gray-500/20 text-gray-400'}">
-                                    ${u.is_admin ? 'ADMIN' : 'USER'}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-2 py-1 rounded-full text-xs font-semibold ${u.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}">
-                                    ${u.is_active ? 'Active' : 'Banned'}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 uppercase">${u.subscription_plan}</td>
-                            <td class="px-6 py-4 text-right space-x-2">
-                                <button onclick="toggleAdmin(${u.id})" class="text-xs font-medium ${u.is_admin ? 'text-red-400 hover:text-red-300' : 'text-purple-400 hover:text-purple-300'}">
-                                    ${u.is_admin ? 'Revoke Admin' : 'Make Admin'}
-                                </button>
-                                <button onclick="toggleActive(${u.id})" class="text-xs font-medium ${u.is_active ? 'text-yellow-500 hover:text-yellow-400' : 'text-green-400 hover:text-green-300'}">
-                                    ${u.is_active ? 'Ban' : 'Unban'}
-                                </button>
-                            </td>
-                        </tr>
-                    `).join("")}
-                </tbody>
-            </table>
+        <div class="p-6 border-b border-white/10 flex flex-col md:flex-row gap-4 items-center justify-between bg-white/5">
+            <div class="relative w-full md:w-1/3">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </span>
+                <input type="text" id="searchUser" placeholder="Search by email or ID..." class="bg-gray-800 text-white pl-10 pr-4 py-2 rounded-lg text-sm border border-gray-700 w-full focus:outline-none focus:border-purple-500 transition shadow-sm">
+            </div>
+            
+            <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                <select id="filterRole" class="bg-gray-800 text-white px-3 py-2 rounded-lg text-sm border border-gray-700 focus:outline-none focus:border-purple-500 shadow-sm transition cursor-pointer">
+                    <option value="all">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="user">User</option>
+                </select>
+                <select id="filterPlan" class="bg-gray-800 text-white px-3 py-2 rounded-lg text-sm border border-gray-700 focus:outline-none focus:border-purple-500 shadow-sm transition cursor-pointer">
+                    <option value="all">All Plans</option>
+                    <option value="free">Free</option>
+                    <option value="pro">Pro</option>
+                    <option value="enterprise">Enterprise</option>
+                </select>
+                <select id="filterStatus" class="bg-gray-800 text-white px-3 py-2 rounded-lg text-sm border border-gray-700 focus:outline-none focus:border-purple-500 shadow-sm transition cursor-pointer">
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="banned">Banned</option>
+                </select>
+            </div>
         </div>
+        <div id="usersTableContainer" class="overflow-x-auto min-h-[300px]"></div>
+    `;
+
+    document.getElementById('searchUser').addEventListener('input', renderUsersTable);
+    document.getElementById('filterRole').addEventListener('change', renderUsersTable);
+    document.getElementById('filterPlan').addEventListener('change', renderUsersTable);
+    document.getElementById('filterStatus').addEventListener('change', renderUsersTable);
+
+    renderUsersTable();
+}
+
+function renderUsersTable() {
+    const search = document.getElementById('searchUser').value.toLowerCase();
+    const role = document.getElementById('filterRole').value;
+    const plan = document.getElementById('filterPlan').value;
+    const status = document.getElementById('filterStatus').value;
+
+    const filtered = allUsers.filter(u => {
+        if (search && !u.email.toLowerCase().includes(search) && String(u.id) !== search) return false;
+        if (role === 'admin' && !u.is_admin) return false;
+        if (role === 'user' && u.is_admin) return false;
+        if (plan !== 'all' && u.subscription_plan?.toLowerCase() !== plan) return false;
+        if (status === 'active' && !u.is_active) return false;
+        if (status === 'banned' && u.is_active) return false;
+        return true;
+    });
+
+    let currentUserId = null;
+    try {
+        currentUserId = JSON.parse(atob(localStorage.getItem('token').split('.')[1])).sub;
+    } catch (e) { }
+
+    const container = document.getElementById('usersTableContainer');
+    container.innerHTML = `
+        <table class="w-full text-left text-sm text-gray-400">
+            <thead class="bg-white/5 text-gray-200 uppercase font-medium">
+                <tr>
+                    <th class="px-6 py-4">User</th>
+                    <th class="px-6 py-4">Role</th>
+                    <th class="px-6 py-4">Status</th>
+                    <th class="px-6 py-4">Plan</th>
+                    <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/10">
+                ${filtered.length === 0 ? `<tr><td colspan="5" class="px-6 py-10 text-center text-gray-500">No users found matching filters.</td></tr>` :
+            filtered.map(u => {
+                const isSelf = String(u.id) === String(currentUserId);
+                return `
+                    <tr class="hover:bg-white/5 transition opacity-0 animate-[fadeInMain_0.3s_forwards]">
+                        <td class="px-6 py-4">
+                            <p class="text-white font-medium">${u.email}</p>
+                            <p class="text-xs text-gray-500">ID: ${u.id}</p>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 rounded-full text-xs font-semibold ${u.is_admin ? 'bg-purple-500/20 text-purple-400' : 'bg-gray-500/20 text-gray-400'}">
+                                ${u.is_admin ? 'ADMIN' : 'USER'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 rounded-full text-xs font-semibold ${u.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}">
+                                ${u.is_active ? 'Active' : 'Banned'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 uppercase font-medium text-gray-300">${u.subscription_plan}</td>
+                        <td class="px-6 py-4 text-right space-x-3 flex justify-end items-center">
+                            <select onchange="changeRole(${u.id}, this)" ${isSelf ? 'disabled title="Cannot change your own role"' : ''} class="${isSelf ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} bg-gray-900 text-white px-2 py-1.5 rounded text-xs border border-gray-700 outline-none hover:border-purple-500 transition shadow-sm">
+                                <option value="user" ${!u.is_admin ? 'selected' : ''}>User</option>
+                                <option value="admin" ${u.is_admin ? 'selected' : ''}>Admin</option>
+                            </select>
+                            
+                            <button onclick="toggleActive(${u.id})" class="text-xs font-medium px-3 py-1.5 rounded border shadow-sm ${u.is_active ? 'text-yellow-500 border-yellow-500/30 hover:bg-yellow-500/10' : 'text-green-400 border-green-500/30 hover:bg-green-500/10'} transition cursor-pointer">
+                                ${u.is_active ? 'Ban' : 'Unban'}
+                            </button>
+                        </td>
+                    </tr>
+                `}).join("")}
+            </tbody>
+        </table>
     `;
 }
 
 // === ACTIONS ===
-async function toggleAdmin(id) {
-    if (!confirm("Are you sure you want to modify admin privileges?")) return;
-    await api(`/users/${id}/toggle-admin`, "PUT");
-    loadUsers(); // Refresh
+window.changeRole = async function (id, selectEl) {
+    if (!confirm("Are you sure you want to modify this user's role?")) {
+        // Revert select choice
+        selectEl.value = selectEl.value === 'admin' ? 'user' : 'admin';
+        return;
+    }
+    const res = await api(`/users/${id}/toggle-admin`, "PUT");
+    if (res) {
+        // Optimistic UI Update
+        const u = allUsers.find(user => user.id === id);
+        if (u) u.is_admin = !u.is_admin;
+        renderUsersTable();
+    } else {
+        loadUsers(); // refresh network
+    }
 }
 
-async function toggleActive(id) {
+window.toggleActive = async function (id) {
     if (!confirm("Are you sure you want to change active status?")) return;
-    await api(`/users/${id}/toggle-active`, "PUT");
-    loadUsers(); // Refresh
+    const res = await api(`/users/${id}/toggle-active`, "PUT");
+    if (res) {
+        // Optimistic UI Update
+        const u = allUsers.find(user => user.id === id);
+        if (u) u.is_active = !u.is_active;
+        renderUsersTable();
+    } else {
+        loadUsers(); // refresh network
+    }
 }
 
 // === VIEW: USAGE (Placeholder) ===
