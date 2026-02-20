@@ -201,7 +201,7 @@ window.loginSuccessHandler = async function () {
 
     for (let i = 0; i < delays.length; i++) {
         try {
-            const response = await fetch(`${API_URL}/api/session-check`, {
+            const response = await fetch(`${API_URL}/api/me`, {
                 headers: { 'Authorization': `Bearer ${getToken()}` },
                 credentials: 'include'
             });

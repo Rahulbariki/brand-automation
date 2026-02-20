@@ -898,7 +898,7 @@
                 if (!token) throw new Error("No session found");
 
                 // Route Guard: Explicitly wait for backend session validation
-                const sessionRes = await fetch(`${API_URL}/api/session-check`, {
+                const sessionRes = await fetch(`${API_URL}/api/me`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!sessionRes.ok) throw new Error("Invalid session token");
