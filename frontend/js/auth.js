@@ -181,6 +181,14 @@ function requireAuth() {
 }
 
 window.fetchWithRetry = async function (url, options = {}, retries = 3) {
+    const impUser = localStorage.getItem('impersonated_user');
+    if (impUser && (url.includes('/api/me') || url.includes('/api/auth/me'))) {
+        return {
+            ok: true,
+            json: async () => JSON.parse(impUser)
+        };
+    }
+
     options.credentials = 'include';
     const delays = [200, 500, 1000];
     for (let i = 0; i < retries; i++) {
@@ -220,4 +228,22 @@ window.loginSuccessHandler = async function () {
         localStorage.removeItem('access_token');
         throw new Error("Authentication session validation failed. Please try again.");
     }
+};
+
+// Impersonation Banner Logic
+document.addEventListener("DOMContentLoaded", () => {
+    const impUserStr = localStorage.getItem('impersonated_user');
+    if (impUserStr && !window.location.pathname.includes('admin.html')) {
+        const impUser = JSON.parse(impUserStr);
+        const banner = document.createElement('div');
+        banner.style = "position:fixed; top:0; left:0; width:100%; z-index:100000; background-color:#ef4444; color:white; text-align:center; padding:10px; font-weight:bold; display:flex; justify-content:center; align-items:center; box-shadow:0 4px 6px rgba(0,0,0,0.1);";
+        banner.innerHTML = `⚠️ IMPERSONATION MODE: Viewing dashboard as ${impUser.email} &nbsp; <button onclick="exitImpersonation()" style="margin-left:15px; background:white; color:#ef4444; padding:4px 12px; border-radius:4px; font-size:12px; cursor:pointer;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='white'">Exit Impersonation</button>`;
+        document.body.prepend(banner);
+        document.body.style.paddingTop = '40px';
+    }
+});
+
+window.exitImpersonation = function () {
+    localStorage.removeItem('impersonated_user');
+    window.location.href = 'admin.html';
 };

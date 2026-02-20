@@ -351,6 +351,9 @@ function renderUsersTable() {
                             <button onclick="toggleActive(${u.id})" class="text-xs font-medium px-3 py-1.5 rounded border shadow-sm ${u.is_active ? 'text-yellow-500 border-yellow-500/30 hover:bg-yellow-500/10' : 'text-green-400 border-green-500/30 hover:bg-green-500/10'} transition cursor-pointer">
                                 ${u.is_active ? 'Ban' : 'Unban'}
                             </button>
+                            <button onclick="impersonateUser(${u.id}, '${u.email}', '${u.subscription_plan}', ${u.is_admin})" ${u.is_admin ? 'disabled title="Cannot impersonate administrators"' : ''} class="text-xs font-medium px-3 py-1.5 rounded border shadow-sm ml-2 transition ${u.is_admin ? 'text-gray-500 border-gray-600 opacity-50 cursor-not-allowed' : 'text-blue-400 border-blue-500/30 hover:bg-blue-500/10 cursor-pointer'}">
+                                Login As
+                            </button>
                         </td>
                     </tr>
                 `}).join("")}
@@ -390,21 +393,64 @@ window.toggleActive = async function (id) {
     }
 }
 
-// === VIEW: USAGE (Placeholder) ===
+window.impersonateUser = function (id, email, plan, isAdmin) {
+    if (isAdmin) {
+        alert("Security Error: Cannot impersonate other administrators.");
+        return;
+    }
+    if (!confirm(`Are you sure you want to impersonate ${email}?`)) return;
+
+    // Original admin session is securely stored via physical JWT. We execute client-side override.
+    const fakeData = { id, email, fullname: email.split('@')[0], is_admin: false, subscription_plan: plan || 'free' };
+    localStorage.setItem('impersonated_user', JSON.stringify(fakeData));
+
+    window.location.href = 'dashboard.html';
+}
+
+// === VIEW: USAGE (Audit Log Panel) ===
 async function loadUsage() {
     setActiveNav('nav-usage');
-    document.getElementById('page-title').innerText = "Usage Logs";
-    document.getElementById('contentArea').innerHTML = '<div class="p-10 text-center text-gray-500">Log viewer loading implementation...</div>';
-    // Implementation same as Users but simpler table
+    document.getElementById('page-title').innerText = "System Audit Logs";
+    document.getElementById('page-subtitle').innerText = "Live tracking of platform events and token usage.";
+    document.getElementById('kpi-grid').style.display = 'none';
+    document.getElementById('charts-grid').style.display = 'none';
+    const contentArea = document.getElementById('contentArea');
+    contentArea.style.display = 'block';
+
+    contentArea.innerHTML = '<div class="p-10 text-center text-gray-500"><div class="animate-pulse">Loading audit logs...</div></div>';
+
     const logs = await api("/usage");
     if (!logs) return;
-    document.getElementById('contentArea').innerHTML = `
-        <table class="w-full text-left text-sm text-gray-400">
-            <thead class="bg-white/5 text-gray-200"><tr><th class="px-6 py-4">Date</th><th class="px-6 py-4">User</th><th class="px-6 py-4">Feature</th><th class="px-6 py-4">Tokens</th></tr></thead>
-            <tbody class="divide-y divide-white/10">
-                ${logs.map(l => `<tr><td class="px-6 py-4">${new Date(l.created_at).toLocaleString()}</td><td class="px-6 py-4">${l.user_id}</td><td class="px-6 py-4">${l.feature}</td><td class="px-6 py-4">${l.tokens_used}</td></tr>`).join("")}
-            </tbody>
-        </table>`;
+
+    contentArea.innerHTML = `
+        <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
+            <table class="w-full text-left text-sm text-gray-400 relative">
+                <thead class="bg-gray-800/80 backdrop-blur-md text-gray-200 sticky top-0 z-10">
+                    <tr>
+                        <th class="px-6 py-4">Timestamp</th>
+                        <th class="px-6 py-4">User</th>
+                        <th class="px-6 py-4">Action Type</th>
+                        <th class="px-6 py-4 text-right">Details / Tokens</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/10">
+                    ${logs.length === 0 ? `<tr><td colspan="4" class="px-6 py-10 text-center text-gray-500">No logs found.</td></tr>` :
+            logs.map((l, i) => `
+                        <tr class="hover:bg-white/5 transition opacity-0 animate-[fadeInMain_0.4s_forwards]" style="animation-delay: ${Math.min(i * 0.05, 1)}s">
+                            <td class="px-6 py-4 text-xs font-mono text-gray-500 whitespace-nowrap">${new Date(l.created_at).toLocaleString()}</td>
+                            <td class="px-6 py-4 font-medium text-gray-300">${l.user_email || l.user_id}</td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 rounded text-xs font-semibold ${l.feature.includes('chat') || l.feature.includes('generate') ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'}">
+                                    ${l.feature.toUpperCase()}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right font-mono text-green-400">${l.tokens_used > 0 ? `+${l.tokens_used} tokens` : '-'}</td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        </div>
+    `;
 }
 
 async function loadContent() {
