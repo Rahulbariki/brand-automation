@@ -74,7 +74,7 @@ window.googleLogin = async function () {
     const { data, error } = await client.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: window.location.origin + '/login.html'
+            redirectTo: window.location.origin + '/dashboard.html'
         }
     });
 
@@ -84,98 +84,21 @@ window.googleLogin = async function () {
 }
 
 // --- Session Handling ---
-// --- Session Handling ---
-window.checkSession = function () {
-    return new Promise((resolve, reject) => {
-        // Wait for Supabase to initialize if needed
-        if (!window.supabaseClient) {
-            initSupabase();
-        }
-
-        // Check local storage first for speed
-        const localToken = localStorage.getItem('access_token');
-        if (localToken) {
-            resolve(localToken);
-            return;
-        }
-
-        // Helper to perform the token exchange
-        const exchangeToken = async (session) => {
-            try {
-                const res = await fetch(`${API_URL}/api/google-login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: session.access_token })
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    localStorage.setItem('access_token', data.access_token);
-                    return data.access_token;
-                } else {
-                    const errText = await res.text();
-                    console.error("Token exchange failed", errText);
-                    // Throw to be caught by checkSession promise
-                    throw new Error(`Auth Failed: ${res.status} ${res.statusText} - ${errText}`);
-                }
-            } catch (err) {
-                console.error("Token exchange error:", err);
-                throw err;
-            }
-        };
-
-        // Subscribe to auth state changes
-        const { data: { subscription } } = window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'SIGNED_IN' && session) {
-                try {
-                    const token = await exchangeToken(session);
-                    resolve(token);
-                } catch (e) {
-                    reject(e);
-                }
-            } else if (event === 'SIGNED_OUT') {
-                resolve(null);
-            }
-        });
-
-        // Fallback: Check getSession directly
-        setTimeout(() => {
-            window.supabaseClient.auth.getSession().then(async ({ data: { session } }) => {
-                if (session) {
-                    try {
-                        const token = await exchangeToken(session);
-                        resolve(token);
-                    } catch (e) {
-                        reject(e);
-                    }
-                } else {
-                    resolve(null);
-                }
-            });
-        }, 1000);
-    });
-};
-
-function logout() {
-    localStorage.removeItem('access_token');
-    if (window.supabaseClient) window.supabaseClient.auth.signOut();
+async function logout() {
+    const client = initSupabase();
+    if (client) {
+        await client.auth.signOut();
+    }
+    localStorage.removeItem('impersonated_user'); // Clear impersonation if any
     window.location.href = 'login.html';
 }
 
-function getToken() {
-    return localStorage.getItem('access_token');
+async function isLoggedIn() {
+    return !!(await window.getSupabaseToken());
 }
 
-function setToken(token) {
-    localStorage.setItem('access_token', token);
-}
-
-function isLoggedIn() {
-    return !!getToken();
-}
-
-function requireAuth() {
-    if (!isLoggedIn()) {
+async function requireAuth() {
+    if (!(await isLoggedIn())) {
         window.location.href = 'login.html';
     }
 }
@@ -189,7 +112,16 @@ window.fetchWithRetry = async function (url, options = {}, retries = 3) {
         };
     }
 
-    options.credentials = 'include';
+    // Attach Supabase token to Authorization header if available
+    const token = await window.getSupabaseToken();
+    if (token) {
+        options.headers = {
+            ...options.headers,
+            'Authorization': `Bearer ${token}`
+        };
+    }
+
+    options.credentials = 'include'; // Keep this if your API uses cookies/sessions alongside Bearer token
     const delays = [200, 500, 1000];
     for (let i = 0; i < retries; i++) {
         try {
@@ -209,8 +141,12 @@ window.loginSuccessHandler = async function () {
     let sessionValid = false;
 
     try {
+        const token = await window.getSupabaseToken();
+        if (!token) throw new Error("No token returned by Supabase");
+
         const response = await window.fetchWithRetry(`${API_URL}/api/me`, {
-            headers: { 'Authorization': `Bearer ${getToken()}` }
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` }
         }, 3);
 
         if (response.ok) {
@@ -226,7 +162,7 @@ window.loginSuccessHandler = async function () {
         setTimeout(() => window.location.href = 'dashboard.html', 500);
     } else {
         localStorage.removeItem('access_token');
-        throw new Error("Authentication session validation failed. Please try again.");
+        throw new Error("Authentication session validation failed against FastAPI backend. Please check configuration.");
     }
 };
 

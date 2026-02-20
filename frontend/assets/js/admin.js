@@ -1,13 +1,13 @@
 const API_URL = "https://brandnova-brand-automation.vercel.app/api"; // Production
 
-// Auth Check & Redirect
-const token = localStorage.getItem("token");
-if (!token) {
-    window.location.href = "login.html";
-}
-
 // Helper: Fetch with Auth
 async function api(path, method = "GET", body = null, silent = false) {
+    const token = await window.getSupabaseToken();
+    if (!token) {
+        if (!silent) window.location.href = "login.html";
+        return null; // Stop execution without a token
+    }
+
     const options = {
         method,
         headers: {
