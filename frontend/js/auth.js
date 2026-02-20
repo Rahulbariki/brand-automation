@@ -47,16 +47,57 @@ window.login = async function (email, password) {
     const client = initSupabase();
     if (!client) throw new Error("Supabase client not initialized.");
 
+    // 1. Try Supabase auth first
     const { data, error } = await client.auth.signInWithPassword({
         email,
         password
     });
 
-    if (error) {
-        throw new Error(error.message);
+    if (!error) {
+        // Supabase login succeeded
+        await window.loginSuccessHandler();
+        return;
     }
 
-    await window.loginSuccessHandler();
+    // 2. Fallback: Try local backend auth (for users created before Supabase migration)
+    console.log("Supabase login failed, trying local backend...");
+    try {
+        const res = await fetch(`${API_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (!res.ok) {
+            const detail = await res.json().catch(() => ({}));
+            throw new Error(detail.detail || "Invalid login credentials");
+        }
+
+        const tokenData = await res.json();
+
+        // 3. Try to create the user in Supabase so future logins are unified
+        try {
+            await client.auth.signUp({ email, password });
+        } catch (_) { /* ignore if already exists */ }
+
+        // 4. Try Supabase sign-in again (may work now after signUp)
+        const { data: retryData, error: retryError } = await client.auth.signInWithPassword({
+            email, password
+        });
+
+        if (!retryError && retryData?.session) {
+            await window.loginSuccessHandler();
+            return;
+        }
+
+        // 5. If Supabase still fails, redirect with the local JWT token
+        localStorage.setItem('access_token', tokenData.access_token);
+        document.body.style.opacity = '0';
+        document.body.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => window.location.href = 'dashboard.html', 500);
+    } catch (backendErr) {
+        throw new Error(backendErr.message || "Invalid login credentials");
+    }
 }
 
 window.signup = async function (email, password, fullname) {
