@@ -18,7 +18,7 @@ async function api(path, method = "GET", body = null) {
     if (body) options.body = JSON.stringify(body);
 
     try {
-        const res = await fetch(`${API_URL}/admin${path}`, options);
+        const res = await window.fetchWithRetry(`${API_URL}/admin${path}`, options, 3);
 
         // Handle Auth Errors
         if (res.status === 403 || res.status === 401) {

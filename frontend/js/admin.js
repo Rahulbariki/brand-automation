@@ -4,9 +4,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Verify Admin Access
     try {
-        const meRes = await fetch('/api/me', {
+        const meRes = await window.fetchWithRetry('/api/me', {
             headers: { 'Authorization': `Bearer ${token}` }
-        });
+        }, 3);
         const user = await meRes.json();
         if (!user.is_admin) {
             window.location.href = 'dashboard.html'; // Redirect non-admins
@@ -24,9 +24,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function loadStats(token) {
-    const res = await fetch('/api/admin/stats', {
+    const res = await window.fetchWithRetry('/api/admin/stats', {
         headers: { 'Authorization': `Bearer ${token}` }
-    });
+    }, 3);
     const stats = await res.json();
 
     // Example: Update DOM elements with IDs like 'total-users'
@@ -42,9 +42,9 @@ async function loadStats(token) {
 }
 
 async function loadUsers(token) {
-    const res = await fetch('/api/admin/users', {
+    const res = await window.fetchWithRetry('/api/admin/users', {
         headers: { 'Authorization': `Bearer ${token}` }
-    });
+    }, 3);
     const users = await res.json();
 
     const tbody = document.getElementById('userTableBody');
@@ -68,13 +68,13 @@ async function loadUsers(token) {
 // Make globally available for onclick events
 window.toggleRole = async (userId, newRole) => {
     const token = localStorage.getItem('access_token');
-    await fetch(`/api/admin/users/${userId}/role`, {
+    await window.fetchWithRetry(`/api/admin/users/${userId}/role`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ role: newRole })
-    });
+    }, 3);
     location.reload();
 };

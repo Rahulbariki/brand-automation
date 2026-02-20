@@ -180,8 +180,9 @@ function requireAuth() {
     }
 }
 
-window.fetchWithRetry = async function (url, options = {}, retries = 3, backoff = 1000) {
+window.fetchWithRetry = async function (url, options = {}, retries = 3) {
     options.credentials = 'include';
+    const delays = [200, 500, 1000];
     for (let i = 0; i < retries; i++) {
         try {
             const response = await fetch(url, options);
@@ -191,34 +192,25 @@ window.fetchWithRetry = async function (url, options = {}, retries = 3, backoff 
         } catch (err) {
             if (i === retries - 1) throw err;
         }
-        await new Promise(r => setTimeout(r, backoff * Math.pow(2, i)));
+        const waitTime = i < delays.length ? delays[i] : 1000;
+        await new Promise(r => setTimeout(r, waitTime));
     }
 };
 
 window.loginSuccessHandler = async function () {
-    const delays = [200, 500, 1000];
     let sessionValid = false;
 
-    for (let i = 0; i < delays.length; i++) {
-        try {
-            const response = await fetch(`${API_URL}/api/me`, {
-                headers: { 'Authorization': `Bearer ${getToken()}` },
-                credentials: 'include'
-            });
+    try {
+        const response = await window.fetchWithRetry(`${API_URL}/api/me`, {
+            headers: { 'Authorization': `Bearer ${getToken()}` }
+        }, 3);
 
-            if (response.ok) {
-                sessionValid = true;
-                break;
-            }
-        } catch (e) {
-            console.warn('Session check polling error', e);
+        if (response.ok) {
+            sessionValid = true;
         }
-
-        if (!sessionValid) {
-            await new Promise(r => setTimeout(r, delays[i]));
-        }
+    } catch (e) {
+        console.warn('Session check polling error', e);
     }
-
     if (sessionValid) {
         // Smooth transition out
         document.body.style.opacity = '0';

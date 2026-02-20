@@ -621,7 +621,7 @@
         async function apiCall(endpoint, body) {
             const res = await window.fetchWithRetry(`${API_URL}${endpoint}`, {
                 method: 'POST', headers: HEADERS, body: JSON.stringify(body)
-            }, 3, 500);
+            }, 3);
             if (res.status === 403) {
                 const data = await res.json();
                 if (data.detail && data.detail.includes('Upgrade')) {
@@ -808,7 +808,7 @@
         // ── Admin ──
         async function loadAdmin() {
             try {
-                const stats = await window.fetchWithRetry(`${API_URL}/api/admin/stats`, { headers: HEADERS }, 3, 500).then(r => r.json());
+                const stats = await window.fetchWithRetry(`${API_URL}/api/admin/stats`, { headers: HEADERS }, 3).then(r => r.json());
                 document.getElementById('adminStats').innerHTML = `
                     <div class="glass-card stat-card"><h4>Total Users</h4><div class="stat-value">${stats.total_users}</div></div>
                     <div class="glass-card stat-card"><h4>Active Users</h4><div class="stat-value">${stats.active_users}</div></div>
@@ -817,7 +817,7 @@
                     <div class="glass-card stat-card"><h4>MRR</h4><div class="stat-value" data-prefix="$">${stats.mrr || 0}</div><div class="stat-trend up"><i class="fas fa-dollar-sign"></i> Monthly Revenue</div></div>
                     <div class="glass-card stat-card"><h4>Conversion</h4><div class="stat-value">${stats.conversion_rate || 0}%</div><div class="stat-trend"><i class="fas fa-chart-line"></i> Pro / Total</div></div>
                 `;
-                const users = await window.fetchWithRetry(`${API_URL}/api/admin/users`, { headers: HEADERS }, 3, 500).then(r => r.json());
+                const users = await window.fetchWithRetry(`${API_URL}/api/admin/users`, { headers: HEADERS }, 3).then(r => r.json());
                 document.getElementById('adminTableBody').innerHTML = users.map(u => `
                     <tr>
                         <td>${u.id}</td>
@@ -836,7 +836,7 @@
             await window.fetchWithRetry(`${API_URL}/api/admin/users/${id}/role`, {
                 method: 'PUT', headers: HEADERS,
                 body: JSON.stringify({ role: newRole })
-            }, 3, 500);
+            }, 3);
             loadAdmin();
         }
 
@@ -844,7 +844,7 @@
         async function loadDashboardData() {
             // Check if admin
             try {
-                const res = await window.fetchWithRetry(`${API_URL}/api/admin/stats`, { headers: HEADERS }, 3, 500);
+                const res = await window.fetchWithRetry(`${API_URL}/api/admin/stats`, { headers: HEADERS }, 3);
                 if (res.ok) document.getElementById('adminLink').style.display = '';
             } catch (e) { }
 
@@ -852,7 +852,7 @@
 
             // Fetch current user details to update Plan UI
             try {
-                const me = await window.fetchWithRetry(`${API_URL}/api/auth/me`, { headers: HEADERS }, 3, 500).then(r => r.json());
+                const me = await window.fetchWithRetry(`${API_URL}/api/auth/me`, { headers: HEADERS }, 3).then(r => r.json());
                 if (me.subscription_plan && ['pro', 'enterprise', 'admin'].includes(me.subscription_plan)) {
                     // Update Plan Text
                     document.getElementById('statPlan').innerText = me.subscription_plan.charAt(0).toUpperCase() + me.subscription_plan.slice(1);
