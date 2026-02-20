@@ -105,36 +105,53 @@ async function requireAuth() {
 
 window.fetchWithRetry = async function (url, options = {}, retries = 3) {
     const impUser = localStorage.getItem('impersonated_user');
-    if (impUser && (url.includes('/api/me') || url.includes('/api/auth/me'))) {
+    if (impUser && (url.includes('/api/me') || url.includes('/api/auth/me') || url.includes('/api/session-check'))) {
         return {
             ok: true,
             json: async () => JSON.parse(impUser)
         };
     }
 
-    // Attach Supabase token to Authorization header if available
-    const token = await window.getSupabaseToken();
-    if (token) {
-        options.headers = {
-            ...options.headers,
-            'Authorization': `Bearer ${token}`
-        };
-    }
-
-    options.credentials = 'include'; // Keep this if your API uses cookies/sessions alongside Bearer token
+    options.credentials = 'include';
     const delays = [200, 500, 1000];
+    let lastResponse = null;
+
     for (let i = 0; i < retries; i++) {
+        // Fetch token natively on each retry attempt in case it was refreshed
+        const token = await window.getSupabaseToken();
+        if (token) {
+            options.headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
         try {
             const response = await fetch(url, options);
+            lastResponse = response;
+
             if (response.ok) return response;
-            // If response is not OK, we might want to retry
-            if (i === retries - 1) return response;
+
+            // If response guarantees auth rejection, surface it after retries
+            if (i === retries - 1) {
+                if (response.status === 401 || response.status === 403) {
+                    // Only show session failure after all retries successfully exhaust.
+                    if (window.showToast) window.showToast("Session expired. Please log in again.", "error");
+                }
+                return response;
+            }
         } catch (err) {
-            if (i === retries - 1) throw err;
+            if (i === retries - 1) {
+                if (window.showToast) window.showToast("Network failure. Please verify connection.", "error");
+                throw err;
+            }
         }
+
         const waitTime = i < delays.length ? delays[i] : 1000;
         await new Promise(r => setTimeout(r, waitTime));
     }
+
+    return lastResponse;
 };
 
 window.loginSuccessHandler = async function () {
