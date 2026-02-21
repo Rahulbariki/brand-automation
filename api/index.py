@@ -1,5 +1,7 @@
 import os
 import sys
+from dotenv import load_dotenv
+load_dotenv()
 import json
 import traceback
 
@@ -41,6 +43,8 @@ try:
     import routes.branding_routes as branding_routes
     import routes.stripe_routes as stripe_routes
     import routes.debug_routes as debug_routes
+    import routes.workspace_routes as workspace_routes
+    import routes.team_routes as team_routes
 
     # Config
     ENV = os.getenv("ENV", "development")
@@ -86,6 +90,8 @@ try:
     app.include_router(branding_routes.router, prefix="/api", tags=["Branding AI"])
     app.include_router(stripe_routes.router, prefix="/api/stripe", tags=["Stripe"])
     app.include_router(debug_routes.router, prefix="/api/debug", tags=["Debug"])
+    app.include_router(workspace_routes.router)
+    app.include_router(team_routes.router, prefix="/api/team", tags=["Team"])
 
     # Serve Static Assets (Generated Logos)
     assets_dir = os.path.join(api_dir, "..", "frontend", "assets")

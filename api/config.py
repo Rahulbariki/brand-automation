@@ -23,3 +23,10 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 # Frontend
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+# Groq API
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+# Usage Limits
+FREE_TIER_LIMIT = int(os.getenv("FREE_TIER_LIMIT", 10))
+PRO_TIER_LIMIT = int(os.getenv("PRO_TIER_LIMIT", 100))

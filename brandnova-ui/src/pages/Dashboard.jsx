@@ -13,15 +13,60 @@ import AnimatedText from "../components/AnimatedText";
 import Loader from "../components/Loader";
 import StripeModal from "../components/StripeModal";
 import ParticleBackground from "../effects/ParticleBackground";
-import { apiPost } from "../hooks/useApi";
+import { apiPost, apiGet, apiDelete } from "../hooks/useApi";
+import Tilt from "react-parallax-tilt";
+import { Toaster, toast } from "react-hot-toast";
+
+const Skeleton = ({ className }) => (
+    <div className={`animate-pulse bg-[var(--card-border)] rounded-xl ${className}`}></div>
+);
+
+function AILoader({ stage = "names" }) {
+    const textSequence = {
+        "names": ["Thinking...", "Analyzing industry trends...", "Generating Names..."],
+        "logo": ["Thinking...", "Designing Visual Style...", "Crafting Identity...", "Rendering Assets..."],
+        "marketing": ["Thinking...", "Analyzing target audience...", "Writing Marketing Copy..."],
+        "startup": ["Thinking...", "Structuring pitch...", "Generating Startup Tools..."],
+        "sentiment": ["Thinking...", "Processing language...", "Analyzing Sentiment..."]
+    };
+
+    const seq = textSequence[stage] || ["Thinking...", "Generating..."];
+    const [step, setStep] = useState(0);
+
+    useEffect(() => {
+        const i = setInterval(() => setStep(s => (s + 1) % seq.length), 2000);
+        return () => clearInterval(i);
+    }, [seq.length]);
+
+    return (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center py-10">
+            <Loader2 size={32} className="animate-spin text-[var(--primary)] mb-4" />
+            <motion.p
+                key={step}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                className="text-text-secondary font-bold text-sm"
+            >
+                {seq[step]}
+            </motion.p>
+        </motion.div>
+    );
+}
+
+const playBeep = () => {
+    try {
+        new Audio("data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAA==").play().catch(() => { });
+    } catch { }
+};
 
 const modules = [
-    { id: "names", icon: "🧠", title: "Brand Name Generator", desc: "LLaMA 70B powered naming engine — unique, memorable, instantly available.", tag: "AI Powered", tagIcon: <Zap size={12} /> },
-    { id: "logo", icon: "🎨", title: "Logo Studio", desc: "Stable Diffusion XL creates stunning logos. Download in HD.", tag: "Pro Feature", tagIcon: <Crown size={12} />, pro: true },
-    { id: "marketing", icon: "✍️", title: "Marketing Copy", desc: "Ad copy, social captions, product descriptions — any tone, any format.", tag: "AI Powered", tagIcon: <Zap size={12} /> },
-    { id: "startup", icon: "🚀", title: "Startup Tools", desc: "Elevator pitches, investor emails, competitor analysis for founders.", tag: "New", tagIcon: <Sparkles size={12} /> },
-    { id: "sentiment", icon: "📊", title: "Sentiment Analysis", desc: "Analyze customer reviews and align feedback with your brand tone.", tag: "AI Powered", tagIcon: <Zap size={12} /> },
-    { id: "chat", icon: "💬", title: "AI Brand Consultant", desc: "Chat with IBM Granite for strategic branding and positioning advice.", tag: "IBM Granite", tagIcon: <BarChart3 size={12} /> },
+    { id: "names", icon: "🧠", title: "Brand Name Generator", desc: "LLaMA 70B powered naming engine.", tag: "AI Powered", tagIcon: <Zap size={12} />, planRequired: "free" },
+    { id: "logo", icon: "🎨", title: "Logo Studio", desc: "Stable Diffusion XL creates stunning logos.", tag: "Pro Feature", tagIcon: <Crown size={12} />, planRequired: "pro", pro: true },
+    { id: "marketing", icon: "✍️", title: "Marketing Copy", desc: "Ad copy, social captions, product descriptions.", tag: "Pro Feature", tagIcon: <Crown size={12} />, planRequired: "pro", pro: true },
+    { id: "startup", icon: "🚀", title: "Startup Tools", desc: "Elevator pitches, investor emails.", tag: "Enterprise", tagIcon: <Crown size={12} />, planRequired: "enterprise", enterprise: true },
+    { id: "sentiment", icon: "📊", title: "Sentiment Analysis", desc: "Analyze customer reviews.", tag: "AI Powered", tagIcon: <Zap size={12} />, planRequired: "free" },
+    { id: "chat", icon: "💬", title: "AI Brand Consultant", desc: "Chat with IBM Granite.", tag: "Enterprise", tagIcon: <BarChart3 size={12} />, planRequired: "enterprise", enterprise: true },
 ];
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
@@ -40,14 +85,33 @@ export default function Dashboard() {
     const [chatMessages, setChatMessages] = useState([
         { role: "ai", text: "👋 I'm your AI brand consultant. Ask me anything about branding, positioning, or growth strategy." },
     ]);
+    const [userPlan, setUserPlan] = useState("free");
+    const [effectivePlan, setEffectivePlan] = useState("free");
+    const [usage, setUsage] = useState({ used: 0, limit: 10 });
+    const [isImpersonated, setIsImpersonated] = useState(false);
+    const [userEmail, setUserEmail] = useState("");
 
-    // Detect admin from JWT token
     useEffect(() => {
+        const fetchPlan = async () => {
+            try {
+                const res = await apiGet("/api/me");
+                setUserPlan(res.subscription_plan);
+                setEffectivePlan(res.effective_plan);
+                setIsAdmin(res.is_admin);
+                setUserEmail(res.email);
+                if (res.usage) setUsage(res.usage);
+            } catch (err) {
+                // Ignore gracefully
+            }
+        };
+        fetchPlan();
+
         try {
             const token = localStorage.getItem("access_token");
             if (token) {
                 const payload = JSON.parse(atob(token.split(".")[1]));
                 setIsAdmin(!!payload.admin);
+                setIsImpersonated(!!payload.is_impersonated);
             }
         } catch { }
     }, []);
@@ -57,7 +121,22 @@ export default function Dashboard() {
         navigate("/login");
     };
 
-    const goTo = (id) => navigate(`/dashboard/${id}`);
+    const isUsageExceeded = usage.limit !== "Unlimited" && usage.used >= usage.limit;
+    const blockGeneration = !isAdmin && effectivePlan !== "enterprise" && isUsageExceeded;
+
+    const goTo = (m) => {
+        if (!isAdmin) {
+            if (m.planRequired === "enterprise" && effectivePlan !== "enterprise") {
+                setShowUpgrade(true);
+                return;
+            }
+            if (m.planRequired === "pro" && !["pro", "enterprise"].includes(effectivePlan)) {
+                setShowUpgrade(true);
+                return;
+            }
+        }
+        navigate(`/dashboard/${m.id}`);
+    };
     const goHome = () => navigate("/dashboard");
 
     async function callApi(endpoint, body, key) {
@@ -88,19 +167,177 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {modules.map((m, i) => (
                         <motion.div key={m.id} variants={fadeUp}>
-                            <GlassCard onClick={() => goTo(m.id)} className="group cursor-pointer h-full">
+                            <GlassCard onClick={() => goTo(m)} className="group cursor-pointer h-full relative overflow-hidden">
+                                {m.enterprise && effectivePlan !== "enterprise" && !isAdmin && (
+                                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center">
+                                        <Crown className="text-amber-400 mb-2" size={24} />
+                                        <span className="text-white text-sm font-bold">Requires Enterprise</span>
+                                    </div>
+                                )}
+                                {m.pro && !["pro", "enterprise"].includes(effectivePlan) && !isAdmin && (
+                                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center">
+                                        <Crown className="text-[var(--primary)] mb-2" size={24} />
+                                        <span className="text-white text-sm font-bold">Requires Pro</span>
+                                    </div>
+                                )}
                                 <div className="text-4xl mb-4">{m.icon}</div>
                                 <h3 className="text-lg font-bold mb-2 group-hover:text-[var(--primary)] transition-colors">{m.title}</h3>
                                 <p className="text-text-secondary text-sm mb-4 leading-relaxed">{m.desc}</p>
-                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${m.pro ? "bg-amber-500/10 text-amber-400" : "bg-[var(--primary)]/10 text-[var(--primary)]"}`}>
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${m.enterprise ? "bg-amber-500/10 text-amber-400" : m.pro ? "bg-[var(--primary)]/10 text-[var(--primary)]" : "bg-green-500/10 text-green-400"}`}>
                                     {m.tagIcon} {m.tag}
                                 </span>
                             </GlassCard>
                         </motion.div>
                     ))}
                 </div>
+
+                <TeamManagement />
             </motion.div>
         );
+    }
+
+    function UsagePanel() {
+        if (isAdmin || effectivePlan === "enterprise") return (
+            <div className="mb-6">
+                <Tilt tiltMaxAngleX={5} tiltMaxAngleY={5} scale={1.01} transitionSpeed={2500}>
+                    <GlassCard className="!p-4 flex items-center gap-4 border border-[var(--primary)]/20 shadow-[0_0_15px_rgba(124,58,237,0.1)]">
+                        <div className="text-amber-400 bg-amber-400/10 p-2 rounded-xl"><Crown size={20} /></div>
+                        <div>
+                            <p className="text-xs text-text-muted uppercase tracking-wider font-bold">Usage Limits</p>
+                            <p className="text-sm font-black gradient-text">Unlimited Access (Enterprise)</p>
+                        </div>
+                    </GlassCard>
+                </Tilt>
+            </div>
+        );
+        const limitStr = usage.limit || 10;
+        const usedStr = usage.used || 0;
+        const percent = Math.min(100, Math.round((usedStr / limitStr) * 100)) || 0;
+        return (
+            <div className="mb-6 flex gap-4">
+                <Tilt tiltMaxAngleX={5} tiltMaxAngleY={5} scale={1.01} transitionSpeed={2500} className="w-full">
+                    <GlassCard className={`!p-5 flex-1 ${isUsageExceeded ? 'border border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : ''}`}>
+                        <div className="flex justify-between items-center mb-3">
+                            <p className="text-xs font-bold text-text-secondary uppercase tracking-wider"><BarChart3 size={14} className="inline mr-1 mb-0.5 text-[var(--primary)]" /> Monthly Usage</p>
+                            <p className={`text-sm font-black ${isUsageExceeded ? 'text-red-400' : 'text-[var(--text)]'}`}>{usedStr} / {limitStr}</p>
+                        </div>
+                        <div className="w-full bg-[var(--surface)] h-2.5 rounded-full overflow-hidden mb-2">
+                            <div className={`h-full transition-all duration-1000 ${isUsageExceeded ? "bg-red-500" : "bg-[var(--primary)]"}`} style={{ width: `${percent}%` }}></div>
+                        </div>
+                        {isUsageExceeded ?
+                            <div className="flex items-center justify-between text-xs mt-3"><span className="text-red-400 font-bold">Usage limit exceeded.</span> <button onClick={() => setShowUpgrade(true)} className="text-[var(--primary)] font-bold hover:underline">Upgrade Plan</button></div> :
+                            <p className="text-xs text-text-muted mt-2">Resets next month.</p>
+                        }
+                    </GlassCard>
+                </Tilt>
+            </div>
+        )
+    }
+
+    function TeamManagement() {
+        const [team, setTeam] = useState(null);
+        const [inviteEmail, setInviteEmail] = useState("");
+        const [loadingTeam, setLoadingTeam] = useState(false);
+
+        useEffect(() => {
+            if (effectivePlan === "enterprise" || isAdmin) {
+                apiGet('/api/team/').then(res => setTeam(res)).catch(() => setTeam(null));
+            }
+        }, [effectivePlan, isAdmin]);
+
+        if (effectivePlan !== "enterprise" && !isAdmin) return null;
+
+        const handleCreate = async () => {
+            setLoadingTeam(true);
+            try {
+                await apiPost('/api/team/create', { team_name: "My Enterprise Team" });
+                const res = await apiGet('/api/team/');
+                setTeam(res);
+            } catch (e) { alert(e.message); }
+            setLoadingTeam(false);
+        };
+
+        const handleInvite = async (e) => {
+            e.preventDefault();
+            if (!inviteEmail) return;
+            setLoadingTeam(true);
+            try {
+                await apiPost('/api/team/invite', { email: inviteEmail });
+                const res = await apiGet('/api/team/');
+                setTeam(res);
+                setInviteEmail("");
+            } catch (e) { alert(e.message); }
+            setLoadingTeam(false);
+        };
+
+        const handleRemove = async (id) => {
+            setLoadingTeam(true);
+            try {
+                await apiDelete(`/api/team/member/${id}`);
+                const res = await apiGet('/api/team/');
+                setTeam(res);
+            } catch (e) { alert(e.message); }
+            setLoadingTeam(false);
+        };
+
+        if (team === null) {
+            return (
+                <div className="mt-8">
+                    <h2 className="text-xl font-bold mb-4">Team Management</h2>
+                    <Tilt tiltMaxAngleX={2} tiltMaxAngleY={2} scale={1.01} transitionSpeed={2500}>
+                        <GlassCard className="!p-6 flex items-center justify-between">
+                            <div>
+                                <p className="font-bold">Setup your Enterprise Team</p>
+                                <p className="text-sm text-text-secondary">Invite members to collaborate under your plan.</p>
+                            </div>
+                            <AnimatedButton onClick={handleCreate} disabled={loadingTeam} className="!px-4 !py-2">
+                                Create Team
+                            </AnimatedButton>
+                        </GlassCard>
+                    </Tilt>
+                </div>
+            )
+        }
+
+        return (
+            <div className="mt-8">
+                <h2 className="text-xl font-bold mb-4">Enterprise Team</h2>
+                <Tilt tiltMaxAngleX={2} tiltMaxAngleY={2} scale={1.01} transitionSpeed={2500}>
+                    <GlassCard className="!p-6">
+                        <div className="flex justify-between items-center mb-6 border-b border-[var(--card-border)] pb-4">
+                            <div>
+                                <p className="font-bold text-lg">{team.team_name}</p>
+                                <p className="text-sm text-text-secondary">{team.is_owner ? "You are the owner" : `Owned by ${team.owner_email}`}</p>
+                            </div>
+                        </div>
+
+                        {team.is_owner && (
+                            <form onSubmit={handleInvite} className="flex gap-2 mb-6">
+                                <input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} type="email" placeholder="user@example.com" required className="flex-1 bg-[var(--surface)] border border-[var(--card-border)] rounded-xl px-3 text-sm focus:border-[var(--primary)] outline-none" />
+                                <AnimatedButton type="submit" disabled={loadingTeam} className="!px-4 !py-2 text-sm">Invite Member</AnimatedButton>
+                            </form>
+                        )}
+
+                        {team.members && (
+                            <div className="space-y-2">
+                                {team.members.map(m => (
+                                    <div key={m.user_id} className="flex items-center justify-between p-3 rounded-xl bg-[var(--surface)] text-sm">
+                                        <div>
+                                            <p className="font-bold">{m.fullname || "User"}</p>
+                                            <p className="text-xs text-text-muted">{m.email}</p>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xs uppercase font-bold text-[var(--primary)] bg-[var(--primary)]/10 px-2 py-1 rounded">{m.role}</span>
+                                            <button onClick={() => handleRemove(m.user_id)} disabled={loadingTeam} className="text-red-400 hover:text-red-300 transition-colors bg-red-400/10 p-1.5 rounded-lg"><Copy size={14} className="hidden" /> Remove</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </GlassCard>
+                </Tilt>
+            </div>
+        )
     }
 
     // ─── BACK HEADER ───
@@ -132,12 +369,13 @@ export default function Dashboard() {
                         <Input placeholder="Industry (e.g. FinTech, HealthCare)" value={industry} onChange={setIndustry} />
                         <Input placeholder="Keywords (comma-separated)" value={keywords} onChange={setKeywords} />
                         <Input placeholder="Tone (modern, playful, luxurious...)" value={tone} onChange={setTone} />
-                        <AnimatedButton type="submit" disabled={loading} className="w-full py-3.5 justify-center">
+                        <AnimatedButton type="submit" disabled={blockGeneration || loading} className={`w-full py-3.5 justify-center ${blockGeneration ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}>
                             {loading ? <Loader2 size={18} className="animate-spin" /> : <><Sparkles size={16} /> Generate Names</>}
                         </AnimatedButton>
+                        {blockGeneration && <p className="text-xs text-red-400 text-center font-bold">Generation disabled (usage limit reached)</p>}
                     </form>
                 </GlassCard>
-                {loading && <Loader text="Generating brand names..." />}
+                {loading && <AILoader stage="names" />}
                 {result?.key === "names" && !result.error && (
                     <div className="grid gap-3 max-w-2xl mt-6">
                         {result.data.names?.map((name, i) => (
@@ -171,12 +409,13 @@ export default function Dashboard() {
                         <Input placeholder="Industry" value={industry} onChange={setIndustry} />
                         <Input placeholder="Keywords (comma-separated)" value={keywords} onChange={setKeywords} />
                         <Input placeholder="Style (minimalist, abstract, vintage)" value={style} onChange={setStyle} />
-                        <AnimatedButton type="submit" disabled={loading} className="w-full py-3.5 justify-center">
+                        <AnimatedButton type="submit" disabled={blockGeneration || loading} className={`w-full py-3.5 justify-center ${blockGeneration ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}>
                             {loading ? <Loader2 size={18} className="animate-spin" /> : <><Paintbrush size={16} /> Generate Logo</>}
                         </AnimatedButton>
+                        {blockGeneration && <p className="text-xs text-red-400 text-center font-bold">Generation disabled (usage limit reached)</p>}
                     </form>
                 </GlassCard>
-                {loading && <Loader text="Creating your logo..." />}
+                {loading && <AILoader stage="logo" />}
                 {result?.key === "logo" && !result.error && result.data.image_url && (
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-6 max-w-2xl">
                         <GlassCard tilt={false} className="text-center !p-8">
@@ -213,12 +452,13 @@ export default function Dashboard() {
                             <option value="email">Email Campaign</option>
                         </select>
                         <Input placeholder="Tone (bold, witty, premium...)" value={tone} onChange={setTone} />
-                        <AnimatedButton type="submit" disabled={loading} className="w-full py-3.5 justify-center">
+                        <AnimatedButton type="submit" disabled={blockGeneration || loading} className={`w-full py-3.5 justify-center ${blockGeneration ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}>
                             {loading ? <Loader2 size={18} className="animate-spin" /> : <><PenLine size={16} /> Generate Copy</>}
                         </AnimatedButton>
+                        {blockGeneration && <p className="text-xs text-red-400 text-center font-bold">Generation disabled (usage limit reached)</p>}
                     </form>
                 </GlassCard>
-                {loading && <Loader text="Writing brilliant copy..." />}
+                {loading && <AILoader stage="marketing" />}
                 {result?.key === "marketing" && !result.error && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 max-w-2xl">
                         <GlassCard tilt={false} className="!p-8">
@@ -258,9 +498,10 @@ export default function Dashboard() {
                             <Textarea placeholder="The Problem" value={problem} onChange={setProblem} />
                             <Textarea placeholder="The Solution" value={solution} onChange={setSolution} />
                             <Input placeholder="Target Audience" value={audience} onChange={setAudience} />
-                            <AnimatedButton type="submit" disabled={loading} className="w-full py-3.5 justify-center">
+                            <AnimatedButton type="submit" disabled={blockGeneration || loading} className={`w-full py-3.5 justify-center ${blockGeneration ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}>
                                 {loading ? <Loader2 size={18} className="animate-spin" /> : <><Rocket size={16} /> Generate Pitch</>}
                             </AnimatedButton>
+                            {blockGeneration && <p className="text-xs text-red-400 text-center font-bold">Generation disabled (usage limit reached)</p>}
                         </form>
                     </GlassCard>
                 ) : (
@@ -270,13 +511,14 @@ export default function Dashboard() {
                             <Input placeholder="Investor Name" value={investor} onChange={setInvestor} />
                             <Input placeholder="Key Metrics (e.g. $10k MRR, 500 users)" value={metrics} onChange={setMetrics} />
                             <Input placeholder="Your Ask (e.g. 15 min call, $500k seed)" value={ask} onChange={setAsk} />
-                            <AnimatedButton type="submit" disabled={loading} className="w-full py-3.5 justify-center">
+                            <AnimatedButton type="submit" disabled={blockGeneration || loading} className={`w-full py-3.5 justify-center ${blockGeneration ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}>
                                 {loading ? <Loader2 size={18} className="animate-spin" /> : <><Send size={16} /> Draft Email</>}
                             </AnimatedButton>
+                            {blockGeneration && <p className="text-xs text-red-400 text-center font-bold">Generation disabled (usage limit reached)</p>}
                         </form>
                     </GlassCard>
                 )}
-                {loading && <Loader />}
+                {loading && <AILoader stage="startup" />}
                 {result?.key === "pitch" && !result.error && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 max-w-2xl">
                         <GlassCard tilt={false} className="!p-8"><AnimatedText text={result.data.pitch} speed={0.012} className="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap" /></GlassCard>
@@ -304,12 +546,13 @@ export default function Dashboard() {
                     <form onSubmit={(e) => { e.preventDefault(); callApi("/api/analyze-sentiment", { text, brand_tone: tone }, "sentiment"); }} className="space-y-4">
                         <Textarea placeholder="Paste a customer review or feedback..." value={text} onChange={setText} rows={4} />
                         <Input placeholder="Brand Tone (professional, playful...)" value={tone} onChange={setTone} />
-                        <AnimatedButton type="submit" disabled={loading} className="w-full py-3.5 justify-center">
+                        <AnimatedButton type="submit" disabled={blockGeneration || loading} className={`w-full py-3.5 justify-center ${blockGeneration ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}>
                             {loading ? <Loader2 size={18} className="animate-spin" /> : <><BarChart3 size={16} /> Analyze</>}
                         </AnimatedButton>
+                        {blockGeneration && <p className="text-xs text-red-400 text-center font-bold">Generation disabled (usage limit reached)</p>}
                     </form>
                 </GlassCard>
-                {loading && <Loader text="Analyzing sentiment..." />}
+                {loading && <AILoader stage="sentiment" />}
                 {result?.key === "sentiment" && !result.error && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 max-w-2xl">
                         <GlassCard tilt={false} className="!p-8">
@@ -386,12 +629,15 @@ export default function Dashboard() {
                             </div>
                         )}
                     </div>
-                    <form onSubmit={send} className="flex border-t border-[var(--card-border)] p-3 gap-2">
-                        <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask about branding strategy..."
-                            className="flex-1 bg-transparent border-none text-sm text-[var(--text)] placeholder:text-text-muted focus:outline-none px-2" />
-                        <AnimatedButton type="submit" disabled={chatLoading} className="!rounded-xl !px-4 !py-2.5">
-                            <Send size={16} />
-                        </AnimatedButton>
+                    <form onSubmit={send} className="flex flex-col border-t border-[var(--card-border)] p-3 gap-2">
+                        <div className="flex gap-2">
+                            <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask about branding strategy..."
+                                className="flex-1 bg-transparent border-none text-sm text-[var(--text)] placeholder:text-text-muted focus:outline-none px-2" />
+                            <AnimatedButton type="submit" disabled={blockGeneration || chatLoading} className="!rounded-xl !px-4 !py-2.5">
+                                <Send size={16} />
+                            </AnimatedButton>
+                        </div>
+                        {blockGeneration && <p className="text-xs text-red-400 text-center font-bold">Generation disabled (usage limit reached)</p>}
                     </form>
                 </GlassCard>
             </motion.div>
@@ -437,13 +683,31 @@ export default function Dashboard() {
 
     const ActiveView = views[view] || HomeView;
 
+    const stopImpersonation = () => {
+        const originalToken = localStorage.getItem("original_access_token");
+        if (originalToken) {
+            localStorage.setItem("access_token", originalToken);
+            localStorage.removeItem("original_access_token");
+            window.location.href = "/admin";
+        }
+    };
+
     return (
         <div className="min-h-screen animated-bg text-[var(--text)]">
+            <Toaster position="top-right" toastOptions={{ className: 'glass-card text-sm', style: { background: 'var(--surface)', color: 'var(--text)' } }} />
             <ParticleBackground />
-            <Sidebar onLogout={handleLogout} isAdmin={isAdmin} />
-            <StripeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} />
 
-            <main className="ml-[260px] p-8 relative z-10 min-h-screen">
+            {isImpersonated && (
+                <div className="fixed top-0 left-0 right-0 z-50 bg-red-500/90 text-white text-center py-2 text-sm font-bold backdrop-blur-sm flex items-center justify-center gap-4 shadow-lg">
+                    <span>You are logged in as: {userEmail}</span>
+                    <button onClick={stopImpersonation} className="bg-white text-red-600 px-3 py-1 rounded-full text-xs hover:bg-red-50 transition-colors">Exit Impersonation</button>
+                </div>
+            )}
+
+            <Sidebar onLogout={handleLogout} isAdmin={isAdmin} />
+            <StripeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} onSuccess={(plan) => setUserPlan(plan)} />
+
+            <main className={`ml-[260px] p-8 relative z-10 min-h-screen ${isImpersonated ? 'pt-16' : ''}`}>
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={view}
@@ -452,6 +716,7 @@ export default function Dashboard() {
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.3 }}
                     >
+                        {view !== "home" && <UsagePanel />}
                         <ActiveView />
                     </motion.div>
                 </AnimatePresence>

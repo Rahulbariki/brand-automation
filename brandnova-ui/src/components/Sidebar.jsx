@@ -2,11 +2,12 @@ import { motion } from "framer-motion";
 import { useLocation, Link } from "react-router-dom";
 import {
     Home, Lightbulb, Paintbrush, PenLine, Rocket,
-    Heart, MessageCircle, Shield, LogOut, Palette,
+    Heart, MessageCircle, Shield, LogOut, Palette, Folder
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
 const links = [
+    { to: "/workspaces", icon: Folder, label: "Brand Workspaces" },
     { to: "/dashboard", icon: Home, label: "Creative World" },
     { to: "/dashboard/names", icon: Lightbulb, label: "Brand Names" },
     { to: "/dashboard/logo", icon: Paintbrush, label: "Logo Studio" },

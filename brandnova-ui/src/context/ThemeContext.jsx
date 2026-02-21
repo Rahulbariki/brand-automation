@@ -9,10 +9,10 @@ export const ThemeContext = createContext();
 const themes = { cosmic, aurora, sunset, minimal };
 
 const themeList = [
-    { id: "cosmic", name: "Cosmic", emoji: "🌌", swatch: "linear-gradient(135deg,#7c3aed,#ec4899)" },
-    { id: "aurora", name: "Aurora", emoji: "🌌", swatch: "linear-gradient(135deg,#10b981,#06b6d4)" },
-    { id: "sunset", name: "Sunset", emoji: "🌅", swatch: "linear-gradient(135deg,#f43f5e,#f59e0b)" },
-    { id: "minimal", name: "Minimal", emoji: "⬛", swatch: "linear-gradient(135deg,#fff,#555)" },
+    { id: "cosmic", name: "Cyberpunk", emoji: "🌌", swatch: "linear-gradient(135deg,#7c3aed,#ec4899)" },
+    { id: "aurora", name: "Gradient Neon", emoji: "⚡", swatch: "linear-gradient(135deg,#10b981,#06b6d4)" },
+    { id: "sunset", name: "Glass", emoji: "🪟", swatch: "linear-gradient(135deg,#f43f5e,#f59e0b)" },
+    { id: "minimal", name: "Dark / Light", emoji: "⬛", swatch: "linear-gradient(135deg,#fff,#555)" },
 ];
 
 export default function ThemeProvider({ children }) {

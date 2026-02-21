@@ -100,13 +100,46 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
     return {"access_token": token, "token_type": "bearer"}
 
 @router.get("/me")
-def read_users_me(current_user: User = Depends(get_current_user)):
+def read_users_me(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    from models import UsageLog, Team, TeamMember
+    from sqlalchemy import func
+    from datetime import datetime
+    from config import FREE_TIER_LIMIT, PRO_TIER_LIMIT
+    
+    # Define effective plan (if they belong to an enterprise team)
+    effective_plan = current_user.subscription_plan
+    owner_user = current_user
+    
+    membership = db.query(TeamMember).filter(TeamMember.user_id == current_user.id).first()
+    if membership:
+        team = db.query(Team).filter(Team.id == membership.team_id).first()
+        if team and team.owner.subscription_plan == "enterprise":
+            effective_plan = "enterprise"
+            owner_user = team.owner
+
+    now = datetime.utcnow()
+    month_start = datetime(now.year, now.month, 1)
+    
+    usage_sum = db.query(func.sum(UsageLog.request_count)).filter(
+        UsageLog.user_id == owner_user.id,
+        UsageLog.created_at >= month_start
+    ).scalar() or 0
+    
+    limit = FREE_TIER_LIMIT if effective_plan == "free" else PRO_TIER_LIMIT
+    if effective_plan == "enterprise" or current_user.is_admin:
+        limit = "Unlimited"
+
     return {
         "id": current_user.id,
         "email": current_user.email,
         "fullname": current_user.fullname,
         "is_admin": current_user.is_admin,
-        "subscription_plan": current_user.subscription_plan
+        "subscription_plan": current_user.subscription_plan,
+        "effective_plan": effective_plan,
+        "usage": {
+            "used": usage_sum,
+            "limit": limit
+        }
     }
 
 @router.get("/session-check")
@@ -129,3 +162,18 @@ async def session_check(request: Request, db: Session = Depends(get_db)):
         return {"status": "Valid", "user_id": payload.get("sub")}
     else:
         return {"status": "Invalid", "reason": "Expired or invalid token"}
+
+class CouponRequest(BaseModel):
+    coupon_code: str
+
+@router.post("/apply-coupon")
+def apply_coupon(request: CouponRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if request.coupon_code != "RAHUL2005":
+        raise HTTPException(status_code=400, detail="Invalid coupon code")
+        
+    current_user.subscription_plan = "pro"
+    current_user.subscription_status = "active"
+    current_user.plan_source = "coupon"
+    db.commit()
+    
+    return {"message": "Coupon applied successfully! You are now a Pro user.", "plan": "pro"}

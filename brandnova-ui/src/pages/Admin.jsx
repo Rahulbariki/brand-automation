@@ -8,7 +8,12 @@ import GlassCard from "../components/GlassCard";
 import AnimatedButton from "../components/AnimatedButton";
 import Sidebar from "../components/Sidebar";
 import ParticleBackground from "../effects/ParticleBackground";
-import { apiGet } from "../hooks/useApi";
+import { apiGet, apiPost } from "../hooks/useApi";
+import { Toaster, toast } from "react-hot-toast";
+
+const Skeleton = ({ className }) => (
+    <div className={`animate-pulse bg-[var(--card-border)] rounded-xl ${className}`}></div>
+);
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Title, Tooltip, Legend, Filler);
 
@@ -40,36 +45,82 @@ export default function Admin() {
     const [users, setUsers] = useState([]);
     const [search, setSearch] = useState("");
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         loadData();
     }, []);
 
     async function loadData() {
+        setLoading(true);
         try {
-            const s = await apiGet("/api/admin/stats");
+            const s = await apiGet("/api/admin/analytics");
             setStats(s);
             const u = await apiGet("/api/admin/users");
             setUsers(u);
         } catch (err) {
             setError("Admin access required");
             setTimeout(() => navigate("/dashboard"), 2000);
+        } finally {
+            setLoading(false);
         }
     }
 
     async function toggleRole(id, currentRole) {
         const newRole = currentRole === "admin" ? "user" : "admin";
         try {
-            await fetch("http://127.0.0.1:8000" + `/api/admin/users/${id}/role`, {
+            await fetch("http://127.0.0.1:8000" + `/api/admin/users/${id}/toggle-admin`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${localStorage.getItem("access_token")}`,
                 },
-                body: JSON.stringify({ role: newRole }),
             });
             loadData();
         } catch { }
+    }
+
+    async function updatePlan(id, newPlan) {
+        try {
+            const res = await fetch("http://127.0.0.1:8000" + `/api/admin/users/${id}/set-plan`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+                },
+                body: JSON.stringify({ subscription_plan: newPlan }),
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                alert(data.detail || "Update failed");
+            }
+            loadData();
+        } catch (err) { alert(err.message); }
+    }
+
+    async function impersonateUser(id) {
+        try {
+            const res = await fetch("http://127.0.0.1:8000" + `/api/admin/impersonate`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+                },
+                body: JSON.stringify({ user_id: id }),
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                toast.error(data.detail || "Impersonation failed");
+                return;
+            }
+            const data = await res.json();
+            // Store original token
+            localStorage.setItem("original_access_token", localStorage.getItem("access_token"));
+            // Replace with impersonated token
+            localStorage.setItem("access_token", data.impersonation_token);
+            toast.success("Impersonation successful");
+            setTimeout(() => navigate("/dashboard"), 1000);
+        } catch (err) { toast.error(err.message); }
     }
 
     const filteredUsers = search
@@ -78,36 +129,50 @@ export default function Admin() {
 
     const statCards = stats ? [
         { label: "Total Users", icon: <Users size={20} />, value: stats.total_users, prefix: "" },
-        { label: "Active Users", icon: <Activity size={20} />, value: stats.active_users, prefix: "" },
-        { label: "Pro Users", icon: <Crown size={20} />, value: stats.pro_users, prefix: "" },
-        { label: "Generations", icon: <BarChart3 size={20} />, value: stats.total_generations, prefix: "" },
-        { label: "MRR", icon: <DollarSign size={20} />, value: Math.round(stats.mrr || 0), prefix: "$" },
-        { label: "Conversion", icon: <TrendingUp size={20} />, value: Math.round(stats.conversion_rate || 0), suffix: "%" },
+        { label: "Active 30d Users", icon: <Activity size={20} />, value: stats.active_users, prefix: "" },
+        { label: "Pro Users", icon: <Crown size={20} />, value: stats.plan_distribution?.pro || 0, prefix: "" },
+        { label: "Enterprise Users", icon: <Crown size={20} />, value: stats.plan_distribution?.enterprise || 0, prefix: "" },
+        { label: "Generations", icon: <BarChart3 size={20} />, value: stats.total_generated_content, prefix: "" },
+        { label: "API Requests", icon: <TrendingUp size={20} />, value: stats.total_branding_requests, prefix: "" },
     ] : [];
 
     const style = getComputedStyle(document.documentElement);
     const primary = style.getPropertyValue("--primary")?.trim() || "#7c3aed";
     const accent = style.getPropertyValue("--accent2")?.trim() || "#ec4899";
 
+    const contentGrowth = stats?.monthly_growth?.content || [];
+    const requestGrowth = stats?.monthly_growth?.requests || [];
+
+    const labels = [...new Set([...contentGrowth.map(c => c.month), ...requestGrowth.map(r => r.month)])].sort();
+
     const lineData = {
-        labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
+        labels: labels.length ? labels : ["Jan", "Feb", "Mar"],
         datasets: [{
-            label: "Users",
-            data: [2, 5, 12, 25, 45, 80, stats?.total_users || 100],
+            label: "API Requests (Usage)",
+            data: labels.length ? labels.map(l => requestGrowth.find(r => r.month === l)?.count || 0) : [10, 50, 100],
             borderColor: primary,
             backgroundColor: primary + "22",
             fill: true,
             tension: 0.4,
             pointRadius: 4,
             pointBackgroundColor: primary,
+        }, {
+            label: "Generations",
+            data: labels.length ? labels.map(l => contentGrowth.find(r => r.month === l)?.count || 0) : [5, 20, 45],
+            borderColor: accent,
+            backgroundColor: accent + "22",
+            fill: true,
+            tension: 0.4,
+            pointRadius: 4,
+            pointBackgroundColor: accent,
         }],
     };
 
     const doughnutData = {
-        labels: ["Brand Names", "Logos", "Marketing", "Pitch", "Sentiment", "Chat"],
+        labels: ["Free", "Pro", "Enterprise"],
         datasets: [{
-            data: [35, 15, 25, 10, 8, 7],
-            backgroundColor: [primary, accent, "#f59e0b", "#10b981", "#06b6d4", "#8b5cf6"],
+            data: stats ? [stats.plan_distribution?.free || 0, stats.plan_distribution?.pro || 0, stats.plan_distribution?.enterprise || 0] : [70, 20, 10],
+            backgroundColor: ["#06b6d4", primary, "#f59e0b"],
             borderWidth: 0,
             spacing: 3,
         }],
@@ -133,6 +198,7 @@ export default function Admin() {
 
     return (
         <div className="min-h-screen animated-bg text-[var(--text)]">
+            <Toaster position="top-right" toastOptions={{ className: 'glass-card text-sm', style: { background: 'var(--surface)', color: 'var(--text)' } }} />
             <ParticleBackground />
             <Sidebar onLogout={() => { localStorage.removeItem("access_token"); navigate("/login"); }} />
 
@@ -150,7 +216,7 @@ export default function Admin() {
 
                     {/* Stat Cards */}
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-10">
-                        {statCards.map((s, i) => (
+                        {loading ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32" />) : statCards.map((s, i) => (
                             <motion.div key={i} variants={fadeUp}>
                                 <GlassCard className="text-center !p-5 h-full">
                                     <div className="text-[var(--primary)] mb-2">{s.icon}</div>
@@ -167,14 +233,14 @@ export default function Admin() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
                         <motion.div variants={fadeUp}>
                             <GlassCard tilt={false} className="!p-6">
-                                <h3 className="text-sm font-bold mb-4">User Growth</h3>
-                                {stats && <Line data={lineData} options={chartOptions} />}
+                                <h3 className="text-sm font-bold mb-4">Monthly Usage & Growth</h3>
+                                {loading ? <Skeleton className="h-64" /> : <Line data={lineData} options={{ ...chartOptions, plugins: { legend: { display: true, position: 'bottom' } } }} />}
                             </GlassCard>
                         </motion.div>
                         <motion.div variants={fadeUp}>
                             <GlassCard tilt={false} className="!p-6">
-                                <h3 className="text-sm font-bold mb-4">Feature Usage</h3>
-                                {stats && <Doughnut data={doughnutData} options={{ responsive: true, plugins: { legend: { position: "bottom", labels: { color: "#888", padding: 15 } } }, animation: { animateRotate: true, duration: 1500 } }} />}
+                                <h3 className="text-sm font-bold mb-4">Plan Distribution</h3>
+                                {loading ? <Skeleton className="h-64 w-64 mx-auto rounded-full" /> : <Doughnut data={doughnutData} options={{ responsive: true, plugins: { legend: { position: "bottom", labels: { color: "#888", padding: 15 } } }, animation: { animateRotate: true, duration: 1500 } }} />}
                             </GlassCard>
                         </motion.div>
                     </div>
@@ -197,12 +263,21 @@ export default function Admin() {
                                         <th className="text-left py-3 text-text-muted font-semibold">Email</th>
                                         <th className="text-left py-3 text-text-muted font-semibold">Name</th>
                                         <th className="text-left py-3 text-text-muted font-semibold">Role</th>
+                                        <th className="text-left py-3 text-text-muted font-semibold">Plan</th>
                                         <th className="text-left py-3 text-text-muted font-semibold">Status</th>
                                         <th className="text-left py-3 text-text-muted font-semibold">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredUsers.map((u, i) => (
+                                    {loading ? (
+                                        Array.from({ length: 5 }).map((_, i) => (
+                                            <tr key={i} className="border-b border-[var(--card-border)] animate-pulse">
+                                                <td colSpan="7" className="py-4">
+                                                    <Skeleton className="h-4 w-full" />
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : filteredUsers.map((u, i) => (
                                         <motion.tr key={u.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
                                             className="border-b border-[var(--card-border)] hover:bg-[var(--surface)] transition-colors">
                                             <td className="py-3 text-text-muted font-mono">#{u.id}</td>
@@ -213,12 +288,29 @@ export default function Admin() {
                                                     {u.role}
                                                 </span>
                                             </td>
+                                            <td className="py-3">
+                                                <select
+                                                    value={u.subscription_plan || "free"}
+                                                    onChange={(e) => updatePlan(u.id, e.target.value)}
+                                                    className="bg-[var(--surface)] text-xs border border-[var(--card-border)] rounded px-2 py-1 outline-none"
+                                                >
+                                                    <option value="free">Free</option>
+                                                    <option value="pro">Pro</option>
+                                                    <option value="enterprise">Enterprise</option>
+                                                </select>
+                                            </td>
                                             <td className="py-3"><span className={u.is_active ? "text-green-400" : "text-red-400"}>● {u.is_active ? "Active" : "Inactive"}</span></td>
                                             <td className="py-3">
-                                                <button onClick={() => toggleRole(u.id, u.role)}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--surface)] hover:bg-[var(--card-hover)] transition-colors text-text-secondary hover:text-[var(--text)]">
-                                                    {u.role === "admin" ? <><ArrowDown size={14} /> Demote</> : <><ArrowUp size={14} /> Promote</>}
-                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    <button onClick={() => toggleRole(u.id, u.role)}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--surface)] hover:bg-[var(--card-hover)] transition-colors text-text-secondary hover:text-[var(--text)]">
+                                                        {u.role === "admin" ? <><ArrowDown size={14} /> Demote</> : <><ArrowUp size={14} /> Promote</>}
+                                                    </button>
+                                                    <button onClick={() => impersonateUser(u.id)}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)]/10 text-[var(--primary)] hover:bg-[var(--primary)]/20 transition-colors">
+                                                        <Users size={14} /> Impersonate
+                                                    </button>
+                                                </div>
                                             </td>
                                         </motion.tr>
                                     ))}

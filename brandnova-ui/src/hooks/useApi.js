@@ -40,6 +40,15 @@ export async function apiGet(endpoint) {
     return res.json();
 }
 
+export async function apiDelete(endpoint) {
+    const res = await fetch(`${API_BASE}${endpoint}`, { method: "DELETE", headers: getHeaders() });
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || `Request failed (${res.status})`);
+    }
+    return res.json();
+}
+
 export function login(email, password) {
     return apiPost("/api/login", { email, password });
 }
