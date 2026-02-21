@@ -56,3 +56,7 @@ export function login(email, password) {
 export function signup(fullname, email, password) {
     return apiPost("/api/signup", { fullname, email, password });
 }
+
+export function googleLogin(token) {
+    return apiPost("/api/google-login", { token });
+}
