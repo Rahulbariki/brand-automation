@@ -6,6 +6,10 @@
             "use": "@vercel/python"
         },
         {
+            "src": "brandnova-ui/package.json",
+            "use": "@vercel/static-build"
+        },
+        {
             "src": "frontend/**",
             "use": "@vercel/static"
         }
@@ -16,8 +20,27 @@
             "dest": "api/index.py"
         },
         {
+            "src": "/assets/(.*)",
+            "dest": "brandnova-ui/assets/$1",
+            "continue": true
+        },
+        {
+            "src": "/static/(.*)",
+            "dest": "brandnova-ui/static/$1",
+            "continue": true
+        },
+        {
+            "src": "/legacy/(.*)",
+            "dest": "frontend/$1"
+        },
+        {
+            "src": "/(.*)\\.(js|css|json|png|jpg|svg|ico)",
+            "dest": "brandnova-ui/$1.$2",
+            "check": true
+        },
+        {
             "src": "/(.*)",
-            "dest": "/frontend/$1"
+            "dest": "brandnova-ui/index.html"
         }
     ]
 }
