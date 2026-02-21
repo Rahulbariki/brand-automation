@@ -3,14 +3,26 @@ import { Points, PointMaterial } from "@react-three/drei";
 import * as random from "maath/random/dist/maath-random.esm";
 import { useRef, useMemo } from "react";
 
+import { useTheme } from "../context/ThemeContext";
+
 function Particles() {
     const ref = useRef();
+    const { theme } = useTheme();
     const sphere = useMemo(
         () => random.inSphere(new Float32Array(4000 * 3), { radius: 1.4 }),
         []
     );
 
-    useFrame((_, delta) => {
+    const themeColors = {
+        cosmic: "#7c3aed",
+        aurora: "#10b981",
+        sunset: "#f43f5e",
+        minimal: "#888",
+    };
+
+    const color = themeColors[theme] || "#10b981";
+
+    useFrame((state, delta) => {
         if (ref.current) {
             ref.current.rotation.x -= delta / 20;
             ref.current.rotation.y -= delta / 30;
@@ -22,7 +34,7 @@ function Particles() {
             <Points ref={ref} positions={sphere} stride={3} frustumCulled={false}>
                 <PointMaterial
                     transparent
-                    color="var(--primary)"
+                    color={color}
                     size={0.008}
                     sizeAttenuation
                     depthWrite={false}

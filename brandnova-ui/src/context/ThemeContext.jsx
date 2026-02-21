@@ -16,7 +16,7 @@ const themeList = [
 ];
 
 export default function ThemeProvider({ children }) {
-    const [theme, setTheme] = useState(() => localStorage.getItem("bn-theme") || "cosmic");
+    const [theme, setTheme] = useState(() => localStorage.getItem("bn-theme") || "aurora");
 
     useEffect(() => {
         const selected = themes[theme];
