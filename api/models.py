@@ -54,7 +54,12 @@ class User(Base):
     usage_logs = relationship("UsageLog", back_populates="user", cascade="all, delete-orphan")
     owned_teams = relationship("Team", back_populates="owner", cascade="all, delete-orphan")
     team_memberships = relationship("TeamMember", back_populates="user", cascade="all, delete-orphan")
+    
+    # New Workspace System
     workspaces = relationship("Workspace", back_populates="owner", cascade="all, delete-orphan")
+    
+    # Legacy/Alternative Workspace System
+    brand_workspaces = relationship("BrandWorkspace", back_populates="user", cascade="all, delete-orphan")
 
 
 # =========================
@@ -80,7 +85,7 @@ class BrandWorkspace(Base):
 
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    user = relationship("User", back_populates="workspaces")
+    user = relationship("User", back_populates="brand_workspaces")
 
 
 # =========================

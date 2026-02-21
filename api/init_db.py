@@ -13,7 +13,7 @@ from database import engine, Base, SessionLocal
 from models import User, Workspace, WorkspaceAsset, WorkspaceActivity, GeneratedContent, UsageLog, Team, TeamMember
 
 def init_db():
-    print("🚀 Initializing BrandNova Unified Database Migration...")
+    print("Initializing BrandNova Unified Database Migration...")
     
     # 1. Create tables if they don't exist
     print("--- Creating all tables from models ---")
@@ -35,9 +35,9 @@ def init_db():
                 existing_admin.role = "admin"
                 db.commit()
         
-        print("✅ Database is synchronized and ready for production.")
+        print("Database is synchronized and ready for production.")
     except Exception as e:
-        print(f"❌ Migration Error: {e}")
+        print(f"Migration Error: {e}")
     finally:
         db.close()
 
