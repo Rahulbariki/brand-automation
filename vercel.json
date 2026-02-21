@@ -24,7 +24,7 @@
         },
         {
             "src": "/assets/(.*)",
-            "dest": "brandnova-ui/dist/assets/$1",
+            "dest": "brandnova-ui/assets/$1",
             "check": true
         },
         {
@@ -33,12 +33,12 @@
         },
         {
             "src": "/(.*)\\.(js|css|json|png|jpg|svg|ico)",
-            "dest": "brandnova-ui/dist/$1.$2",
+            "dest": "brandnova-ui/$1.$2",
             "check": true
         },
         {
             "src": "/(.*)",
-            "dest": "brandnova-ui/dist/index.html"
+            "dest": "brandnova-ui/index.html"
         }
     ]
 }
