@@ -55,11 +55,11 @@ class User(Base):
     owned_teams = relationship("Team", back_populates="owner", cascade="all, delete-orphan")
     team_memberships = relationship("TeamMember", back_populates="user", cascade="all, delete-orphan")
     
-    # New Workspace System
-    workspaces = relationship("Workspace", back_populates="owner", cascade="all, delete-orphan")
+    # Workspace System (Requested Fix)
+    workspaces = relationship("BrandWorkspace", back_populates="user", cascade="all, delete-orphan")
     
-    # Legacy/Alternative Workspace System
-    brand_workspaces = relationship("BrandWorkspace", back_populates="user", cascade="all, delete-orphan")
+    # New Workspace System
+    owned_workspaces = relationship("Workspace", back_populates="owner", cascade="all, delete-orphan")
 
 
 # =========================
@@ -85,7 +85,7 @@ class BrandWorkspace(Base):
 
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    user = relationship("User", back_populates="brand_workspaces")
+    user = relationship("User", back_populates="workspaces")
 
 
 # =========================
@@ -184,7 +184,7 @@ class Workspace(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    owner = relationship("User", back_populates="workspaces")
+    owner = relationship("User", back_populates="owned_workspaces")
     assets = relationship("WorkspaceAsset", back_populates="workspace", cascade="all, delete-orphan")
     timeline = relationship("WorkspaceActivity", back_populates="workspace", cascade="all, delete-orphan")
 
