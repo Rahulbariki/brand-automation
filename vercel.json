@@ -7,7 +7,10 @@
         },
         {
             "src": "brandnova-ui/package.json",
-            "use": "@vercel/static-build"
+            "use": "@vercel/static-build",
+            "config": {
+                "distDir": "dist"
+            }
         },
         {
             "src": "frontend/**",
@@ -21,13 +24,8 @@
         },
         {
             "src": "/assets/(.*)",
-            "dest": "brandnova-ui/assets/$1",
-            "continue": true
-        },
-        {
-            "src": "/static/(.*)",
-            "dest": "brandnova-ui/static/$1",
-            "continue": true
+            "dest": "brandnova-ui/dist/assets/$1",
+            "check": true
         },
         {
             "src": "/legacy/(.*)",
@@ -35,12 +33,12 @@
         },
         {
             "src": "/(.*)\\.(js|css|json|png|jpg|svg|ico)",
-            "dest": "brandnova-ui/$1.$2",
+            "dest": "brandnova-ui/dist/$1.$2",
             "check": true
         },
         {
             "src": "/(.*)",
-            "dest": "brandnova-ui/index.html"
+            "dest": "brandnova-ui/dist/index.html"
         }
     ]
 }
