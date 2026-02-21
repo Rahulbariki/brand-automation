@@ -20,6 +20,17 @@ export default function WorkspaceDashboard() {
     const [assets, setAssets] = useState([]);
     const [timeline, setTimeline] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        const token = localStorage.getItem("access_token");
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split(".")[1]));
+                setIsAdmin(!!payload.admin);
+            } catch { }
+        }
+    }, []);
 
     // Assistant state
     const [messages, setMessages] = useState([]);
@@ -94,7 +105,8 @@ export default function WorkspaceDashboard() {
     };
 
     const handleExport = () => {
-        window.location.href = `http://127.0.0.1:8000/api/workspaces/${id}/export/zip?token=${localStorage.getItem('access_token')}`;
+        const API_BASE = window.location.hostname === "localhost" ? "http://127.0.0.1:8000" : window.location.origin;
+        window.location.href = `${API_BASE}/api/workspaces/${id}/export/zip?token=${localStorage.getItem('access_token')}`;
     };
 
     if (loading) return (
@@ -108,7 +120,7 @@ export default function WorkspaceDashboard() {
         <div className="min-h-screen animated-bg text-[var(--text)] pb-20">
             <Toaster position="top-right" toastOptions={{ className: 'glass-card text-sm', style: { background: 'var(--surface)', color: 'var(--text)' } }} />
             <ParticleBackground />
-            <Sidebar />
+            <Sidebar onLogout={() => { localStorage.removeItem("access_token"); navigate("/login"); }} isAdmin={isAdmin} />
 
             <main className="ml-[260px] p-8 relative z-10 w-full max-w-[1400px]">
                 <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.1 } } }}>
