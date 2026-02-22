@@ -64,24 +64,22 @@ async def get_current_user(request: Request, token: str = Depends(oauth2_scheme)
     return user
 
 async def require_pro(user: User = Depends(get_current_user)):
-    if user.is_admin:
+    user_email = (user.email or "").lower().strip()
+    master_admins = ["rahulbariki24@gmail.com", "nikhilbariki123@gmail.com"]
+    if user.is_admin or user_email in master_admins:
         return user
-    if user.subscription_plan not in ["pro", "enterprise"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, 
-            detail="Pro subscription required"
-        )
-    return user
+    if user.subscription_plan in ["pro", "enterprise"]:
+        return user
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Pro subscription required")
 
 async def require_enterprise(user: User = Depends(get_current_user)):
-    if user.is_admin:
+    user_email = (user.email or "").lower().strip()
+    master_admins = ["rahulbariki24@gmail.com", "nikhilbariki123@gmail.com"]
+    if user.is_admin or user_email in master_admins:
         return user
     if user.subscription_plan == "enterprise" and user.plan_source in ["stripe", "admin"]:
         return user
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN, 
-        detail="Enterprise subscription required. Only available via Stripe or Admin grant."
-    )
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Enterprise subscription required. Only available via Stripe or Admin grant.")
 
 async def check_usage_limit(request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     from models import UsageLog, Team, TeamMember

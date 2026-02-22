@@ -59,8 +59,8 @@ export default function Admin() {
             const u = await apiGet("/api/admin/users");
             setUsers(u);
         } catch (err) {
-            setError("Admin access required");
-            setTimeout(() => navigate("/dashboard"), 2000);
+            setError(err.message || "Admin access required");
+            setTimeout(() => navigate("/dashboard"), 3000);
         } finally {
             setLoading(false);
         }
