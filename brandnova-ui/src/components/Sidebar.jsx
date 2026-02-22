@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useLocation, Link } from "react-router-dom";
 import {
     Home, Lightbulb, Paintbrush, PenLine, Rocket,
-    Heart, MessageCircle, Shield, LogOut, Palette, Folder
+    Heart, MessageCircle, Shield, LogOut, Palette, Folder, Sparkles
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { playClick, playPop } from "../effects/sounds";

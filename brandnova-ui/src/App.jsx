@@ -55,8 +55,8 @@ export default function App() {
     <ThemeProvider>
       <BrowserRouter>
         <MagneticCursor />
-        <CommandPalette />
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center animated-bg"><Loader text="Loading..." /></div>}>
+          <CommandPalette />
           <AnimatedRoutes />
         </Suspense>
       </BrowserRouter>
