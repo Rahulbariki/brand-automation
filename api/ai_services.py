@@ -320,7 +320,7 @@ def _fallback_svg_logo(prompt: str) -> str:
     """Fallback generator that creates a clean SVG if SDXL fails."""
     import base64
     svg_prompt = f"""
-You are an elite SaaS brand logo designer.
+You are an elite brand logo designer.
 
 Generate a modern, professional startup-style logo for:
 {prompt}
@@ -343,15 +343,16 @@ Tech startup dashboard style.
 
 Design should feel like:
 worlds best logo designer
-Linear.app
-Arc Browser
-Vercel AI
-Framer
-Notion AI
-Raycast
+product logo designer and brand logo designer
+logo designer for startup
+logo designer for saas company
+logo designer for tech company
+logo designer for business
+logo designer for agency
+logo designer for company
 
 VISUAL EFFECTS REQUIRED:
-
+any effects which is perfect for the logo
 • Smooth gradient fills
 • Soft outer glow
 • Inner shadow depth
@@ -362,7 +363,7 @@ VISUAL EFFECTS REQUIRED:
 • Glass-like transparency
 
 SVG MUST USE:
-
+ any effects which is perfect for the logo
 <linearGradient>
 <radialGradient>
 <filter>
@@ -370,30 +371,18 @@ SVG MUST USE:
 <feDropShadow>
 
 ICON RULES:
-
-• viewBox="0 0 512 512"
-• Centered composition
-• Rounded geometry
-• Abstract tech symbol
-• Max 3 gradient colors
-• Dark UI friendly
+ 
+• what ever is perfect for the logo
 • Premium dashboard feel
 
 BACKGROUND:
-Transparent only.
-
+Transparent  or white or black or gray.
+ any background which is perfect for the logo
 SHAPE IDEAS:
-AI nodes
-Network rings
-Stacked cubes
-Flow arrows
-Energy waves
-Abstract N shape
-Connected geometry
-Futuristic portal rings
+
 everything should be realistic and premium
 
-use various shapes and symbols which is perfect for the logo
+use various shapes and images or symbols which is perfect for the logo
 
 IMPORTANT:
 Return ONLY raw SVG code.
@@ -402,10 +391,9 @@ SVG MUST START WITH:
 
 
 Logo must be:
-
+ 
 • Realistic
-• Startup-friendly
-• Suitable for dashboard UI
+• more relavant to the user given prompt
 
 Typography (if used):
 
