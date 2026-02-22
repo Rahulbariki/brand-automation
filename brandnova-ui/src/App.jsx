@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import ThemeProvider from "./context/ThemeContext";
 import MagneticCursor from "./effects/MagneticCursor";
 import Loader from "./components/Loader";
+const CommandPalette = lazy(() => import("./components/CommandPalette"));
 
 const Landing = lazy(() => import("./pages/Landing"));
 const Login = lazy(() => import("./pages/Login"));
@@ -19,9 +20,9 @@ function AuthGuard({ children }) {
 }
 
 const pageVariants = {
-  initial: { opacity: 0, x: 20 },
-  in: { opacity: 1, x: 0 },
-  out: { opacity: 0, x: -20 }
+  initial: { opacity: 0, scale: 0.98, filter: "blur(4px)" },
+  in: { opacity: 1, scale: 1, filter: "blur(0px)" },
+  out: { opacity: 0, scale: 1.02, filter: "blur(4px)" }
 };
 
 const MotionPage = ({ children }) => (
@@ -54,6 +55,7 @@ export default function App() {
     <ThemeProvider>
       <BrowserRouter>
         <MagneticCursor />
+        <CommandPalette />
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center animated-bg"><Loader text="Loading..." /></div>}>
           <AnimatedRoutes />
         </Suspense>

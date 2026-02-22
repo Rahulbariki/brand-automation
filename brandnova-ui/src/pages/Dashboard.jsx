@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
     Sparkles, Zap, Paintbrush, PenLine, Rocket, Heart,
     MessageCircle, ArrowLeft, Send, Loader2, Crown, Copy,
-    Check, BarChart3, Download, Palette,
+    Check, BarChart3, Download, Palette, Mic, MicOff,
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import GlassCard from "../components/GlassCard";
@@ -807,9 +807,29 @@ export default function Dashboard() {
 
     // ─── SHARED INPUT ───
     function Input({ placeholder, value, onChange, type = "text", suggestions = [] }) {
+        const [isListening, setIsListening] = useState(false);
         const listId = `suggestions-${placeholder.replace(/\s+/g, '-').toLowerCase()}`;
+
+        const startListening = () => {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                toast.error("Speech recognition not supported in this browser.");
+                return;
+            }
+            const recognition = new SpeechRecognition();
+            recognition.onstart = () => setIsListening(true);
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                onChange(transcript);
+                setIsListening(false);
+            };
+            recognition.onerror = () => setIsListening(false);
+            recognition.onend = () => setIsListening(false);
+            recognition.start();
+        };
+
         return (
-            <div className="w-full relative">
+            <div className="w-full relative group">
                 <input
                     type={type}
                     placeholder={placeholder}
@@ -817,8 +837,16 @@ export default function Dashboard() {
                     onChange={(e) => onChange(e.target.value)}
                     list={suggestions.length > 0 ? listId : undefined}
                     required
-                    className="w-full bg-[var(--surface)] border border-[var(--card-border)] rounded-xl px-4 py-3.5 text-sm text-[var(--text)] placeholder:text-text-muted focus:outline-none focus:border-[var(--primary)] transition-colors"
+                    className="w-full bg-[var(--surface)] border border-[var(--card-border)] rounded-xl px-4 py-3.5 pr-12 text-sm text-[var(--text)] placeholder:text-text-muted focus:outline-none focus:border-[var(--primary)] transition-colors"
                 />
+                <button
+                    type="button"
+                    onClick={startListening}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all ${isListening ? 'text-red-400 bg-red-400/10' : 'text-text-muted hover:text-[var(--primary)] hover:bg-[var(--primary)]/10 opacity-0 group-hover:opacity-100'}`}
+                    title="Dictate"
+                >
+                    {isListening ? <MicOff size={16} className="animate-pulse" /> : <Mic size={16} />}
+                </button>
                 {suggestions.length > 0 && (
                     <datalist id={listId}>
                         {suggestions.map((s, i) => (
@@ -831,9 +859,45 @@ export default function Dashboard() {
     }
 
     function Textarea({ placeholder, value, onChange, rows = 3 }) {
+        const [isListening, setIsListening] = useState(false);
+
+        const startListening = () => {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                toast.error("Speech recognition not supported in this browser.");
+                return;
+            }
+            const recognition = new SpeechRecognition();
+            recognition.onstart = () => setIsListening(true);
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                onChange(value ? value + " " + transcript : transcript);
+                setIsListening(false);
+            };
+            recognition.onerror = () => setIsListening(false);
+            recognition.onend = () => setIsListening(false);
+            recognition.start();
+        };
+
         return (
-            <textarea placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} rows={rows} required
-                className="w-full bg-[var(--surface)] border border-[var(--card-border)] rounded-xl px-4 py-3.5 text-sm text-[var(--text)] placeholder:text-text-muted focus:outline-none focus:border-[var(--primary)] transition-colors resize-none" />
+            <div className="w-full relative group">
+                <textarea
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    rows={rows}
+                    required
+                    className="w-full bg-[var(--surface)] border border-[var(--card-border)] rounded-xl px-4 py-3.5 pr-12 text-sm text-[var(--text)] placeholder:text-text-muted focus:outline-none focus:border-[var(--primary)] transition-colors resize-none"
+                />
+                <button
+                    type="button"
+                    onClick={startListening}
+                    className={`absolute right-3 top-4 p-2 rounded-lg transition-all ${isListening ? 'text-red-400 bg-red-400/10' : 'text-text-muted hover:text-[var(--primary)] hover:bg-[var(--primary)]/10 opacity-0 group-hover:opacity-100'}`}
+                    title="Dictate"
+                >
+                    {isListening ? <MicOff size={16} className="animate-pulse" /> : <Mic size={16} />}
+                </button>
+            </div>
         );
     }
 
