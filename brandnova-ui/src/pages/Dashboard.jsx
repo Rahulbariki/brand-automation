@@ -417,33 +417,94 @@ export default function Dashboard() {
         const [keywords, setKeywords] = useState("");
         const [style, setStyle] = useState("minimalist");
 
+        const styles = [
+            { id: "minimalist", label: "Minimalist", icon: "✨" },
+            { id: "modern vector", label: "Modern Vector", icon: "📐" },
+            { id: "tech geometric", label: "Tech / Geometric", icon: "⬡" },
+            { id: "luxury elegant", label: "Luxury / Elegant", icon: "💎" },
+            { id: "vintage retro", label: "Vintage / Retro", icon: "📜" },
+            { id: "playful mascot", label: "Playful Mascot", icon: "🦊" },
+        ];
+
         return (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <BackHeader title="Logo Studio" subtitle="AI image generation with Stable Diffusion XL" />
-                <GlassCard tilt={false} className="max-w-2xl !p-8">
-                    <form onSubmit={(e) => { e.preventDefault(); callApi("/api/generate-logo", { brand_name: brand, industry, keywords: keywords.split(",").map(k => k.trim()), style }, "logo"); }} className="space-y-4">
-                        <Input placeholder="Brand Name" value={brand} onChange={setBrand} />
-                        <Input placeholder="Industry" value={industry} onChange={setIndustry} />
-                        <Input placeholder="Keywords (comma-separated)" value={keywords} onChange={setKeywords} />
-                        <Input placeholder="Style (minimalist, abstract, vintage)" value={style} onChange={setStyle} />
-                        <AnimatedButton type="submit" disabled={blockGeneration || loading} className={`w-full py-3.5 justify-center ${blockGeneration ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}>
-                            {loading ? <Loader2 size={18} className="animate-spin" /> : <><Paintbrush size={16} /> Generate Logo</>}
-                        </AnimatedButton>
-                        {blockGeneration && <p className="text-xs text-red-400 text-center font-bold">Generation disabled (usage limit reached)</p>}
-                    </form>
-                </GlassCard>
-                {loading && <AILoader stage="logo" />}
-                {result?.key === "logo" && !result.error && result.data.image_url && (
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-6 max-w-2xl">
-                        <GlassCard tilt={false} className="text-center !p-8">
-                            <img src={result.data.image_url} alt="Generated Logo" className="max-w-[400px] mx-auto rounded-2xl mb-4" />
-                            <a href={result.data.image_url} download>
-                                <AnimatedButton><Download size={16} /> Download HD</AnimatedButton>
-                            </a>
+                <BackHeader title="Logo Studio" subtitle="Professional AI branding powered by Stable Diffusion XL" />
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2">
+                        <GlassCard tilt={false} className="!p-8">
+                            <form onSubmit={(e) => { e.preventDefault(); callApi("/api/generate-logo", { brand_name: brand, industry, keywords: keywords.split(",").map(k => k.trim()), style }, "logo"); }} className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-xs font-bold text-text-muted mb-2 block uppercase tracking-wider">Brand Name</label>
+                                        <Input placeholder="e.g. BrandNova" value={brand} onChange={setBrand} />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-text-muted mb-2 block uppercase tracking-wider">Industry</label>
+                                        <Input placeholder="e.g. SaaS, Finance, Cafe" value={industry} onChange={setIndustry} />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-bold text-text-muted mb-2 block uppercase tracking-wider">Core Keywords</label>
+                                    <Input placeholder="e.g. speed, trust, organic, digital (comma separated)" value={keywords} onChange={setKeywords} />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-bold text-text-muted mb-3 block uppercase tracking-wider">Visual Style</label>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                        {styles.map(s => (
+                                            <button
+                                                key={s.id}
+                                                type="button"
+                                                onClick={() => setStyle(s.id)}
+                                                className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${style === s.id
+                                                        ? "bg-[var(--primary)]/10 border-[var(--primary)] text-[var(--primary)]"
+                                                        : "bg-[var(--surface)] border-[var(--card-border)] text-text-secondary hover:border-text-muted"
+                                                    }`}
+                                            >
+                                                <span className="text-xl mb-1">{s.icon}</span>
+                                                <span className="text-[10px] font-bold uppercase">{s.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <AnimatedButton type="submit" disabled={blockGeneration || loading} className={`w-full py-4 justify-center text-lg ${blockGeneration ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}>
+                                    {loading ? <Loader2 size={24} className="animate-spin" /> : <><Paintbrush size={20} /> Design Your Logo</>}
+                                </AnimatedButton>
+                                {blockGeneration && <p className="text-xs text-red-400 text-center font-bold">Generation disabled (usage limit reached)</p>}
+                            </form>
                         </GlassCard>
-                    </motion.div>
-                )}
-                <ErrorDisplay result={result} keyName="logo" />
+                    </div>
+
+                    <div className="space-y-6">
+                        <GlassCard tilt={false} className="!p-6 !bg-[var(--primary)]/5 !border-[var(--primary)]/20">
+                            <h4 className="flex items-center gap-2 text-sm font-bold mb-4">
+                                <Sparkles size={16} className="text-[var(--primary)]" /> Pro Design Tips
+                            </h4>
+                            <ul className="space-y-3 text-xs text-text-secondary">
+                                <li className="flex gap-2 leading-relaxed"><span>•</span> Use simple keywords for better "Accuracy" (e.g. "leaf" instead of "natural organic foliage").</li>
+                                <li className="flex gap-2 leading-relaxed"><span>•</span> Choosing "Minimalist" usually yields the most balanced, professional results.</li>
+                                <li className="flex gap-2 leading-relaxed"><span>•</span> Mention 2-3 specific colors in keywords for brand consistency.</li>
+                            </ul>
+                        </GlassCard>
+
+                        {result?.key === "logo" && !result.error && result.data.image_url && (
+                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+                                <GlassCard tilt={false} className="text-center !p-6 border-2 border-[var(--primary)]">
+                                    <div className="aspect-square bg-white rounded-xl mb-4 overflow-hidden flex items-center justify-center">
+                                        <img src={result.data.image_url} alt="Generated Logo" className="w-full h-full object-contain p-4" />
+                                    </div>
+                                    <a href={result.data.image_url} download={`${brand || 'logo'}_brandnova.png`} className="block">
+                                        <AnimatedButton className="w-full justify-center"><Download size={16} /> Save High-Res</AnimatedButton>
+                                    </a>
+                                </GlassCard>
+                            </motion.div>
+                        )}
+                        <ErrorDisplay result={result} keyName="logo" />
+                    </div>
+                </div>
             </motion.div>
         );
     }

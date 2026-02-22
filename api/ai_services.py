@@ -198,27 +198,30 @@ def chat_with_ai(request: ChatRequest) -> str:
 
 # --- Activity 2.10: Logo Prompt Generation ---
 def generate_logo_prompt(request: LogoRequest) -> str:
-    """Generates a detailed prompt for SDXL."""
+    """Generates a detailed, professionally-engineered prompt for high-quality logo generation (SDXL)."""
     prompt = f"""
-    Create a highly detailed stable diffusion prompt for a logo.
+    Create a professional, high-end logo generation prompt for the following brand:
     Brand Name: {request.brand_name}
     Industry: {request.industry}
     Style: {request.style}
     Keywords: {', '.join(request.keywords)}
     
-    The prompt should describe visual elements, colors, mood, and lighting. 
-    Return ONLY the prompt text.
+    The prompt should follow this format:
+    "A professional [style] logo for [brand name] in the [industry] industry. [visual elements based on keywords]. Minimalist, clean vector style, flat design, solid colors, white background, high resolution, 8k, professional branding, premium aesthetic."
+    
+    Return ONLY the prompt text, no extra explanation or markdown.
     """
     
     try:
         chat_completion = groq_client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+            temperature=0.7,
         )
-        return chat_completion.choices[0].message.content.strip()
+        return chat_completion.choices[0].message.content.strip().replace('"', '')
     except Exception as e:
         print(f"Error generating logo prompt: {e}")
-        return "A professional logo for " + request.brand_name
+        return f"Professional {request.style} logo for {request.brand_name}, {request.industry}, minimalist vector graphic, white background"
 
 # --- Legacy Helper ---
 def generate_tagline(request: TaglineRequest) -> str:
@@ -232,51 +235,69 @@ def generate_tagline(request: TaglineRequest) -> str:
 
 # --- Activity 2.10 (Part 2): Logo Image Generation (SDXL) ---
 def generate_logo_image(prompt: str) -> str:
-    """Generates a high-quality SVG vector logo via Groq AI (Llama 70B) to ensure 100% stability, infinite usage limits, and perfect resolution."""
+    """Generates a high-quality logo image using Stable Diffusion XL via Hugging Face Inference API."""
     import base64
+    import time
     
-    # We ask Groq to literally write the SVG code for the exact prompt style requested:
-    svg_prompt = f"""
-    You are an expert graphic designer and UI/UX developer.
-    Your task is to create a stunning, professional business logo using ONLY pure SVG code.
+    # We use SDXL for high-quality raster logos
+    SDXL_MODEL = "stabilityai/stable-diffusion-xl-base-1.0"
+    SDXL_URL = f"https://api-inference.huggingface.co/models/{SDXL_MODEL}"
     
-    Instructions based on the user's styling prompt:
-    {prompt}
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "negative_prompt": "photorealistic, 3d render, shadows, gradients, blurry, low resolution, messy, watermark, complex background",
+            "num_inference_steps": 30,
+            "guidance_scale": 7.5
+        }
+    }
+    
+    # HF Inference API can be slow or need retries
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(SDXL_URL, headers=HF_HEADERS, json=payload, timeout=30)
+            
+            # If the model is loading, wait and retry
+            if response.status_code == 503:
+                wait_time = response.json().get("estimated_time", 10)
+                print(f"Model is loading, waiting {wait_time}s...")
+                time.sleep(min(wait_time, 20))
+                continue
+                
+            response.raise_for_status()
+            
+            # The response is the raw image bytes
+            image_bytes = response.content
+            encoded = base64.b64encode(image_bytes).decode('utf-8')
+            return f"data:image/png;base64,{encoded}"
+            
+        except Exception as e:
+            print(f"SDXL Generation Attempt {attempt+1} Failed: {e}")
+            if attempt == max_retries - 1:
+                # Fallback to SVG if SDXL is completely down
+                return _fallback_svg_logo(prompt)
+            time.sleep(2)
+    
+    return _fallback_svg_logo(prompt)
 
-    Requirements:
-    1. Create a beautiful, minimalist, and highly creative SVG graphic.
-    2. Use vibrant colors, modern gradients, and clean geometry.
-    3. Include both an iconic mark and the text if appropriate.
-    4. Make the viewBox "0 0 500 500".
-    5. Return ONLY the raw valid XML/SVG code start to finish. DO NOT wrap it in ```svg or any markdown blocks. No explanations.
-    """
-    
+def _fallback_svg_logo(prompt: str) -> str:
+    """Fallback generator that creates a clean SVG if SDXL fails."""
+    import base64
+    svg_prompt = f"Create a simple, professional minimalist SVG logo based on: {prompt}. Return ONLY raw SVG code, no text."
     try:
         chat_completion = groq_client.chat.completions.create(
             messages=[{"role": "user", "content": svg_prompt}],
             model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-            temperature=0.7,
         )
-        
         svg_content = chat_completion.choices[0].message.content.strip()
-        
-        # Strip potential markdown formatting just in case the AI hallucinates them
-        if svg_content.startswith("```"):
-            svg_content = svg_content.split("\n", 1)[-1]
-        if svg_content.startswith("svg"):
-            svg_content = svg_content[3:].strip()
-        if svg_content.endswith("```"):
-            svg_content = svg_content.rsplit("\n", 1)[0]
-            
-        # Encode string as base64 so frontend <img> tags parse it identically to SDXL raster bytes
+        # Clean up SVG
+        if "```" in svg_content:
+            svg_content = svg_content.split("```")[1].replace("svg", "", 1).strip()
         encoded = base64.b64encode(svg_content.encode('utf-8')).decode('utf-8')
         return f"data:image/svg+xml;base64,{encoded}"
-        
-    except Exception as e:
-        print(f"SVG Logo Generation Failed: {e}")
-        import traceback
-        traceback.print_exc()
-        raise Exception(f"Logo generation failed: {str(e)}")
+    except:
+        return "https://via.placeholder.com/500?text=Logo+Generation+Error"
 
 # --- Startup Tools ---
 def generate_pitch(request) -> str:
