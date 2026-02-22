@@ -322,55 +322,95 @@ def _fallback_svg_logo(prompt: str) -> str:
     svg_prompt = f"""
 You are an elite SaaS brand logo designer.
 
-Generate a modern, clean, professional startup-style logo for:
+Generate a modern, professional startup-style logo for:
 {prompt}
 
 STRICT RULES:
-
+each logo should be unique and creative
+every logo should be different from each other
+you can use any shape or symbol which is perfect for the logo
+use relevant morphisms like glassmorphism, neon lighting, tech startup dashboard style, etc.
 Return ONLY valid raw SVG code.
 Do NOT include markdown.
 Do NOT include explanations.
 Do NOT include comments.
+Modern SaaS.
+Glassmorphism.
+Soft gradients.
+Floating depth.
+Neon lighting.
+Tech startup dashboard style.
 
-SVG MUST:
+Design should feel like:
+worlds best logo designer
+Linear.app
+Arc Browser
+Vercel AI
+Framer
+Notion AI
+Raycast
 
-• Use only <svg>, <g>, <path>, <rect>, <circle>, <polygon>, <text>
-• Use flat modern SaaS style (Stripe / Linear / Notion inspired)
-• Be centered inside a 512x512 viewBox
-• Use max 2 primary colors
-• Background must be transparent
-• No gradients
-• No shadows
-• No blur
-• No filters
-• No raster images
-• No embedded fonts
-• No CSS
-• No external references
-• No style tags
-• No metadata
-• No script tags
+VISUAL EFFECTS REQUIRED:
+
+• Smooth gradient fills
+• Soft outer glow
+• Inner shadow depth
+• Subtle drop shadow
+• Light reflection effect
+• Floating layered shapes
+• Depth illusion
+• Glass-like transparency
+
+SVG MUST USE:
+
+<linearGradient>
+<radialGradient>
+<filter>
+<feGaussianBlur>
+<feDropShadow>
+
+ICON RULES:
+
+• viewBox="0 0 512 512"
+• Centered composition
+• Rounded geometry
+• Abstract tech symbol
+• Max 3 gradient colors
+• Dark UI friendly
+• Premium dashboard feel
+
+BACKGROUND:
+Transparent only.
+
+SHAPE IDEAS:
+AI nodes
+Network rings
+Stacked cubes
+Flow arrows
+Energy waves
+Abstract N shape
+Connected geometry
+Futuristic portal rings
+everything should be realistic and premium
+
+use various shapes and symbols which is perfect for the logo
+
+IMPORTANT:
+Return ONLY raw SVG code.
+
+SVG MUST START WITH:
+
 
 Logo must be:
 
-• Minimal
-• Geometric
-• Symmetrical
+• Realistic
 • Startup-friendly
-• Scalable for mobile & favicon
 • Suitable for dashboard UI
 
 Typography (if used):
 
-• Use basic system sans-serif
-• Use <text> only
-• No custom fonts
-
-Stroke rules:
-
-• Stroke width between 4–8
-• Rounded joins and caps
-• Consistent spacing
+• Use advanced enhanced system sans-serif
+• use various fonts which is perfect for the logo
 
 Output MUST start with:
 
