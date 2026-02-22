@@ -1,10 +1,17 @@
 {
+    "venvPath": ".",
+    "venv": ".venv",
     "executionEnvironments": [
         {
-            "root": "api"
+            "root": "."
         }
     ],
     "extraPaths": [
         "api"
+    ],
+    "include": [
+        "api",
+        "main.py",
+        "*.py"
     ]
 }
