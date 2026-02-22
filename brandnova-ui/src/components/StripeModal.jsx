@@ -29,6 +29,22 @@ export default function StripeModal({ open, onClose, onSuccess }) {
         }
     };
 
+    const handleStripeCheckout = async (plan) => {
+        setLoading(true);
+        setMsg(null);
+        try {
+            const res = await apiPost(`/api/stripe/create-checkout-session?plan=${plan}`);
+            if (res.checkout_url) {
+                window.location.href = res.checkout_url;
+            } else {
+                throw new Error("Could not retrieve checkout URL");
+            }
+        } catch (e) {
+            setMsg({ type: "error", text: e.message });
+            setLoading(false);
+        }
+    };
+
     return (
         <AnimatePresence>
             {open && (
@@ -76,6 +92,7 @@ export default function StripeModal({ open, onClose, onSuccess }) {
                                     className="flex-1 bg-[var(--surface)] text-sm px-3 py-2 rounded-lg border border-[var(--card-border)] focus:outline-none focus:border-[var(--primary)]"
                                     value={couponCode}
                                     onChange={(e) => setCouponCode(e.target.value)}
+                                    disabled={loading}
                                 />
                                 <AnimatedButton variant="ghost" className="!px-4 !py-2" onClick={handleCoupon} disabled={loading}>
                                     Apply
@@ -91,11 +108,11 @@ export default function StripeModal({ open, onClose, onSuccess }) {
                         <div className="text-5xl font-black mb-1 gradient-text">₹ 29</div>
                         <p className="text-text-muted text-sm mb-6">/month &bull; Cancel anytime</p>
 
-                        <AnimatedButton onClick={onClose} className="w-full mb-3 py-3.5">
+                        <AnimatedButton onClick={() => handleStripeCheckout('pro')} disabled={loading} className="w-full mb-3 py-3.5">
                             <Crown size={16} /> Go Pro via Stripe
                         </AnimatedButton>
-                        <AnimatedButton onClick={onClose} variant="ghost" className="w-full text-amber-400">
-                            Upgrade to Enterprise (Contact Us)
+                        <AnimatedButton onClick={() => handleStripeCheckout('enterprise')} disabled={loading} variant="ghost" className="w-full text-amber-400">
+                            Upgrade to Enterprise
                         </AnimatedButton>
                     </motion.div>
                 </motion.div>

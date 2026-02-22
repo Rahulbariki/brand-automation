@@ -1,8 +1,14 @@
-// Simple Web Audio API implementation for smooth micro-interactions without large assets
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioCtx = null;
 
 export function playSound(type) {
-    if (!audioCtx) return;
+    if (typeof window === 'undefined') return;
+
+    if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        audioCtx = new AudioContext();
+    }
+
     if (audioCtx.state === 'suspended') {
         audioCtx.resume();
     }

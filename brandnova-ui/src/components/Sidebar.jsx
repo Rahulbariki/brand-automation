@@ -5,6 +5,7 @@ import {
     Heart, MessageCircle, Shield, LogOut, Palette, Folder
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import { playClick, playPop } from "../effects/sounds";
 
 const links = [
     { to: "/workspaces", icon: Folder, label: "Brand Workspaces" },
@@ -30,7 +31,7 @@ export default function Sidebar({ onLogout, isAdmin = false }) {
                  flex flex-col py-5 px-3"
         >
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5 px-3 pb-5 mb-3 border-b border-[var(--card-border)] interactive">
+            <Link to="/" onClick={playClick} onMouseEnter={playPop} className="flex items-center gap-2.5 px-3 pb-5 mb-3 border-b border-[var(--card-border)] interactive">
                 <span className="w-9 h-9 flex items-center justify-center rounded-xl text-sm"
                     style={{ background: "var(--gradient)" }}>✦</span>
                 <span className="text-lg font-extrabold gradient-text">BrandNova</span>
@@ -44,6 +45,8 @@ export default function Sidebar({ onLogout, isAdmin = false }) {
                         <Link
                             key={to}
                             to={to}
+                            onClick={playClick}
+                            onMouseEnter={playPop}
                             className={`
                 flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium
                 transition-all duration-200 relative interactive

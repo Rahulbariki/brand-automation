@@ -69,7 +69,7 @@ export default function Admin() {
     async function toggleRole(id, currentRole) {
         const newRole = currentRole === "admin" ? "user" : "admin";
         try {
-            await fetch("http://127.0.0.1:8000" + `/api/admin/users/${id}/toggle-admin`, {
+            await fetch(`/api/admin/users/${id}/toggle-admin`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -82,7 +82,7 @@ export default function Admin() {
 
     async function updatePlan(id, newPlan) {
         try {
-            const res = await fetch("http://127.0.0.1:8000" + `/api/admin/users/${id}/set-plan`, {
+            const res = await fetch(`/api/admin/users/${id}/set-plan`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -92,15 +92,17 @@ export default function Admin() {
             });
             if (!res.ok) {
                 const data = await res.json();
-                alert(data.detail || "Update failed");
+                toast.error(data.detail || "Update failed");
+            } else {
+                toast.success("User plan updated!");
             }
             loadData();
-        } catch (err) { alert(err.message); }
+        } catch (err) { toast.error(err.message); }
     }
 
     async function impersonateUser(id) {
         try {
-            const res = await fetch("http://127.0.0.1:8000" + `/api/admin/impersonate`, {
+            const res = await fetch(`/api/admin/impersonate`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

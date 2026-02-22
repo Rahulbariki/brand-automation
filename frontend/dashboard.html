@@ -611,10 +611,23 @@
         // ── Modal ──
         function showUpgradeModal() { document.getElementById('upgradeModal').classList.add('open'); }
         function closeUpgradeModal() { document.getElementById('upgradeModal').classList.remove('open'); }
-        function handleUpgrade() {
-            // In production: redirect to Stripe checkout
-            alert('Redirecting to Stripe checkout...');
-            closeUpgradeModal();
+        async function handleUpgrade() {
+            try {
+                const btn = document.querySelector('#upgradeModal .glow-btn');
+                const origHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing Checkout...';
+                btn.disabled = true;
+
+                const res = await apiCall('/api/stripe/create-checkout-session?plan=pro', {});
+                if (res.checkout_url) {
+                    window.location.href = res.checkout_url;
+                } else {
+                    throw new Error("Could not retrieve checkout URL");
+                }
+            } catch (e) {
+                alert("Checkout error: " + e.message);
+                closeUpgradeModal();
+            }
         }
 
         // ── API Helper ──

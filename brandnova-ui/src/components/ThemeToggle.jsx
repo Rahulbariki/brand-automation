@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Palette } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
+import { playClick, playPop, playSuccess } from "../effects/sounds";
 
 export default function ThemeToggle({ direction = "down" }) {
     const { theme, setTheme, themes } = useTheme();
@@ -20,7 +21,8 @@ export default function ThemeToggle({ direction = "down" }) {
         <div className="relative" ref={ref}>
             <motion.button
                 whileHover={{ rotate: 30 }}
-                onClick={() => setOpen(!open)}
+                onClick={() => { playClick(); setOpen(!open); }}
+                onMouseEnter={playPop}
                 className="w-10 h-10 flex items-center justify-center rounded-full
                    bg-[var(--card)] border border-[var(--card-border)]
                    text-text-secondary hover:text-[var(--primary)] transition-colors interactive cursor-pointer"
@@ -40,7 +42,7 @@ export default function ThemeToggle({ direction = "down" }) {
                         {themes.map((t) => (
                             <button
                                 key={t.id}
-                                onClick={() => { setTheme(t.id); setOpen(false); }}
+                                onClick={() => { playSuccess(); setTheme(t.id); setOpen(false); }}
                                 className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium cursor-pointer
                   transition-colors ${theme === t.id
                                         ? "text-[var(--primary)] bg-[var(--surface)]"

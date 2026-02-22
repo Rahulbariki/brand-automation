@@ -59,6 +59,10 @@ function Particles() {
             // Smooth interpolation towards target
             ref.current.rotation.x += (targetX - ref.current.rotation.x) * 0.05;
             ref.current.rotation.y += (targetY - ref.current.rotation.y) * 0.05;
+
+            // Breathing pulse effect
+            const pulse = Math.sin(state.clock.elapsedTime * 1.5) * 0.05 + 0.95;
+            ref.current.scale.set(pulse, pulse, pulse);
         }
     });
 

@@ -54,11 +54,7 @@ function AILoader({ stage = "names" }) {
     );
 }
 
-const playBeep = () => {
-    try {
-        new Audio("data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAA==").play().catch(() => { });
-    } catch { }
-};
+import { playSuccess, playClick, playPop } from "../effects/sounds";
 
 const modules = [
     { id: "names", icon: "🧠", title: "Brand Name Generator", desc: "LLaMA 70B powered naming engine.", tag: "AI Powered", tagIcon: <Zap size={12} />, planRequired: "free" },
@@ -125,6 +121,7 @@ export default function Dashboard() {
     const blockGeneration = !isAdmin && effectivePlan !== "enterprise" && isUsageExceeded;
 
     const goTo = (m) => {
+        playClick();
         if (!isAdmin) {
             if (m.planRequired === "enterprise" && effectivePlan !== "enterprise") {
                 setShowUpgrade(true);
@@ -137,13 +134,17 @@ export default function Dashboard() {
         }
         navigate(`/dashboard/${m.id}`);
     };
-    const goHome = () => navigate("/dashboard");
+    const goHome = () => {
+        playClick();
+        navigate("/dashboard");
+    };
 
     async function callApi(endpoint, body, key) {
         setLoading(true);
         setResult(null);
         try {
             const data = await apiPost(endpoint, body);
+            playSuccess();
             setResult({ key, data });
         } catch (err) {
             if (err.upgrade) { setShowUpgrade(true); }
@@ -167,7 +168,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {modules.map((m, i) => (
                         <motion.div key={m.id} variants={fadeUp}>
-                            <GlassCard onClick={() => goTo(m)} className="group cursor-pointer h-full relative overflow-hidden">
+                            <GlassCard onMouseEnter={() => playPop()} onClick={() => goTo(m)} className="group cursor-pointer h-full relative overflow-hidden">
                                 {m.enterprise && effectivePlan !== "enterprise" && !isAdmin && (
                                     <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center">
                                         <Crown className="text-amber-400 mb-2" size={24} />
