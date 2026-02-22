@@ -232,26 +232,20 @@ def generate_tagline(request: TaglineRequest) -> str:
 
 # --- Activity 2.10 (Part 2): Logo Image Generation (SDXL) ---
 def generate_logo_image(prompt: str) -> str:
-    """Generates a logo image using SDXL via Hugging Face and returns it as a Base64 string."""
-    import base64
-    from io import BytesIO
+    """Generates a logo image using Pollinations AI rendering to bypass HF 410 limitations."""
+    import urllib.parse
+    import time
     
-    # Use stabilityai SDXL on standard free API inference
-    MODEL_ID = "stabilityai/stable-diffusion-xl-base-1.0" 
-    API_URL = f"https://api-inference.huggingface.co/models/{MODEL_ID}"
-    
-    payload = {"inputs": prompt}
     try:
-        response = requests.post(API_URL, headers=HF_HEADERS, json=payload, timeout=30)
-        response.raise_for_status()
-        image_bytes = response.content
-        
-        # Convert to Base64
-        base64_str = base64.b64encode(image_bytes).decode("utf-8")
-        return f"data:image/png;base64,{base64_str}"
+        encoded_prompt = urllib.parse.quote(prompt)
+        # We append a random seed to bust browser cache
+        seed = int(time.time() * 1000)
+        # Return a direct image URL that frontend can immediately embed via <img src="..." />
+        logo_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&nologo=true&seed={seed}"
+        return logo_url
         
     except Exception as e:
-        print(f"SDXL Generation Failed: {e}")
+        print(f"Logo Generation URL mapping Failed: {e}")
         import traceback
         traceback.print_exc()
         raise Exception(f"Logo generation failed: {str(e)}")
