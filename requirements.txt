@@ -1,7 +1,6 @@
 fastapi==0.104.1
 uvicorn==0.24.0
 python-dotenv==1.0.0
---extra-index-url https://download.pytorch.org/whl/cpu
 torch
 transformers
 groq>=0.4.0
