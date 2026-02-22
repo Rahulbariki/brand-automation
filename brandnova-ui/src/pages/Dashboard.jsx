@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
     Sparkles, Zap, Paintbrush, PenLine, Rocket, Heart,
     MessageCircle, ArrowLeft, Send, Loader2, Crown, Copy,
-    Check, BarChart3, Download,
+    Check, BarChart3, Download, Palette,
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import GlassCard from "../components/GlassCard";
@@ -62,6 +62,7 @@ const modules = [
     { id: "marketing", icon: "✍️", title: "Marketing Copy", desc: "Ad copy, social captions, product descriptions.", tag: "Pro Feature", tagIcon: <Crown size={12} />, planRequired: "pro", pro: true },
     { id: "startup", icon: "🚀", title: "Startup Tools", desc: "Elevator pitches, investor emails.", tag: "Enterprise", tagIcon: <Crown size={12} />, planRequired: "enterprise", enterprise: true },
     { id: "sentiment", icon: "📊", title: "Sentiment Analysis", desc: "Analyze customer reviews.", tag: "AI Powered", tagIcon: <Zap size={12} />, planRequired: "free" },
+    { id: "colors", icon: "🎨", title: "Brand Colors", desc: "AI-curated color palettes.", tag: "AI Powered", tagIcon: <Zap size={12} />, planRequired: "free" },
     { id: "chat", icon: "💬", title: "AI Brand Consultant", desc: "Chat with IBM Granite.", tag: "Enterprise", tagIcon: <BarChart3 size={12} />, planRequired: "enterprise", enterprise: true },
 ];
 
@@ -459,8 +460,8 @@ export default function Dashboard() {
                                                 type="button"
                                                 onClick={() => setStyle(s.id)}
                                                 className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${style === s.id
-                                                        ? "bg-[var(--primary)]/10 border-[var(--primary)] text-[var(--primary)]"
-                                                        : "bg-[var(--surface)] border-[var(--card-border)] text-text-secondary hover:border-text-muted"
+                                                    ? "bg-[var(--primary)]/10 border-[var(--primary)] text-[var(--primary)]"
+                                                    : "bg-[var(--surface)] border-[var(--card-border)] text-text-secondary hover:border-text-muted"
                                                     }`}
                                             >
                                                 <span className="text-xl mb-1">{s.icon}</span>
@@ -651,6 +652,69 @@ export default function Dashboard() {
             </motion.div>
         );
     }
+    function ColorsView() {
+        const [industry, setIndustry] = useState("");
+        const [tone, setTone] = useState("vibrant");
+
+        const handleGenerate = (e) => {
+            e.preventDefault();
+            callApi("/api/get-colors", { industry, tone }, "colors");
+        };
+
+        return (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <BackHeader title="Brand Colors" subtitle="Psychology-backed color recommendations" />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <GlassCard tilt={false} className="!p-8 h-fit">
+                        <form onSubmit={handleGenerate} className="space-y-4">
+                            <div>
+                                <label className="text-xs font-bold text-text-muted mb-2 block uppercase tracking-wider">Industry</label>
+                                <Input placeholder="e.g. Luxury Jewelry, Eco-Friendly Cafe" value={industry} onChange={setIndustry} />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-text-muted mb-2 block uppercase tracking-wider">Brand Tone</label>
+                                <Input placeholder="e.g. minimalist, bold, trustworthy" value={tone} onChange={setTone} />
+                            </div>
+                            <AnimatedButton type="submit" disabled={blockGeneration || loading} className="w-full py-3.5 justify-center">
+                                {loading ? <Loader2 size={18} className="animate-spin" /> : <><Palette size={16} /> Generate Palette</>}
+                            </AnimatedButton>
+                            {blockGeneration && <p className="text-xs text-red-400 text-center font-bold">Generation disabled (usage limit reached)</p>}
+                        </form>
+                    </GlassCard>
+
+                    <div className="space-y-4">
+                        {loading && <AILoader stage="colors" />}
+                        {result?.key === "colors" && !result.error && (
+                            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+                                <GlassCard tilt={false} className="!p-6">
+                                    <h3 className="text-sm font-bold mb-6 text-text-secondary uppercase tracking-widest">Recommended Palette</h3>
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {result.data.colors?.map((hex, i) => (
+                                            <div
+                                                key={i}
+                                                onClick={() => { navigator.clipboard.writeText(hex); toast.success(`Copied ${hex}`); }}
+                                                className="flex items-center gap-4 p-3 rounded-2xl bg-[var(--surface)] border border-white/5 hover:border-[var(--primary)]/30 transition-all cursor-pointer group"
+                                            >
+                                                <div className="w-14 h-14 rounded-xl shadow-lg border border-black/10 group-hover:scale-110 transition-transform" style={{ backgroundColor: hex }}></div>
+                                                <div className="flex-1">
+                                                    <p className="font-mono font-bold text-lg">{hex}</p>
+                                                    <p className="text-[10px] text-text-muted uppercase">Click to copy hex code</p>
+                                                </div>
+                                                <Copy size={16} className="text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <p className="text-[10px] text-text-muted mt-6 text-center italic">Colors are chosen based on industry color psychology standards.</p>
+                                </GlassCard>
+                            </motion.div>
+                        )}
+                        <ErrorDisplay result={result} keyName="colors" />
+                    </div>
+                </div>
+            </motion.div>
+        );
+    }
+
 
     // ─── AI CHAT ───
     function ChatView() {
@@ -756,6 +820,7 @@ export default function Dashboard() {
         marketing: MarketingView,
         startup: StartupView,
         sentiment: SentimentView,
+        colors: ColorsView,
         chat: ChatView,
     };
 

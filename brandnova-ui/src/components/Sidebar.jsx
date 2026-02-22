@@ -15,6 +15,7 @@ const links = [
     { to: "/dashboard/marketing", icon: PenLine, label: "Marketing" },
     { to: "/dashboard/startup", icon: Rocket, label: "Startup Tools" },
     { to: "/dashboard/sentiment", icon: Heart, label: "Sentiment" },
+    { to: "/dashboard/colors", icon: Palette, label: "Brand Colors" },
     { to: "/dashboard/chat", icon: MessageCircle, label: "AI Consultant" },
 ];
 
