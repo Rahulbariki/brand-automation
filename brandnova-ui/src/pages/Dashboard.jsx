@@ -439,12 +439,12 @@ export default function Dashboard() {
         const [style, setStyle] = useState("minimalist");
 
         const styles = [
-            { id: "minimalist", label: "Minimalist", icon: "✨" },
+            { id: "corporate physical", label: "Real World Corporate", icon: "🏢" },
+            { id: "glassmorphism", label: "3D Glassmorphism", icon: "💎" },
+            { id: "minimalist iconic", label: "Minimalist Iconic", icon: "✨" },
+            { id: "tech geometric", label: "Architecture / Tech", icon: "⬡" },
+            { id: "premium luxury", label: "Luxury / Elegant", icon: "👑" },
             { id: "modern vector", label: "Modern Vector", icon: "📐" },
-            { id: "tech geometric", label: "Tech / Geometric", icon: "⬡" },
-            { id: "luxury elegant", label: "Luxury / Elegant", icon: "💎" },
-            { id: "vintage retro", label: "Vintage / Retro", icon: "📜" },
-            { id: "playful mascot", label: "Playful Mascot", icon: "🦊" },
         ];
 
         return (
@@ -525,20 +525,17 @@ export default function Dashboard() {
                                             <GlassCard tilt={false} className="!p-2 hover:border-[var(--primary)] transition-all cursor-pointer overflow-hidden">
                                                 <div className="aspect-square bg-white rounded-lg overflow-hidden flex items-center justify-center relative">
                                                     <img src={logo.image_url} alt={`Logo ${i + 1}`} className="w-full h-full object-contain p-2" />
-                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                        <a href={logo.image_url} download={`${brand || 'logo'}_v${i + 1}.png`} onClick={(e) => e.stopPropagation()}>
-                                                            <button className="p-2 bg-[var(--primary)] rounded-full text-white hover:scale-110 transition-transform">
-                                                                <Download size={14} />
+                                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3 p-4">
+                                                        <a href={logo.image_url} download={`${brand || 'logo'}_v${i + 1}.png`} onClick={(e) => e.stopPropagation()} className="w-full">
+                                                            <button className="w-full py-2 px-4 bg-[var(--primary)] text-white rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:scale-105 transition-transform shadow-lg">
+                                                                <Download size={14} /> Download HD
                                                             </button>
                                                         </a>
                                                         <button
-                                                            onClick={() => {
-                                                                // Open preview logic if needed, but download is priority
-                                                                window.open(logo.image_url, '_blank')
-                                                            }}
-                                                            className="p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40 transition-colors"
+                                                            onClick={() => window.open(logo.image_url, '_blank')}
+                                                            className="w-full py-2 px-4 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white/20 transition-all"
                                                         >
-                                                            <Sparkles size={14} />
+                                                            <Sparkles size={14} /> Full Preview
                                                         </button>
                                                     </div>
                                                 </div>

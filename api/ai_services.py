@@ -212,15 +212,15 @@ def generate_logo_prompts(request: LogoRequest) -> list[str]:
     - Use sophisticated lighting: "volumetric lighting", "soft studio shadows", "rim lighting".
     - For {request.brand_name}, the logo should feel "expensive", "authoritative", and "stunning".
     
-    Each prompt should represent a unique direction:
-    1. A Ultra-Minimalist Geometric Mark (Apple/Nike style).
-    2. A Sophisticated 3D Glassmorphism or Metallic emblem.
-    3. A High-Tech Cybernetic or Futuristic vector.
-    4. A Premium Luxury Heraldry/Modern Crest.
-    5. An Avant-Garde Abstract masterpiece.
+    Each prompt should represent a unique, world-class direction:
+    1. A "Real World" Corporate Identity: High-fidelity, symmetrical, precisely balanced, suitable for global tech or finance giants.
+    2. A Sophisticated 3D Glassmorphism: Clear transparency, frosted textures, depth-map shadows, photorealistic unreal engine 5 render.
+    3. A Premium Matte/Metallic Physical Mark: Embossed or debossed feel, realistic material texture (brushed aluminum or matte soft-touch), studio rim lighting.
+    4. A Modern Architectural Vector: Focus on geometric perfection, negative space mastery, timeless aesthetic.
+    5. A Luxury Physical Emblem: Professional crest with high-detail fine lines, suitable for premium hardware or high-end fashion.
     
-    The prompts must follow this specific high-end format:
-    "A hyper-realistic [description] professional logo for [brand name], [Industry]. [Specific visual elements]. [Color palette]. Unreal Engine 5 render style, 8k, sharp edges, raytracing, masterpiece, trending on Dribbble, designer quality, symmetrical, isolated on white background, cinematic lighting."
+    The prompts MUST include:
+    "Professional high-end [style] logo for [brand name], [Industry]. [Core elements]. Cinematic global illumination, 8k resolution, photorealistic material rendering, 3D depth, sharp focus, symmetrical composition, isolated on centered white background, award-winning studio quality, raytraced shadows."
     
     Return ONLY a JSON list of 5 strings.
     """
@@ -229,7 +229,7 @@ def generate_logo_prompts(request: LogoRequest) -> list[str]:
         chat_completion = groq_client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-            temperature=0.75,
+            temperature=0.7,
             response_format={"type": "json_object"}
         )
         data = json.loads(chat_completion.choices[0].message.content)
