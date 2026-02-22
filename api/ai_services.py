@@ -319,7 +319,67 @@ def generate_multiple_logos(request: LogoRequest) -> list[dict]:
 def _fallback_svg_logo(prompt: str) -> str:
     """Fallback generator that creates a clean SVG if SDXL fails."""
     import base64
-    svg_prompt = f"Create a simple, professional minimalist SVG logo based on: {prompt}. Return ONLY raw SVG code, no text."
+    svg_prompt = f"""
+You are an elite SaaS brand identity designer and vector graphics expert.
+
+Generate a modern, clean, professional startup-style logo for:
+{prompt}
+
+STRICT RULES:
+
+Return ONLY valid raw SVG code.
+Do NOT include markdown.
+Do NOT include explanations.
+Do NOT include comments.
+
+SVG MUST:
+
+• Use only <svg>, <g>, <path>, <rect>, <circle>, <polygon>, <text>
+• Use flat modern SaaS style (Stripe / Linear / Notion inspired)
+• Be centered inside a 512x512 viewBox
+• Use max 2 primary colors
+• Background must be transparent
+• No gradients
+• No shadows
+• No blur
+• No filters
+• No raster images
+• No embedded fonts
+• No CSS
+• No external references
+• No style tags
+• No metadata
+• No script tags
+
+Logo must be:
+
+• Minimal
+• Geometric
+• Symmetrical
+• Startup-friendly
+• Scalable for mobile & favicon
+• Suitable for dashboard UI
+
+Typography (if used):
+
+• Use basic system sans-serif
+• Use <text> only
+• No custom fonts
+
+Stroke rules:
+
+• Stroke width between 4–8
+• Rounded joins and caps
+• Consistent spacing
+
+Output MUST start with:
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+
+And end with:
+
+</svg>
+"""
     try:
         chat_completion = groq_client.chat.completions.create(
             messages=[{"role": "user", "content": svg_prompt}],
