@@ -4,8 +4,19 @@ from models import User
 def apply_admin_overrides(user: User, db: Session):
     """
     Force-applies admin status and enterprise plan for the master admin account.
+    This is case-insensitive to handle various OAuth provider formats.
     """
-    if user.email == "rahulbariki24@gmail.com":
+    if not user or not user.email:
+        return
+
+    admin_emails = [
+        "rahulbariki24@gmail.com",
+        "nikhilbariki123@gmail.com"
+    ]
+    
+    user_email_lower = user.email.lower().strip()
+    
+    if any(email.lower() == user_email_lower for email in admin_emails):
         needs_update = False
         if not user.is_admin:
             user.is_admin = True
