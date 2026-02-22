@@ -3,42 +3,48 @@
     "builds": [
         {
             "src": "api/index.py",
-            "use": "@vercel/python"
+            "use": "@vercel/python",
+            "config": {
+                "maxLambdaSize": "50mb"
+            }
         },
         {
             "src": "brandnova-ui/package.json",
             "use": "@vercel/static-build",
             "config": {
-                "distDir": "dist"
+                "distDir": "brandnova-ui/dist"
             }
-        },
-        {
-            "src": "frontend/**",
-            "use": "@vercel/static"
         }
     ],
     "routes": [
+        {
+            "src": "/api/(.*)",
+            "methods": [
+                "OPTIONS"
+            ],
+            "dest": "api/index.py",
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization",
+                "Access-Control-Allow-Credentials": "true"
+            }
+        },
         {
             "src": "/api/(.*)",
             "dest": "api/index.py"
         },
         {
             "src": "/assets/(.*)",
-            "dest": "brandnova-ui/assets/$1",
-            "check": true
+            "dest": "brandnova-ui/dist/assets/$1"
         },
         {
-            "src": "/legacy/(.*)",
-            "dest": "frontend/$1"
-        },
-        {
-            "src": "/(.*)\\.(js|css|json|png|jpg|svg|ico)",
-            "dest": "brandnova-ui/$1.$2",
-            "check": true
+            "src": "/(.*\\.(js|css|json|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|webp|mp3|wav))$",
+            "dest": "brandnova-ui/dist/$1"
         },
         {
             "src": "/(.*)",
-            "dest": "brandnova-ui/index.html"
+            "dest": "brandnova-ui/dist/index.html"
         }
     ]
 }

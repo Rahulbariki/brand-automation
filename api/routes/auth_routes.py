@@ -70,14 +70,20 @@ def signup(user_data: UserSignup, db: Session = Depends(get_db)):
     try:
         db.add(new_user)
         db.commit()
+        db.refresh(new_user)
     except Exception as e:
         db.rollback()
         # Check for integrity error (duplicate email)
         if "unique constraint" in str(e).lower() or "integrityerror" in str(e).lower():
             raise HTTPException(status_code=400, detail="Email already registered")
         raise HTTPException(status_code=500, detail=str(e))
-        
-    return {"message": "User created successfully"}
+    
+    # Apply any admin overrides
+    apply_admin_overrides(new_user, db)
+    
+    # Generate JWT token so the frontend can redirect to dashboard immediately
+    token = create_token({"sub": new_user.email, "email": new_user.email, "admin": new_user.is_admin})
+    return {"access_token": token, "token_type": "bearer"}
 
 class UserLogin(BaseModel):
     email: str

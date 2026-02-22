@@ -229,8 +229,8 @@ def impersonate(request: ImpersonateRequest, db: Session = Depends(get_db), admi
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
         
-    from utils.jwt_handler import create_access_token
+    from utils.jwt_handler import create_token
     token_data = {"sub": user.email, "user_id": user.id, "admin": user.is_admin, "is_impersonated": True}
-    token = create_access_token(token_data)
+    token = create_token(token_data)
     
     return {"impersonation_token": token, "user": {"email": user.email, "id": user.id}}

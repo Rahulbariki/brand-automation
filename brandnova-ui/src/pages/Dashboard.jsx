@@ -87,30 +87,46 @@ export default function Dashboard() {
     const [isImpersonated, setIsImpersonated] = useState(false);
     const [userEmail, setUserEmail] = useState("");
 
+    const [initialLoading, setInitialLoading] = useState(true);
+
     useEffect(() => {
+        // Check if token exists before anything
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+
         const fetchPlan = async () => {
             try {
                 const res = await apiGet("/api/me");
                 setUserPlan(res.subscription_plan);
-                setEffectivePlan(res.effective_plan);
+                setEffectivePlan(res.effective_plan || res.subscription_plan);
                 setIsAdmin(res.is_admin);
                 setUserEmail(res.email);
                 if (res.usage) setUsage(res.usage);
             } catch (err) {
-                // Ignore gracefully
+                console.error("Failed to fetch user data:", err);
+                // If it's an auth error, redirect to login
+                if (err.message?.includes("401") || err.message?.includes("credentials")) {
+                    localStorage.removeItem("access_token");
+                    navigate("/login");
+                    return;
+                }
+            } finally {
+                setInitialLoading(false);
             }
         };
         fetchPlan();
 
         try {
-            const token = localStorage.getItem("access_token");
             if (token) {
                 const payload = JSON.parse(atob(token.split(".")[1]));
                 setIsAdmin(!!payload.admin);
                 setIsImpersonated(!!payload.is_impersonated);
             }
         } catch { }
-    }, []);
+    }, [navigate]);
 
     const handleLogout = () => {
         localStorage.removeItem("access_token");
@@ -693,6 +709,18 @@ export default function Dashboard() {
         }
     };
 
+    if (initialLoading) {
+        return (
+            <div className="min-h-screen animated-bg text-[var(--text)] flex items-center justify-center">
+                <ParticleBackground />
+                <div className="flex flex-col items-center gap-4 relative z-10">
+                    <Loader2 size={40} className="animate-spin text-[var(--primary)]" />
+                    <p className="text-text-secondary text-sm font-bold">Loading your workspace...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen animated-bg text-[var(--text)]">
             <Toaster position="top-right" toastOptions={{ className: 'glass-card text-sm', style: { background: 'var(--surface)', color: 'var(--text)' } }} />
@@ -725,3 +753,4 @@ export default function Dashboard() {
         </div>
     );
 }
+

@@ -16,19 +16,40 @@ export default function Login() {
     const navigate = useNavigate();
 
     useEffect(() => {
+        // If user already has a valid local token, skip to dashboard
+        const existingToken = localStorage.getItem("access_token");
+        if (existingToken) {
+            navigate("/dashboard");
+            return;
+        }
+
+        const handleSupabaseSession = async (session) => {
+            if (!session) return;
+            try {
+                setLoading(true);
+                setError("");
+                const data = await googleLogin(session.access_token);
+                if (data.access_token) {
+                    localStorage.setItem("access_token", data.access_token);
+                    // Sign out of Supabase after getting our local token
+                    // This prevents stale Supabase sessions from causing issues
+                    await supabase.auth.signOut();
+                    navigate("/dashboard");
+                }
+            } catch (err) {
+                console.error("Google login error:", err);
+                setError(err.message || "Google login failed. Please try again.");
+                // Sign out of Supabase on error to allow retry
+                await supabase.auth.signOut();
+            } finally {
+                setLoading(false);
+            }
+        };
+
         const checkSession = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
-                try {
-                    setLoading(true);
-                    const data = await googleLogin(session.access_token);
-                    localStorage.setItem("access_token", data.access_token);
-                    navigate("/dashboard");
-                } catch (err) {
-                    setError(err.message || "Google login failed");
-                } finally {
-                    setLoading(false);
-                }
+                await handleSupabaseSession(session);
             }
         };
 
@@ -36,16 +57,7 @@ export default function Login() {
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (event === 'SIGNED_IN' && session) {
-                try {
-                    setLoading(true);
-                    const data = await googleLogin(session.access_token);
-                    localStorage.setItem("access_token", data.access_token);
-                    navigate("/dashboard");
-                } catch (err) {
-                    setError(err.message || "Google login failed");
-                } finally {
-                    setLoading(false);
-                }
+                await handleSupabaseSession(session);
             }
         });
 

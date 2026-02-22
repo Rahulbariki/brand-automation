@@ -33,6 +33,23 @@ export default function Signup() {
             }
         };
         checkSession();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                try {
+                    setLoading(true);
+                    const data = await googleLogin(session.access_token);
+                    localStorage.setItem("access_token", data.access_token);
+                    navigate("/dashboard");
+                } catch (err) {
+                    setError(err.message || "Google signup failed");
+                } finally {
+                    setLoading(false);
+                }
+            }
+        });
+
+        return () => subscription.unsubscribe();
     }, [navigate]);
 
     const handleGoogleLogin = async () => {
