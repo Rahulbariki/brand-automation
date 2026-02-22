@@ -174,6 +174,7 @@ def get_analytics(db: Session = Depends(get_db), current_user: User = Depends(ad
         pro_users = db.query(func.count(User.id)).filter(User.subscription_plan == "pro").scalar() or 0
         enterprise_users = db.query(func.count(User.id)).filter(User.subscription_plan == "enterprise").scalar() or 0
     except Exception as e:
+        db.rollback()
         print(f"Error fetching basic admin stats: {e}")
         total_users = total_content = total_branding_requests = free_users = pro_users = enterprise_users = 0
 
@@ -183,6 +184,7 @@ def get_analytics(db: Session = Depends(get_db), current_user: User = Depends(ad
             UsageLog.created_at >= func.now() - func.text('interval \'30 days\'')
         ).scalar() or 0
     except:
+        db.rollback()
         # Fallback for SQLite or missed interval
         active_users = db.query(func.count(User.id)).filter(User.is_active == True).scalar() or 0
         
@@ -203,6 +205,7 @@ def get_analytics(db: Session = Depends(get_db), current_user: User = Depends(ad
         content_data = [{"month": str(row[0])[:7], "count": row[1]} for row in monthly_content]
         request_data = [{"month": str(row[0])[:7], "count": row[1]} for row in monthly_requests]
     except Exception as e:
+        db.rollback()
         print(f"Monthly growth queries failed (likely due to DB engine): {e}")
 
     return {
