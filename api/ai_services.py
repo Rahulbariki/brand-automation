@@ -320,7 +320,7 @@ def _fallback_svg_logo(prompt: str) -> str:
     """Fallback generator that creates a clean SVG if SDXL fails."""
     import base64
     svg_prompt = f"""
-You are an elite SaaS brand identity designer and vector graphics expert.
+You are an elite SaaS brand logo designer.
 
 Generate a modern, clean, professional startup-style logo for:
 {prompt}
