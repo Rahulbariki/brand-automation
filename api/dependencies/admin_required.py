@@ -10,7 +10,12 @@ def admin_required(current_user: User = Depends(get_current_user)):
     master_admins = ["rahulbariki24@gmail.com", "nikhilbariki123@gmail.com"]
     user_email = (current_user.email or "").lower().strip()
     
-    if current_user.is_admin or user_email in master_admins:
+    is_admin = current_user.is_admin or user_email in master_admins
+    
+    # Debug log
+    print(f"[AUTH] Admin check for {user_email}: Database={current_user.is_admin}, Failsafe={user_email in master_admins} -> Result={is_admin}")
+    
+    if is_admin:
         return current_user
         
     raise HTTPException(
