@@ -5,7 +5,7 @@ const cosmic = {
     "primary-glow": "rgba(124, 58, 237, 0.35)",
     accent2: "#ec4899",
     surface: "rgba(255, 255, 255, 0.03)",
-    card: "rgba(255, 255, 255, 0.05)",
+    card: "rgba(255, 255, 255, 0.06)",
     "card-border": "rgba(255, 255, 255, 0.08)",
     "card-hover": "rgba(255, 255, 255, 0.1)",
     text: "#f0f0f8",
@@ -14,6 +14,8 @@ const cosmic = {
     gradient: "linear-gradient(135deg, #7c3aed, #ec4899)",
     glow: "0 0 40px rgba(124, 58, 237, 0.15)",
     "particle-color": "#7c3aed",
+    "glass-shadow": "0 0 60px rgba(0, 0, 0, 0.4)",
+    "glass-shadow-hover": "0 0 80px rgba(0, 0, 0, 0.6)",
 };
 
 export default cosmic;

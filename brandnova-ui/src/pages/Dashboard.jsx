@@ -186,15 +186,15 @@ export default function Dashboard() {
                         <motion.div key={m.id} variants={fadeUp}>
                             <GlassCard onMouseEnter={() => playPop()} onClick={() => goTo(m)} className="group cursor-pointer h-full relative overflow-hidden">
                                 {m.enterprise && effectivePlan !== "enterprise" && !isAdmin && (
-                                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center">
+                                    <div className="absolute inset-0 bg-[var(--bg)]/70 backdrop-blur-[3px] z-10 flex flex-col items-center justify-center">
                                         <Crown className="text-amber-400 mb-2" size={24} />
-                                        <span className="text-white text-sm font-bold">Requires Enterprise</span>
+                                        <span className="text-[var(--text)] text-sm font-bold">Requires Enterprise</span>
                                     </div>
                                 )}
                                 {m.pro && !["pro", "enterprise"].includes(effectivePlan) && !isAdmin && (
-                                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center">
+                                    <div className="absolute inset-0 bg-[var(--bg)]/70 backdrop-blur-[3px] z-10 flex flex-col items-center justify-center">
                                         <Crown className="text-[var(--primary)] mb-2" size={24} />
-                                        <span className="text-white text-sm font-bold">Requires Pro</span>
+                                        <span className="text-[var(--text)] text-sm font-bold">Requires Pro</span>
                                     </div>
                                 )}
                                 <div className="text-4xl mb-4">{m.icon}</div>

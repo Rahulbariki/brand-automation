@@ -46,7 +46,7 @@ export default function BrandWizard({ isOpen, onClose, onSuccess }) {
                         <h2 className="text-xl font-bold gradient-text">AI Brand Builder</h2>
                         <p className="text-xs text-text-secondary">Step {step} of 5</p>
                     </div>
-                    <button onClick={onClose} className="text-text-muted hover:text-white transition-colors bg-[var(--card-hover)] p-2 rounded-full">
+                    <button onClick={onClose} className="text-text-muted hover:text-[var(--text)] transition-colors bg-[var(--card-hover)] p-2 rounded-full">
                         <X size={16} />
                     </button>
                 </div>

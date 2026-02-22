@@ -12,7 +12,7 @@ const themeList = [
     { id: "cosmic", name: "Cyberpunk", emoji: "🌌", swatch: "linear-gradient(135deg,#7c3aed,#ec4899)" },
     { id: "aurora", name: "Gradient Neon", emoji: "⚡", swatch: "linear-gradient(135deg,#10b981,#06b6d4)" },
     { id: "sunset", name: "Glass", emoji: "🪟", swatch: "linear-gradient(135deg,#f43f5e,#f59e0b)" },
-    { id: "minimal", name: "Dark / Light", emoji: "⬛", swatch: "linear-gradient(135deg,#fff,#555)" },
+    { id: "minimal", name: "Clean Light", emoji: "☀️", swatch: "linear-gradient(135deg,#6366f1,#8b5cf6)" },
 ];
 
 export default function ThemeProvider({ children }) {

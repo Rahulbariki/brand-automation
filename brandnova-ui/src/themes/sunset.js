@@ -14,6 +14,8 @@ const sunset = {
     gradient: "linear-gradient(135deg, #f43f5e, #f59e0b)",
     glow: "0 0 40px rgba(244, 63, 94, 0.15)",
     "particle-color": "#f43f5e",
+    "glass-shadow": "0 0 60px rgba(0, 0, 0, 0.4)",
+    "glass-shadow-hover": "0 0 80px rgba(0, 0, 0, 0.6)",
 };
 
 export default sunset;

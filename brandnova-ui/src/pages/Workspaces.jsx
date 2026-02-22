@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, ArrowRight, FolderSearch, Activity } from "lucide-react";
+import { Plus, ArrowRight, FolderSearch, Activity, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import GlassCard from "../components/GlassCard";
@@ -135,5 +135,3 @@ export default function Workspaces() {
         </div>
     );
 }
-
-import { Sparkles } from "lucide-react";
