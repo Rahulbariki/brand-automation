@@ -88,7 +88,7 @@ export default function StripeModal({ open, onClose, onSuccess }) {
                             )}
                         </div>
 
-                        <div className="text-5xl font-black mb-1 gradient-text">$19</div>
+                        <div className="text-5xl font-black mb-1 gradient-text">₹ 29</div>
                         <p className="text-text-muted text-sm mb-6">/month &bull; Cancel anytime</p>
 
                         <AnimatedButton onClick={onClose} className="w-full mb-3 py-3.5">

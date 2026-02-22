@@ -21,8 +21,8 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "*")
 app = FastAPI(
     title="BrandNova API",
     version="1.0.0",
-    docs_url=None if ENV == "production" else "/docs",
-    redoc_url=None if ENV == "production" else "/redoc"
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
 app.add_middleware(
@@ -77,7 +77,8 @@ def startup_event():
         from database import engine, Base
         Base.metadata.create_all(bind=engine)
     except Exception as e:
-        print("DB Startup Error:", e)
+        print("DB Startup Error:")
+        traceback.print_exc()
 
 # -------- HEALTH CHECK --------
 
