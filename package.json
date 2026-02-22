@@ -1,0 +1,7 @@
+{
+  "name": "brandnova-monorepo",
+  "private": true,
+  "scripts": {
+    "build": "cd brandnova-ui && npm install && npm run build && cd .. && rm -rf dist && mv brandnova-ui/dist dist"
+  }
+}
