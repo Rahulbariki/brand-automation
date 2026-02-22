@@ -68,6 +68,25 @@ const modules = [
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
+// --- Suggestions Data ---
+const SUGGESTIONS = {
+    industry: [
+        "SaaS", "E-commerce", "FinTech", "HealthCare", "EdTech",
+        "Real Estate", "Fashion & Apparel", "Travel & Tourism",
+        "Food & Beverage", "Gaming", "AI & Robotics", "Sustainability"
+    ],
+    tone: [
+        "Modern", "Playful", "Luxurious", "Minimalist",
+        "Trustworthy", "Bold", "Professional", "Friendly",
+        "Innovative", "Elegant", "Energetic"
+    ],
+    logoStyle: [
+        "Minimalist", "Modern Vector", "Tech / Geometric",
+        "Luxury / Elegant", "Vintage / Retro", "Playful Mascot",
+        "Abstract", "3D Render", "Typography Only"
+    ]
+};
+
 export default function Dashboard() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -384,9 +403,9 @@ export default function Dashboard() {
                 <BackHeader title="Brand Name Generator" subtitle="AI-powered naming with LLaMA 70B" />
                 <GlassCard tilt={false} className="max-w-2xl !p-8">
                     <form onSubmit={(e) => { e.preventDefault(); callApi("/api/generate-brand", { industry, keywords: keywords.split(",").map(k => k.trim()), tone }, "names"); }} className="space-y-4">
-                        <Input placeholder="Industry (e.g. FinTech, HealthCare)" value={industry} onChange={setIndustry} />
+                        <Input placeholder="Industry (e.g. FinTech, HealthCare)" value={industry} onChange={setIndustry} suggestions={SUGGESTIONS.industry} />
                         <Input placeholder="Keywords (comma-separated)" value={keywords} onChange={setKeywords} />
-                        <Input placeholder="Tone (modern, playful, luxurious...)" value={tone} onChange={setTone} />
+                        <Input placeholder="Tone (modern, playful, luxurious...)" value={tone} onChange={setTone} suggestions={SUGGESTIONS.tone} />
                         <AnimatedButton type="submit" disabled={blockGeneration || loading} className={`w-full py-3.5 justify-center ${blockGeneration ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}>
                             {loading ? <Loader2 size={18} className="animate-spin" /> : <><Sparkles size={16} /> Generate Names</>}
                         </AnimatedButton>
@@ -442,7 +461,7 @@ export default function Dashboard() {
                                     </div>
                                     <div>
                                         <label className="text-xs font-bold text-text-muted mb-2 block uppercase tracking-wider">Industry</label>
-                                        <Input placeholder="e.g. SaaS, Finance, Cafe" value={industry} onChange={setIndustry} />
+                                        <Input placeholder="e.g. SaaS, Finance, Cafe" value={industry} onChange={setIndustry} suggestions={SUGGESTIONS.industry} />
                                     </div>
                                 </div>
 
@@ -530,7 +549,7 @@ export default function Dashboard() {
                             <option value="caption">Social Caption</option>
                             <option value="email">Email Campaign</option>
                         </select>
-                        <Input placeholder="Tone (bold, witty, premium...)" value={tone} onChange={setTone} />
+                        <Input placeholder="Tone (bold, witty, premium...)" value={tone} onChange={setTone} suggestions={SUGGESTIONS.tone} />
                         <AnimatedButton type="submit" disabled={blockGeneration || loading} className={`w-full py-3.5 justify-center ${blockGeneration ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}>
                             {loading ? <Loader2 size={18} className="animate-spin" /> : <><PenLine size={16} /> Generate Copy</>}
                         </AnimatedButton>
@@ -576,7 +595,7 @@ export default function Dashboard() {
                             <Input placeholder="Product Name" value={pName} onChange={setPName} />
                             <Textarea placeholder="The Problem" value={problem} onChange={setProblem} />
                             <Textarea placeholder="The Solution" value={solution} onChange={setSolution} />
-                            <Input placeholder="Target Audience" value={audience} onChange={setAudience} />
+                            <Input placeholder="Target Audience" value={audience} onChange={setAudience} suggestions={["Venture Capitalists", "Young Professionals", "Small Business Owners", "Stay-at-home Parents", "Tech Enthusiasts"]} />
                             <AnimatedButton type="submit" disabled={blockGeneration || loading} className={`w-full py-3.5 justify-center ${blockGeneration ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}>
                                 {loading ? <Loader2 size={18} className="animate-spin" /> : <><Rocket size={16} /> Generate Pitch</>}
                             </AnimatedButton>
@@ -624,7 +643,7 @@ export default function Dashboard() {
                 <GlassCard tilt={false} className="max-w-2xl !p-8">
                     <form onSubmit={(e) => { e.preventDefault(); callApi("/api/analyze-sentiment", { text, brand_tone: tone }, "sentiment"); }} className="space-y-4">
                         <Textarea placeholder="Paste a customer review or feedback..." value={text} onChange={setText} rows={4} />
-                        <Input placeholder="Brand Tone (professional, playful...)" value={tone} onChange={setTone} />
+                        <Input placeholder="Brand Tone (professional, playful...)" value={tone} onChange={setTone} suggestions={SUGGESTIONS.tone} />
                         <AnimatedButton type="submit" disabled={blockGeneration || loading} className={`w-full py-3.5 justify-center ${blockGeneration ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}>
                             {loading ? <Loader2 size={18} className="animate-spin" /> : <><BarChart3 size={16} /> Analyze</>}
                         </AnimatedButton>
@@ -669,11 +688,11 @@ export default function Dashboard() {
                         <form onSubmit={handleGenerate} className="space-y-4">
                             <div>
                                 <label className="text-xs font-bold text-text-muted mb-2 block uppercase tracking-wider">Industry</label>
-                                <Input placeholder="e.g. Luxury Jewelry, Eco-Friendly Cafe" value={industry} onChange={setIndustry} />
+                                <Input placeholder="e.g. Luxury Jewelry, Eco-Friendly Cafe" value={industry} onChange={setIndustry} suggestions={SUGGESTIONS.industry} />
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-text-muted mb-2 block uppercase tracking-wider">Brand Tone</label>
-                                <Input placeholder="e.g. minimalist, bold, trustworthy" value={tone} onChange={setTone} />
+                                <Input placeholder="e.g. minimalist, bold, trustworthy" value={tone} onChange={setTone} suggestions={SUGGESTIONS.tone} />
                             </div>
                             <AnimatedButton type="submit" disabled={blockGeneration || loading} className="w-full py-3.5 justify-center">
                                 {loading ? <Loader2 size={18} className="animate-spin" /> : <><Palette size={16} /> Generate Palette</>}
@@ -787,10 +806,27 @@ export default function Dashboard() {
     }
 
     // ─── SHARED INPUT ───
-    function Input({ placeholder, value, onChange, type = "text" }) {
+    function Input({ placeholder, value, onChange, type = "text", suggestions = [] }) {
+        const listId = `suggestions-${placeholder.replace(/\s+/g, '-').toLowerCase()}`;
         return (
-            <input type={type} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} required
-                className="w-full bg-[var(--surface)] border border-[var(--card-border)] rounded-xl px-4 py-3.5 text-sm text-[var(--text)] placeholder:text-text-muted focus:outline-none focus:border-[var(--primary)] transition-colors" />
+            <div className="w-full relative">
+                <input
+                    type={type}
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    list={suggestions.length > 0 ? listId : undefined}
+                    required
+                    className="w-full bg-[var(--surface)] border border-[var(--card-border)] rounded-xl px-4 py-3.5 text-sm text-[var(--text)] placeholder:text-text-muted focus:outline-none focus:border-[var(--primary)] transition-colors"
+                />
+                {suggestions.length > 0 && (
+                    <datalist id={listId}>
+                        {suggestions.map((s, i) => (
+                            <option key={i} value={s} />
+                        ))}
+                    </datalist>
+                )}
+            </div>
         );
     }
 
