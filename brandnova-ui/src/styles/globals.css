@@ -144,6 +144,8 @@ body {
     border: 2px solid var(--primary);
     pointer-events: none;
     position: fixed;
+    top: 0;
+    left: 0;
     z-index: 9999;
     mix-blend-mode: difference;
     transition: width 0.3s, height 0.3s, border-color 0.3s;

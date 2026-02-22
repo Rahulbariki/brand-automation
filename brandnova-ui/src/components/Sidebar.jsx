@@ -87,13 +87,13 @@ export default function Sidebar({ onLogout, isAdmin = false }) {
 
             {/* Bottom */}
             <div className="pt-3 mt-3 border-t border-[var(--card-border)] space-y-2">
-                <div className="px-3">
-                    <ThemeToggle />
+                <div className="px-3 relative">
+                    <ThemeToggle direction="up" />
                 </div>
                 <button
                     onClick={onLogout}
                     className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium
-                     text-red-400 hover:bg-red-500/10 transition-colors w-full interactive"
+                     text-red-400 hover:bg-red-500/10 transition-colors w-full interactive cursor-pointer"
                 >
                     <LogOut size={18} /> Logout
                 </button>

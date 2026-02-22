@@ -28,9 +28,9 @@ const steps = [
 ];
 
 const plans = [
-    { name: "Free", price: "0", features: ["5 generations/day", "Brand names", "Marketing copy", "Basic sentiment"], cta: "Start Free" },
-    { name: "Growth", price: "19", features: ["Unlimited generations", "HD logo exports", "Startup tools", "AI Consultant", "Priority queue"], cta: "Go Pro", popular: true },
-    { name: "Enterprise", price: "49", features: ["Everything in Growth", "Custom models", "API access", "Dedicated support", "White label"], cta: "Contact Sales" },
+    { name: "Free", price: "Rs.0", features: ["5 generations/day", "Brand names", "Marketing copy", "Basic sentiment"], cta: "Start Free" },
+    { name: "Growth", price: "Rs.29", features: ["Unlimited generations", "HD logo exports", "Startup tools", "AI Consultant", "Priority queue"], cta: "Go Pro", popular: true },
+    { name: "Enterprise", price: "Rs.99", features: ["Everything in Growth", "Custom models", "API access", "Dedicated support", "White label"], cta: "Contact Sales" },
 ];
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } };
@@ -160,7 +160,7 @@ export default function Landing() {
                                         </div>
                                     )}
                                     <h3 className="text-lg font-bold mb-2">{p.name}</h3>
-                                    <div className="text-5xl font-black gradient-text mb-1">${p.price}</div>
+                                    <div className="text-5xl font-black gradient-text mb-1">{p.price}</div>
                                     <p className="text-text-muted text-sm mb-6">/month</p>
                                     <ul className="space-y-3 mb-8 text-left">
                                         {p.features.map((f, fi) => (
