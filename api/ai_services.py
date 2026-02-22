@@ -198,44 +198,49 @@ def chat_with_ai(request: ChatRequest) -> str:
 
 # --- Activity 2.10: Logo Prompt Generation ---
 def generate_logo_prompts(request: LogoRequest) -> list[str]:
-    """Generates 5 distinct, high-end logo generation prompts for different design directions."""
+    """Generates 5 distinct, sophisticated, agency-grade logo prompts."""
     prompt = f"""
-    You are a master brand designer. Create 5 DISTINCT, professionally-engineered logo generation prompts for the following brand:
+    You are a world-class senior brand identity designer. Create 5 MASTERPIECE logo generation prompts for:
     Brand Name: {request.brand_name}
     Industry: {request.industry}
     Requested Global Style: {request.style}
     Core Keywords: {', '.join(request.keywords)}
     
-    Each prompt should represent a unique design direction:
-    1. A Minimalist & Iconic approach.
-    2. A Modern & Bold vector approach.
-    3. A Tech-focused / Geometric approach.
-    4. A Premium / Luxury crest or emblem.
-    5. An Innovative / Abstract concept.
+    Guidelines for the engine:
+    - Avoid anything that looks like a "child's drawing", "doodle", or "amateur sketch".
+    - Enforce "Golden Ratio", "symmetrical", "mathematical precision", and "high-end corporate identity".
+    - Use sophisticated lighting: "volumetric lighting", "soft studio shadows", "rim lighting".
+    - For {request.brand_name}, the logo should feel "expensive", "authoritative", and "stunning".
+    
+    Each prompt should represent a unique direction:
+    1. A Ultra-Minimalist Geometric Mark (Apple/Nike style).
+    2. A Sophisticated 3D Glassmorphism or Metallic emblem.
+    3. A High-Tech Cybernetic or Futuristic vector.
+    4. A Premium Luxury Heraldry/Modern Crest.
+    5. An Avant-Garde Abstract masterpiece.
     
     The prompts must follow this specific high-end format:
-    "A professional [description] logo for [brand name], [Industry]. [Specific visual elements]. [Color palette based on keywords]. Minimalist, clean vector style, flat design, solid colors, white background, high resolution, 8k, award-winning branding, Behance aesthetic, centered, uncluttered."
+    "A hyper-realistic [description] professional logo for [brand name], [Industry]. [Specific visual elements]. [Color palette]. Unreal Engine 5 render style, 8k, sharp edges, raytracing, masterpiece, trending on Dribbble, designer quality, symmetrical, isolated on white background, cinematic lighting."
     
-    Return ONLY a JSON list of 5 strings. No extra text, no numbering.
+    Return ONLY a JSON list of 5 strings.
     """
     
     try:
         chat_completion = groq_client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-            temperature=0.8,
+            temperature=0.75,
             response_format={"type": "json_object"}
         )
         data = json.loads(chat_completion.choices[0].message.content)
-        # Handle different potential JSON structures from AI
         if isinstance(data, list): return data[:5]
         if isinstance(data, dict):
             for val in data.values():
                 if isinstance(val, list): return val[:5]
-        return [f"Professional {request.style} logo for {request.brand_name}" for _ in range(5)]
+        return [f"Hyper-realistic professional {request.style} logo for {request.brand_name}, agency quality" for _ in range(5)]
     except Exception as e:
         print(f"Error generating logo prompts: {e}")
-        return [f"A professional {request.style} logo for {request.brand_name}, {request.industry}, vector graphic, white background" for _ in range(5)]
+        return [f"A hyper-realistic {request.style} professional logo for {request.brand_name}, {request.industry}, 8k, sharp edges, white background" for _ in range(5)]
 
 # --- Legacy Helper ---
 def generate_tagline(request: TaglineRequest) -> str:
@@ -249,39 +254,35 @@ def generate_tagline(request: TaglineRequest) -> str:
 
 # --- Activity 2.10 (Part 2): Logo Image Generation (SDXL) ---
 def generate_logo_image(prompt: str) -> str:
-    """Generates a high-quality logo image using Stable Diffusion XL via Hugging Face Inference API."""
+    """Generates a high-fidelity logo image using SDXL."""
     import base64
     import time
     
-    # We use SDXL for high-quality raster logos
+    # Using a specialized logo-tuning or keeping SDXL with better params
     SDXL_MODEL = "stabilityai/stable-diffusion-xl-base-1.0"
     SDXL_URL = f"https://api-inference.huggingface.co/models/{SDXL_MODEL}"
     
     payload = {
         "inputs": prompt,
         "parameters": {
-            "negative_prompt": "photorealistic, 3d render, shadows, gradients, blurry, low resolution, messy, watermark, complex background, text, words, letters, distorted, overlapping, glow",
-            "num_inference_steps": 35,
-            "guidance_scale": 8.0,
+            "negative_prompt": "child drawing, crayon, doodle, messy, sketch, amateur, low quality, blurry, text, font, letters, numbers, hand drawn, watermark, signature, ugly, distorted, anatomy, paper, frame",
+            "num_inference_steps": 45,
+            "guidance_scale": 9.0,
             "width": 1024,
             "height": 1024
         }
     }
     
-    # HF Inference API can be slow or need retries
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            response = requests.post(SDXL_URL, headers=HF_HEADERS, json=payload, timeout=45)
+            response = requests.post(SDXL_URL, headers=HF_HEADERS, json=payload, timeout=60)
             
-            # If the model is loading, wait and retry
             if response.status_code == 503:
-                time.sleep(15) # Wait for model load
+                time.sleep(20)
                 continue
                 
             response.raise_for_status()
-            
-            # The response is the raw image bytes
             image_bytes = response.content
             encoded = base64.b64encode(image_bytes).decode('utf-8')
             return f"data:image/png;base64,{encoded}"
@@ -289,9 +290,8 @@ def generate_logo_image(prompt: str) -> str:
         except Exception as e:
             print(f"SDXL Generation Failed (Attempt {attempt+1}): {e}")
             if attempt == max_retries - 1:
-                # Fallback to SVG if SDXL is completely down
                 return _fallback_svg_logo(prompt)
-            time.sleep(2)
+            time.sleep(3)
     
     return _fallback_svg_logo(prompt)
 
