@@ -202,7 +202,7 @@ export default function Admin() {
         <div className="min-h-screen animated-bg text-[var(--text)]">
             <Toaster position="top-right" toastOptions={{ className: 'glass-card text-sm', style: { background: 'var(--surface)', color: 'var(--text)' } }} />
             <ParticleBackground />
-            <Sidebar onLogout={() => { localStorage.removeItem("access_token"); navigate("/login"); }} />
+            <Sidebar isAdmin={true} onLogout={() => { localStorage.removeItem("access_token"); navigate("/login"); }} />
 
             <main className="ml-[260px] p-8 relative z-10">
                 <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.08 } } }}>

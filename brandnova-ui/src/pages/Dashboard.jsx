@@ -127,7 +127,6 @@ export default function Dashboard() {
                 if (res.usage) setUsage(res.usage);
             } catch (err) {
                 console.error("Failed to fetch user data:", err);
-                // If it's an auth error, redirect to login
                 if (err.message?.includes("401") || err.message?.includes("credentials")) {
                     localStorage.removeItem("access_token");
                     navigate("/login");
@@ -137,15 +136,17 @@ export default function Dashboard() {
                 setInitialLoading(false);
             }
         };
-        fetchPlan();
 
+        // Initial check from token (fast, but could be outdated)
         try {
-            if (token) {
+            if (token && initialLoading) {
                 const payload = JSON.parse(atob(token.split(".")[1]));
-                setIsAdmin(!!payload.admin);
+                if (payload.admin) setIsAdmin(true);
                 setIsImpersonated(!!payload.is_impersonated);
             }
         } catch { }
+
+        fetchPlan();
     }, [navigate]);
 
     const handleLogout = () => {

@@ -164,29 +164,31 @@ def get_live_usage(db: Session = Depends(get_db), current_user: User = Depends(r
 
 @router.get("/analytics")
 def get_analytics(db: Session = Depends(get_db), current_user: User = Depends(admin_required)):
-    # Total Users
-    total_users = db.query(func.count(User.id)).scalar()
-    
-    # Active Users (last 30 days) - users who made a request
+    # Basic Stats
+    try:
+        total_users = db.query(func.count(User.id)).scalar() or 0
+        total_content = db.query(func.count(GeneratedContent.id)).scalar() or 0
+        total_branding_requests = db.query(func.sum(UsageLog.request_count)).scalar() or 0
+        
+        free_users = db.query(func.count(User.id)).filter(User.subscription_plan == "free").scalar() or 0
+        pro_users = db.query(func.count(User.id)).filter(User.subscription_plan == "pro").scalar() or 0
+        enterprise_users = db.query(func.count(User.id)).filter(User.subscription_plan == "enterprise").scalar() or 0
+    except Exception as e:
+        print(f"Error fetching basic admin stats: {e}")
+        total_users = total_content = total_branding_requests = free_users = pro_users = enterprise_users = 0
+
+    # Active Users (last 30 days)
     try:
         active_users = db.query(func.count(func.distinct(UsageLog.user_id))).filter(
-            UsageLog.created_at >= func.now() - func.interval('30 days')
+            UsageLog.created_at >= func.now() - func.text('interval \'30 days\'')
         ).scalar() or 0
     except:
-        active_users = db.query(func.count(User.id)).filter(User.is_active == True).scalar()
+        # Fallback for SQLite or missed interval
+        active_users = db.query(func.count(User.id)).filter(User.is_active == True).scalar() or 0
         
-    # Total Generated Content
-    total_content = db.query(func.count(GeneratedContent.id)).scalar()
-    
-    # Total Branding Requests
-    total_branding_requests = db.query(func.sum(UsageLog.request_count)).scalar() or 0
-    
-    # Plan Distribution
-    free_users = db.query(func.count(User.id)).filter(User.subscription_plan == "free").scalar()
-    pro_users = db.query(func.count(User.id)).filter(User.subscription_plan == "pro").scalar()
-    enterprise_users = db.query(func.count(User.id)).filter(User.subscription_plan == "enterprise").scalar()
-    
-    # Monthly Growth Data
+    # Monthly Growth Data (Postgres specific)
+    content_data = []
+    request_data = []
     try:
         monthly_content = db.query(
             func.date_trunc('month', GeneratedContent.created_at), 
@@ -200,9 +202,8 @@ def get_analytics(db: Session = Depends(get_db), current_user: User = Depends(ad
         
         content_data = [{"month": str(row[0])[:7], "count": row[1]} for row in monthly_content]
         request_data = [{"month": str(row[0])[:7], "count": row[1]} for row in monthly_requests]
-    except:
-        content_data = []
-        request_data = []
+    except Exception as e:
+        print(f"Monthly growth queries failed (likely due to DB engine): {e}")
 
     return {
         "total_users": total_users,
