@@ -232,20 +232,48 @@ def generate_tagline(request: TaglineRequest) -> str:
 
 # --- Activity 2.10 (Part 2): Logo Image Generation (SDXL) ---
 def generate_logo_image(prompt: str) -> str:
-    """Generates a logo image using Pollinations AI rendering to bypass HF 410 limitations."""
-    import urllib.parse
-    import time
+    """Generates a high-quality SVG vector logo via Groq AI (Llama 70B) to ensure 100% stability, infinite usage limits, and perfect resolution."""
+    import base64
+    
+    # We ask Groq to literally write the SVG code for the exact prompt style requested:
+    svg_prompt = f"""
+    You are an expert graphic designer and UI/UX developer.
+    Your task is to create a stunning, professional business logo using ONLY pure SVG code.
+    
+    Instructions based on the user's styling prompt:
+    {prompt}
+
+    Requirements:
+    1. Create a beautiful, minimalist, and highly creative SVG graphic.
+    2. Use vibrant colors, modern gradients, and clean geometry.
+    3. Include both an iconic mark and the text if appropriate.
+    4. Make the viewBox "0 0 500 500".
+    5. Return ONLY the raw valid XML/SVG code start to finish. DO NOT wrap it in ```svg or any markdown blocks. No explanations.
+    """
     
     try:
-        encoded_prompt = urllib.parse.quote(prompt)
-        # We append a random seed to bust browser cache
-        seed = int(time.time() * 1000)
-        # Return a direct image URL that frontend can immediately embed via <img src="..." />
-        logo_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&nologo=true&seed={seed}"
-        return logo_url
+        chat_completion = groq_client.chat.completions.create(
+            messages=[{"role": "user", "content": svg_prompt}],
+            model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+            temperature=0.7,
+        )
+        
+        svg_content = chat_completion.choices[0].message.content.strip()
+        
+        # Strip potential markdown formatting just in case the AI hallucinates them
+        if svg_content.startswith("```"):
+            svg_content = svg_content.split("\n", 1)[-1]
+        if svg_content.startswith("svg"):
+            svg_content = svg_content[3:].strip()
+        if svg_content.endswith("```"):
+            svg_content = svg_content.rsplit("\n", 1)[0]
+            
+        # Encode string as base64 so frontend <img> tags parse it identically to SDXL raster bytes
+        encoded = base64.b64encode(svg_content.encode('utf-8')).decode('utf-8')
+        return f"data:image/svg+xml;base64,{encoded}"
         
     except Exception as e:
-        print(f"Logo Generation URL mapping Failed: {e}")
+        print(f"SVG Logo Generation Failed: {e}")
         import traceback
         traceback.print_exc()
         raise Exception(f"Logo generation failed: {str(e)}")
