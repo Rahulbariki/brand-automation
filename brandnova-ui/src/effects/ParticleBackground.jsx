@@ -30,7 +30,8 @@ function Particles() {
         cosmic: "#7c3aed",
         aurora: "#10b981",
         sunset: "#f43f5e",
-        minimal: "#cbd5e1",
+        minimal: "#888888",
+        light: "#cbd5e1"
     };
 
     const color = themeColors[theme] || "#10b981";
