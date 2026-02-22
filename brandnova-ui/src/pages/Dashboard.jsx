@@ -24,7 +24,7 @@ const Skeleton = ({ className }) => (
 function AILoader({ stage = "names" }) {
     const textSequence = {
         "names": ["Thinking...", "Analyzing industry trends...", "Generating Names..."],
-        "logo": ["Thinking...", "Designing Visual Style...", "Crafting Identity...", "Rendering Assets..."],
+        "logo": ["Thinking...", "Designing Visual Style...", "Generating 5 design concepts simultaneously...", "Crafting Identities...", "Rendering Master Assets..."],
         "marketing": ["Thinking...", "Analyzing target audience...", "Writing Marketing Copy..."],
         "startup": ["Thinking...", "Structuring pitch...", "Generating Startup Tools..."],
         "sentiment": ["Thinking...", "Processing language...", "Analyzing Sentiment..."]
@@ -504,23 +504,52 @@ export default function Dashboard() {
                                 <Sparkles size={16} className="text-[var(--primary)]" /> Pro Design Tips
                             </h4>
                             <ul className="space-y-3 text-xs text-text-secondary">
-                                <li className="flex gap-2 leading-relaxed"><span>•</span> Use simple keywords for better "Accuracy" (e.g. "leaf" instead of "natural organic foliage").</li>
-                                <li className="flex gap-2 leading-relaxed"><span>•</span> Choosing "Minimalist" usually yields the most balanced, professional results.</li>
-                                <li className="flex gap-2 leading-relaxed"><span>•</span> Mention 2-3 specific colors in keywords for brand consistency.</li>
+                                <li className="flex gap-2 leading-relaxed"><span>•</span> We now generate <b>5 unique concepts</b> simultaneously for your brand.</li>
+                                <li className="flex gap-2 leading-relaxed"><span>•</span> Use specific keywords like "gold", "matte black", or "geometric" for better control.</li>
+                                <li className="flex gap-2 leading-relaxed"><span>•</span> <b>SDXL 1.0</b> engine is used to ensure sharp, vector-like precision.</li>
                             </ul>
                         </GlassCard>
 
-                        {result?.key === "logo" && !result.error && result.data.image_url && (
-                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-                                <GlassCard tilt={false} className="text-center !p-6 border-2 border-[var(--primary)]">
-                                    <div className="aspect-square bg-white rounded-xl mb-4 overflow-hidden flex items-center justify-center">
-                                        <img src={result.data.image_url} alt="Generated Logo" className="w-full h-full object-contain p-4" />
-                                    </div>
-                                    <a href={result.data.image_url} download={`${brand || 'logo'}_brandnova.png`} className="block">
-                                        <AnimatedButton className="w-full justify-center"><Download size={16} /> Save High-Res</AnimatedButton>
-                                    </a>
-                                </GlassCard>
-                            </motion.div>
+                        {result?.key === "logo" && !result.error && result.data.logos && (
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                    {result.data.logos.map((logo, i) => (
+                                        <motion.div
+                                            key={i}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.1 }}
+                                            className="group relative"
+                                        >
+                                            <GlassCard tilt={false} className="!p-2 hover:border-[var(--primary)] transition-all cursor-pointer overflow-hidden">
+                                                <div className="aspect-square bg-white rounded-lg overflow-hidden flex items-center justify-center relative">
+                                                    <img src={logo.image_url} alt={`Logo ${i + 1}`} className="w-full h-full object-contain p-2" />
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                        <a href={logo.image_url} download={`${brand || 'logo'}_v${i + 1}.png`} onClick={(e) => e.stopPropagation()}>
+                                                            <button className="p-2 bg-[var(--primary)] rounded-full text-white hover:scale-110 transition-transform">
+                                                                <Download size={14} />
+                                                            </button>
+                                                        </a>
+                                                        <button
+                                                            onClick={() => {
+                                                                // Open preview logic if needed, but download is priority
+                                                                window.open(logo.image_url, '_blank')
+                                                            }}
+                                                            className="p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40 transition-colors"
+                                                        >
+                                                            <Sparkles size={14} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <p className="text-[9px] mt-1.5 font-bold uppercase text-text-muted text-center">Concept {i + 1}</p>
+                                            </GlassCard>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                                <div className="p-4 bg-[var(--surface)] rounded-xl border border-[var(--card-border)] text-center">
+                                    <p className="text-[10px] text-text-muted italic leading-relaxed font-medium">Click any concept to download high-resolution PNG.</p>
+                                </div>
+                            </div>
                         )}
                         <ErrorDisplay result={result} keyName="logo" />
                     </div>

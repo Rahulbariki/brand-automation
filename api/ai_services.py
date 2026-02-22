@@ -197,31 +197,45 @@ def chat_with_ai(request: ChatRequest) -> str:
             return f"I'm having trouble connecting to my brain right now. Error: {str(e)} | Fallback Error: {str(e2)}"
 
 # --- Activity 2.10: Logo Prompt Generation ---
-def generate_logo_prompt(request: LogoRequest) -> str:
-    """Generates a detailed, professionally-engineered prompt for high-quality logo generation (SDXL)."""
+def generate_logo_prompts(request: LogoRequest) -> list[str]:
+    """Generates 5 distinct, high-end logo generation prompts for different design directions."""
     prompt = f"""
-    Create a professional, high-end logo generation prompt for the following brand:
+    You are a master brand designer. Create 5 DISTINCT, professionally-engineered logo generation prompts for the following brand:
     Brand Name: {request.brand_name}
     Industry: {request.industry}
-    Style: {request.style}
-    Keywords: {', '.join(request.keywords)}
+    Requested Global Style: {request.style}
+    Core Keywords: {', '.join(request.keywords)}
     
-    The prompt should follow this format:
-    "A professional [style] logo for [brand name] in the [industry] industry. [visual elements based on keywords]. Minimalist, clean vector style, flat design, solid colors, white background, high resolution, 8k, professional branding, premium aesthetic."
+    Each prompt should represent a unique design direction:
+    1. A Minimalist & Iconic approach.
+    2. A Modern & Bold vector approach.
+    3. A Tech-focused / Geometric approach.
+    4. A Premium / Luxury crest or emblem.
+    5. An Innovative / Abstract concept.
     
-    Return ONLY the prompt text, no extra explanation or markdown.
+    The prompts must follow this specific high-end format:
+    "A professional [description] logo for [brand name], [Industry]. [Specific visual elements]. [Color palette based on keywords]. Minimalist, clean vector style, flat design, solid colors, white background, high resolution, 8k, award-winning branding, Behance aesthetic, centered, uncluttered."
+    
+    Return ONLY a JSON list of 5 strings. No extra text, no numbering.
     """
     
     try:
         chat_completion = groq_client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-            temperature=0.7,
+            temperature=0.8,
+            response_format={"type": "json_object"}
         )
-        return chat_completion.choices[0].message.content.strip().replace('"', '')
+        data = json.loads(chat_completion.choices[0].message.content)
+        # Handle different potential JSON structures from AI
+        if isinstance(data, list): return data[:5]
+        if isinstance(data, dict):
+            for val in data.values():
+                if isinstance(val, list): return val[:5]
+        return [f"Professional {request.style} logo for {request.brand_name}" for _ in range(5)]
     except Exception as e:
-        print(f"Error generating logo prompt: {e}")
-        return f"Professional {request.style} logo for {request.brand_name}, {request.industry}, minimalist vector graphic, white background"
+        print(f"Error generating logo prompts: {e}")
+        return [f"A professional {request.style} logo for {request.brand_name}, {request.industry}, vector graphic, white background" for _ in range(5)]
 
 # --- Legacy Helper ---
 def generate_tagline(request: TaglineRequest) -> str:
@@ -246,9 +260,11 @@ def generate_logo_image(prompt: str) -> str:
     payload = {
         "inputs": prompt,
         "parameters": {
-            "negative_prompt": "photorealistic, 3d render, shadows, gradients, blurry, low resolution, messy, watermark, complex background",
-            "num_inference_steps": 30,
-            "guidance_scale": 7.5
+            "negative_prompt": "photorealistic, 3d render, shadows, gradients, blurry, low resolution, messy, watermark, complex background, text, words, letters, distorted, overlapping, glow",
+            "num_inference_steps": 35,
+            "guidance_scale": 8.0,
+            "width": 1024,
+            "height": 1024
         }
     }
     
@@ -256,13 +272,11 @@ def generate_logo_image(prompt: str) -> str:
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            response = requests.post(SDXL_URL, headers=HF_HEADERS, json=payload, timeout=30)
+            response = requests.post(SDXL_URL, headers=HF_HEADERS, json=payload, timeout=45)
             
             # If the model is loading, wait and retry
             if response.status_code == 503:
-                wait_time = response.json().get("estimated_time", 10)
-                print(f"Model is loading, waiting {wait_time}s...")
-                time.sleep(min(wait_time, 20))
+                time.sleep(15) # Wait for model load
                 continue
                 
             response.raise_for_status()
@@ -273,13 +287,34 @@ def generate_logo_image(prompt: str) -> str:
             return f"data:image/png;base64,{encoded}"
             
         except Exception as e:
-            print(f"SDXL Generation Attempt {attempt+1} Failed: {e}")
+            print(f"SDXL Generation Failed (Attempt {attempt+1}): {e}")
             if attempt == max_retries - 1:
                 # Fallback to SVG if SDXL is completely down
                 return _fallback_svg_logo(prompt)
             time.sleep(2)
     
     return _fallback_svg_logo(prompt)
+
+def generate_multiple_logos(request: LogoRequest) -> list[dict]:
+    """Generates 5 distinct logo designs in parallel."""
+    import concurrent.futures
+    
+    prompts = generate_logo_prompts(request)
+    results = []
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        # Submit all generation tasks
+        future_to_prompt = {executor.submit(generate_logo_image, prompt): prompt for prompt in prompts}
+        
+        for future in concurrent.futures.as_completed(future_to_prompt):
+            prompt = future_to_prompt[future]
+            try:
+                img_url = future.result()
+                results.append({"prompt": prompt, "image_url": img_url})
+            except Exception as e:
+                print(f"Error in parallel logo generation: {e}")
+                
+    return results
 
 def _fallback_svg_logo(prompt: str) -> str:
     """Fallback generator that creates a clean SVG if SDXL fails."""

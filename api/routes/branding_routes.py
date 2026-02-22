@@ -15,7 +15,7 @@ from schemas import (
 )
 from ai_services import (
     generate_brand_names, generate_marketing_content, analyze_sentiment,
-    get_color_palette, chat_with_ai, generate_logo_prompt, generate_logo_image,
+    get_color_palette, chat_with_ai, generate_multiple_logos,
     transcribe_audio, generate_pitch, generate_investor_email
 )
 
@@ -79,14 +79,17 @@ async def api_chat(request: ChatRequest, db: Session = Depends(get_db), user: Us
 
 @router.post("/generate-logo")
 async def api_generate_logo(request: LogoRequest, db: Session = Depends(get_db), user: User = Depends(require_pro)):
-    # Logo is strictly Pro, but we also log it
-    prompt = generate_logo_prompt(request)
-    # Return Base64 data URI directly (no file system write)
-    image_url = generate_logo_image(prompt)
+    # Logo is strictly Pro, generate 5 variations in parallel
+    results = generate_multiple_logos(request)
     
-    # We log the prompt or "Image Generated" instead of full base64 to save DB space
-    log_generation(db, user, "logo", f"Prompt: {prompt}")
-    return {"prompt": prompt, "image_url": image_url}
+    if not results:
+        raise HTTPException(status_code=500, detail="Failed to generate logos. Please try again.")
+        
+    # Log the first prompt as a reference in the DB
+    main_prompt = results[0]["prompt"] if results else "Logo Generation"
+    log_generation(db, user, "logo", f"Generated 5 logos. Prompt 1: {main_prompt}")
+    
+    return {"logos": results}
 
 @router.post("/transcribe-voice")
 async def api_transcribe_voice(file: UploadFile = File(...), db: Session = Depends(get_db), user: User = Depends(check_usage_limit)):
