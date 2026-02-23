@@ -254,69 +254,54 @@ def generate_tagline(request: TaglineRequest) -> str:
 
 # --- Activity 2.10 (Part 2): Logo Image Generation ---
 def generate_logo_image(prompt: str) -> str:
-    """Generates a high-fidelity logo image using Hugging Face Serverless Inference (FLUX)."""
+    """Generates a high-fidelity vector logo directly in SVG format via LLaMA."""
     import base64
-    import time
     
-    # Enhance the prompt for modern, high-end logo generation
-    enhanced_prompt = f"Professional global brand logo, {prompt}. Masterpiece, isolated on pure white background, minimal, clean edges, award winning logo design, vector art style"
-    
-    # Using the new Hugging Face Router Endpoint with FLUX
-    MODEL = "black-forest-labs/FLUX.1-schnell"
-    URL = f"https://router.huggingface.co/hf-inference/models/{MODEL}"
-    
-    payload = {
-        "inputs": enhanced_prompt,
-        "parameters": {
-            "num_inference_steps": 4, # FLUX.1-schnell requires fewer steps
-            "guidance_scale": 7.5,
-            "width": 1024,
-            "height": 1024
-        }
-    }
-    
-    max_retries = 4
-    for attempt in range(max_retries):
-        try:
-            # First attempt: Try Hugging Face FLUX
-            response = requests.post(URL, headers=HF_HEADERS, json=payload, timeout=60)
+    # We enforce STRICT color rendering to prevent the "white only" logo bug.
+    svg_prompt = f"""
+You are an expert graphic designer and world-class artist creating scalable vector logos. 
+
+Brand/Concept: {prompt}
+
+CRITICAL RULES:
+1. ONLY return the raw, complete <svg>...</svg> XML tag. 
+2. DO NOT use markdown, do not wrap in ```svg ```, do not explain. Just the XML.
+3. The logo MUST BE COLORFUL AND VIBRANT! You MUST use linear gradients and vibrant stroke/fill colors (e.g. #FF512F, #DD2476, #00C9FF).
+4. Do NOT use solid white (#FFFFFF) or black (#000000) for the main logo shape to prevent it from blending into dark/light backgrounds.
+5. Create a highly detailed, professional, geometric icon or modern corporate mark. 
+6. Do NOT include any accompanying text or brand name typography. Symbol ONLY.
+7. Use <defs> with <linearGradient> to make it look premium.
+8. Set viewBox="0 0 512 512" and width="100%" height="100%".
+
+Generate the masterpiece SVG now.
+"""
+    try:
+        chat_completion = groq_client.chat.completions.create(
+            messages=[{"role": "user", "content": svg_prompt}],
+            model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+            temperature=0.6,
+        )
+        content = chat_completion.choices[0].message.content.strip()
+        
+        if "```" in content:
+            content = content.split("```")[1]
+            if content.startswith("svg\n"):
+                content = content[4:]
+        
+        # Ensure it actually looks like an SVG. If it hallucinated text, fallback.
+        if "<svg" not in content:
+            raise ValueError("No SVG found in response")
             
-            # If model is loading, wait and retry
-            if response.status_code == 503:
-                try:
-                    err = response.json()
-                    wait_time = err.get("estimated_time", 15)
-                except:
-                    wait_time = 15
-                print(f"HF Model loading, waiting {wait_time}s...")
-                time.sleep(wait_time)
-                continue
-                
-            response.raise_for_status()
-            
-            # Ensure the response is actually an image and not a JSON success response or error page
-            content_type = response.headers.get('content-type', '')
-            if not content_type.startswith('image/'):
-                print(f"Non-image response from HF: {response.text[:100]}")
-                time.sleep(3)
-                continue
-                
-            image_bytes = response.content
-            encoded = base64.b64encode(image_bytes).decode('utf-8')
-            return f"data:{content_type};base64,{encoded}"
-            
-        except requests.exceptions.HTTPError as e:
-            print(f"HF Generation HTTP Failed (Attempt {attempt+1}): {e}")
-            if hasattr(e.response, "text"):
-                print("HF Error Detail:", e.response.text[:200])
-            time.sleep(3)
-            
-        except Exception as e:
-            print(f"Generation Failed (Attempt {attempt+1}): {e}")
-            time.sleep(3)
-            
-    # Absolute last resort - simple placeholder
-    return "https://via.placeholder.com/1024/000000/FFFFFF?text=Logo+Generation+Overloaded"
+        content = content.replace('\n', '')
+        encoded = base64.b64encode(content.encode('utf-8')).decode('utf-8')
+        return f"data:image/svg+xml;base64,{encoded}"
+        
+    except Exception as e:
+        print(f"Generative SVG Failed: {e}")
+        # Absolute last resort fallback colored shape
+        fallback_svg = '<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FF512F"/><stop offset="100%" stop-color="#DD2476"/></linearGradient></defs><circle cx="256" cy="256" r="200" fill="url(#g)"/></svg>'
+        encoded = base64.b64encode(fallback_svg.encode('utf-8')).decode('utf-8')
+        return f"data:image/svg+xml;base64,{encoded}"
 
 def generate_multiple_logos(request: LogoRequest) -> list[dict]:
     """Generates 5 distinct logo designs in parallel."""
