@@ -342,10 +342,10 @@ low quality
 
         print("Saved:", filepath)
 
-        # 🔥 RETURN LOCAL SERVED PATH
+        # RETURN LOCAL SERVED PATH
         return f"/assets/generated/{filename}"
     except Exception as e:
-        print("Image generation failed:", e)
+        print(f"Image generation failed: {e}")
         return None
 
 def generate_multiple_logos(request: LogoRequest) -> list[dict]:
