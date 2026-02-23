@@ -253,36 +253,80 @@ def generate_tagline(request: TaglineRequest) -> str:
     return chat_completion.choices[0].message.content.strip().replace('"', '')
 
 # --- Activity 2.10 (Part 2): Logo Image Generation ---
+# --- Activity 2.10 (Part 2): Logo Image Generation ---
 def generate_logo_image(prompt: str) -> str:
-    """Generates a high-fidelity vector logo by combining abstract professional geometries."""
     import base64
-    import urllib.parse
     
-    # We use DiceBear's amazing abstract shapes API for beautiful instant SVG logos 
-    # since LLMs are incapable of advanced SVG generation and the Image inference API is depleted.
-    
-    # Choose a specific professional style based on prompt hashing to ensure consistency
-    styles = ["shapes", "rings", "identicon"]
-    style = styles[hash(prompt) % len(styles)]
-    seed = urllib.parse.quote(prompt)
-    
-    # Use high contrast or primary colors config depending on style
-    url = f"https://api.dicebear.com/9.x/{style}/svg?seed={seed}"
-    
+    svg_prompt = f"""
+You are designing a premium SaaS startup ICON LOGO.
+
+Concept:
+{prompt}
+
+Create a layered SVG logo using this render pipeline:
+
+LAYER 1:
+Dark abstract base shape.
+
+LAYER 2:
+Gradient lighting overlay using <linearGradient>
+
+LAYER 3:
+Soft glow using <filter> + <feGaussianBlur>
+
+LAYER 4:
+Floating drop shadow using <feDropShadow>
+
+LAYER 5:
+Glass highlight using <radialGradient>
+
+Rules:
+
+• Abstract tech symbol only
+• No text
+• No letters
+• No typography
+• Center aligned
+• Max 3 colors
+• Transparent background
+• Rounded futuristic geometry
+
+SVG MUST CONTAIN:
+
+<defs>
+<linearGradient>
+<radialGradient>
+<filter>
+<feGaussianBlur>
+<feDropShadow>
+
+Return ONLY SVG code.
+
+Start with:
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+
+End with:
+</svg>
+"""
+
     try:
-        response = requests.get(url, timeout=15)
-        response.raise_for_status()
-        
-        # Parse SVG raw content
-        content = response.text.replace('\n', ' ')
-        
+        chat_completion = groq_client.chat.completions.create(
+            messages=[{"role": "user", "content": svg_prompt}],
+            model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+        )
+
+        svg_content = chat_completion.choices[0].message.content.strip()
+
+        if "```" in svg_content:
+            svg_content = svg_content.split("```")[1].replace("svg", "", 1).strip()
+
         # Browsers will not render SVGs in <img> tags without this xmlns! (Safety Check)
-        if 'xmlns="http://www.w3.org/2000/svg"' not in content and "xmlns='http://www.w3.org/2000/svg'" not in content:
-            content = content.replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ')
-            
-        encoded = base64.b64encode(content.encode('utf-8')).decode('utf-8')
+        if 'xmlns="http://www.w3.org/2000/svg"' not in svg_content and "xmlns='http://www.w3.org/2000/svg'" not in svg_content:
+            svg_content = svg_content.replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ')
+
+        encoded = base64.b64encode(svg_content.encode('utf-8')).decode('utf-8')
         return f"data:image/svg+xml;base64,{encoded}"
-        
+
     except Exception as e:
         print(f"Fallback Generative SVG Failed: {e}")
         # Absolute last resort fallback colored shape
