@@ -262,61 +262,69 @@ def generate_logo_image(prompt: str) -> str:
     import requests
     import os
 
+    enhanced_mockup_prompt = f"""
+    Professional luxury brand logo mockup for {prompt}
+    3D embossed metallic logo
+    gold foil or matte black finish
+    realistic paper texture
+    soft studio lighting
+    cinematic shadow
+    premium typography
+    logo engraved on business card
+    logo printed on textured paper
+    brand identity mockup
+    ultra realistic render
+    center composition
+    8k quality
+    dribbble behance style
+    """
+    
+    negative_prompt = "cartoon, icon, favicon, flat vector, circle logo, abstract blob, emoji, clipart, watermark, low quality"
+
     # 1. Hugging Face (Primary attempt if token is available)
     hf_token = os.getenv("HF_API_KEY")
     if hf_token:
         try:
-            print(f"Generating image with Hugging Face (SDXL) for logo...")
-            API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
+            print(f"Generating image with Hugging Face (SDXL Refiner) for {prompt}...")
+            # Using the refiner model as requested for superior photo quality
+            API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-refiner-1.0"
             headers = {"Authorization": f"Bearer {hf_token}"}
             
-            enhanced_hf_prompt = f"minimalist vector logo, flat design, white background, simple, iconic, {prompt}, dribbble style, 8k, no text"
-            
             payload = {
-                "inputs": enhanced_hf_prompt,
-                "parameters": {"negative_prompt": "text, watermark, realistic, photo, 3d render, complex, busy, gradient, shadow, low quality, blurry"}
+                "inputs": enhanced_mockup_prompt,
+                "parameters": {"negative_prompt": negative_prompt}
             }
             response = requests.post(API_URL, headers=headers, json=payload, timeout=20)
             
             if response.status_code == 200:
-                print("HF Generated Successfully. Saving file...")
-                timestamp = int(time.time() * 1000)
-                filename = f"logo_{timestamp}.png"
-                output_dir = Path(__file__).resolve().parent.parent / "frontend" / "static" / "generated_logos"
-                output_dir.mkdir(parents=True, exist_ok=True)
-                filepath = output_dir / filename
-                
-                with open(filepath, "wb") as f:
-                    f.write(response.content)
-                    
-                print(f"Image saved to: {filepath}")
-                return f"/static/generated_logos/{filename}"
+                import base64
+                print("HF Generated Successfully. Encoding to base64 for safe Vercel transmission...")
+                encoded = base64.b64encode(response.content).decode('utf-8')
+                return f"data:image/png;base64,{encoded}"
             else:
                 print(f"HF Generation failed with status {response.status_code}. Fallthrough to backup...")
         except Exception as e:
             print(f"HF Generation exception: {e}. Fallthrough to backup...")
 
-    # 2. Pollinations.ai (Backup)
+    # 2. Pollinations.ai (Backup - Currently Highly Reliable for Frontend Loading)
     try:
         print(f"Generating image with Pollinations.ai (Free Backup) for {prompt}")
         seed = random.randint(1, 100000)
-        enhanced_prompt = (
-            f"Logo design, {prompt}, "
-            f"vector graphics, white background, centered, high quality, 4k, professional, sharp lines, minimalism, no text"
-        )
-        encoded_prompt = urllib.parse.quote(enhanced_prompt)
         
-        # Pollinations URL (Direct Image Endpoint)
-        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&seed={seed}&model=flux&nologo=true"
+        encoded_prompt = urllib.parse.quote(enhanced_mockup_prompt.strip().replace('\n', ' '))
         
-        # We return the URL path expected by the frontend directly because Python's Requests 
-        # is frequently blocked by Pollinations' Cloudflare with a 530 error, but standard 
-        # web browsers (React frontend) easily bypass it using normal image attributes.
+        # Pollinations URL (Direct Image Endpoint) 
+        # Crucial note: Pollinations often uses Flux natively which is incredible for photorealism.
+        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&seed={seed}&nologo=true&enhance=true"
+        
+        # We return the URL path expected by the frontend directly because Python Requesting Pollinations 
+        # may hit a Cloudflare block, but the raw `src=URL` natively works perfectly in users' browsers.
         return image_url
         
     except Exception as e:
         print(f"Image Download failed: {e}")
-        return f"https://image.pollinations.ai/prompt/{urllib.parse.quote(prompt + ' minimalist logo')}?width=1024&height=1024&nologo=true"
+        safe_fallback = urllib.parse.quote(f"Professional luxury brand logo mockup for {prompt}, 3D embossed metallic, gold foil on paper")
+        return f"https://image.pollinations.ai/prompt/{safe_fallback}?width=1024&height=1024&nologo=true"
 
 def generate_multiple_logos(request: LogoRequest) -> list[dict]:
     """Generates 5 distinct logo designs in parallel."""
