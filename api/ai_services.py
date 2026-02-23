@@ -318,23 +318,35 @@ low quality
 
     # 2. Pollinations.ai (Backup - Currently Highly Reliable for Frontend Loading)
     try:
-        print(f"Generating image with Pollinations.ai (Free Backup) for {prompt}")
+        print("Generating with Pollinations + Saving Locally...")
+
         seed = random.randint(1, 100000)
-        
         encoded_prompt = urllib.parse.quote(enhanced_mockup_prompt.strip().replace('\n', ' '))
-        
-        # Pollinations URL (Direct Image Endpoint) 
-        # Crucial note: Pollinations often uses Flux natively which is incredible for photorealism.
-        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&seed={seed}&nologo=true&enhance=true"
-        
-        # We return the URL path expected by the frontend directly because Python Requesting Pollinations 
-        # may hit a Cloudflare block, but the raw `src=URL` natively works perfectly in users' browsers.
-        return image_url
-        
+
+        poll_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&seed={seed}&nologo=true"
+
+        response = requests.get(poll_url, timeout=60)
+
+        if response.status_code != 200:
+            raise Exception("Pollinations download failed")
+
+        # 🔥 SAVE LOCALLY
+        output_dir = Path(__file__).resolve().parent.parent / "frontend" / "assets" / "generated"
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        filename = f"logo_{int(time.time())}.png"
+        filepath = output_dir / filename
+
+        with open(filepath, "wb") as f:
+            f.write(response.content)
+
+        print("Saved:", filepath)
+
+        # 🔥 RETURN LOCAL SERVED PATH
+        return f"/assets/generated/{filename}"
     except Exception as e:
-        print(f"Image Download failed: {e}")
-        safe_fallback = urllib.parse.quote(f"Professional luxury brand logo mockup for {prompt}, 3D embossed metallic, gold foil on paper")
-        return f"https://image.pollinations.ai/prompt/{safe_fallback}?width=1024&height=1024&nologo=true"
+        print("Image generation failed:", e)
+        return None
 
 def generate_multiple_logos(request: LogoRequest) -> list[dict]:
     """Generates 5 distinct logo designs in parallel."""
