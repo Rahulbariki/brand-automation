@@ -161,7 +161,7 @@ def get_color_palette(request: ColorPaletteRequest) -> list[str]:
 def chat_with_ai(request: ChatRequest) -> str:
     """Consults the IBM Granite model for branding advice."""
     prompt = f"""
-    [System: You are BizForge, an expert branding assistant. Provide helpful, strategic, and concise advice.]
+    [System: You are BrandNova, an expert branding assistant. Provide helpful, strategic, and concise advice.]
     [User: {request.message}]
     """
     
@@ -187,7 +187,7 @@ def chat_with_ai(request: ChatRequest) -> str:
         try:
             chat_completion = groq_client.chat.completions.create(
                 messages=[
-                    {"role": "system", "content": "You are BizForge, an expert branding assistant. Provide helpful, strategic, and concise advice."},
+                    {"role": "system", "content": "You are BrandNova, an expert branding assistant. Provide helpful, strategic, and concise advice."},
                     {"role": "user", "content": request.message}
                 ],
                 model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
@@ -255,84 +255,68 @@ def generate_tagline(request: TaglineRequest) -> str:
 # --- Activity 2.10 (Part 2): Logo Image Generation ---
 # --- Activity 2.10 (Part 2): Logo Image Generation ---
 def generate_logo_image(prompt: str) -> str:
-    import base64
-    
-    svg_prompt = f"""
-You are designing a premium SaaS startup ICON LOGO.
+    import urllib.parse
+    import random
+    import time
+    from pathlib import Path
+    import requests
+    import os
 
-Concept:
-{prompt}
+    # 1. Hugging Face (Primary attempt if token is available)
+    hf_token = os.getenv("HF_API_KEY")
+    if hf_token:
+        try:
+            print(f"Generating image with Hugging Face (SDXL) for logo...")
+            API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
+            headers = {"Authorization": f"Bearer {hf_token}"}
+            
+            enhanced_hf_prompt = f"minimalist vector logo, flat design, white background, simple, iconic, {prompt}, dribbble style, 8k, no text"
+            
+            payload = {
+                "inputs": enhanced_hf_prompt,
+                "parameters": {"negative_prompt": "text, watermark, realistic, photo, 3d render, complex, busy, gradient, shadow, low quality, blurry"}
+            }
+            response = requests.post(API_URL, headers=headers, json=payload, timeout=20)
+            
+            if response.status_code == 200:
+                print("HF Generated Successfully. Saving file...")
+                timestamp = int(time.time() * 1000)
+                filename = f"logo_{timestamp}.png"
+                output_dir = Path(__file__).resolve().parent.parent / "frontend" / "static" / "generated_logos"
+                output_dir.mkdir(parents=True, exist_ok=True)
+                filepath = output_dir / filename
+                
+                with open(filepath, "wb") as f:
+                    f.write(response.content)
+                    
+                print(f"Image saved to: {filepath}")
+                return f"/static/generated_logos/{filename}"
+            else:
+                print(f"HF Generation failed with status {response.status_code}. Fallthrough to backup...")
+        except Exception as e:
+            print(f"HF Generation exception: {e}. Fallthrough to backup...")
 
-Create a layered SVG logo using this render pipeline:
-
-LAYER 1:
-Dark abstract base shape.
-
-LAYER 2:
-Gradient lighting overlay using <linearGradient>
-
-LAYER 3:
-Soft glow using <filter> + <feGaussianBlur>
-
-LAYER 4:
-Floating drop shadow using <feDropShadow>
-
-LAYER 5:
-Glass highlight using <radialGradient>
-
-Rules:
-
-• Abstract tech symbol only
-• No text
-• No letters
-• No typography
-• Center aligned
-• Max 3 colors
-• Transparent background
-• Rounded futuristic geometry
-
-SVG MUST CONTAIN:
-
-<defs>
-<linearGradient>
-<radialGradient>
-<filter>
-<feGaussianBlur>
-<feDropShadow>
-
-Return ONLY SVG code.
-
-Start with:
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-
-End with:
-</svg>
-"""
-
+    # 2. Pollinations.ai (Backup)
     try:
-        chat_completion = groq_client.chat.completions.create(
-            messages=[{"role": "user", "content": svg_prompt}],
-            model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+        print(f"Generating image with Pollinations.ai (Free Backup) for {prompt}")
+        seed = random.randint(1, 100000)
+        enhanced_prompt = (
+            f"Logo design, {prompt}, "
+            f"vector graphics, white background, centered, high quality, 4k, professional, sharp lines, minimalism, no text"
         )
-
-        svg_content = chat_completion.choices[0].message.content.strip()
-
-        if "```" in svg_content:
-            svg_content = svg_content.split("```")[1].replace("svg", "", 1).strip()
-
-        # Browsers will not render SVGs in <img> tags without this xmlns! (Safety Check)
-        if 'xmlns="http://www.w3.org/2000/svg"' not in svg_content and "xmlns='http://www.w3.org/2000/svg'" not in svg_content:
-            svg_content = svg_content.replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ')
-
-        encoded = base64.b64encode(svg_content.encode('utf-8')).decode('utf-8')
-        return f"data:image/svg+xml;base64,{encoded}"
-
+        encoded_prompt = urllib.parse.quote(enhanced_prompt)
+        
+        # Pollinations URL (Direct Image Endpoint)
+        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&seed={seed}&model=flux&nologo=true"
+        
+        # We return the URL path expected by the frontend directly because Python's Requests 
+        # is frequently blocked by Pollinations' Cloudflare with a 530 error, but standard 
+        # web browsers (React frontend) easily bypass it using normal image attributes.
+        return image_url
+        
     except Exception as e:
-        print(f"Fallback Generative SVG Failed: {e}")
-        # Absolute last resort fallback colored shape
-        fallback_svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient></defs><rect width="512" height="512" rx="128" fill="url(#g)"/><circle cx="256" cy="256" r="100" fill="#ffffff" opacity="0.8"/></svg>'
-        encoded = base64.b64encode(fallback_svg.encode('utf-8')).decode('utf-8')
-        return f"data:image/svg+xml;base64,{encoded}"
+        print(f"Image Download failed: {e}")
+        return f"https://image.pollinations.ai/prompt/{urllib.parse.quote(prompt + ' minimalist logo')}?width=1024&height=1024&nologo=true"
 
 def generate_multiple_logos(request: LogoRequest) -> list[dict]:
     """Generates 5 distinct logo designs in parallel."""
