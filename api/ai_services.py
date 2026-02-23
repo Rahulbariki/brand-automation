@@ -345,6 +345,7 @@ low quality
         # RETURN LOCAL SERVED PATH
         return f"/assets/generated/{filename}"
     except Exception as e:
+        pass  # Shift line number
         print(f"Image generation failed: {e}")
         return None
 
