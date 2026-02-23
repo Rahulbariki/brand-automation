@@ -252,13 +252,46 @@ def generate_tagline(request: TaglineRequest) -> str:
     )
     return chat_completion.choices[0].message.content.strip().replace('"', '')
 
-# --- Activity 2.10 (Part 2): Logo Image Generation (SDXL) ---
+# --- Activity 2.10 (Part 2): Logo Image Generation ---
 def generate_logo_image(prompt: str) -> str:
-    """Generates a high-fidelity logo image using SDXL."""
+    """Generates a high-fidelity logo image using Pollinations AI (Flux based) to guarantee masterpiece quality."""
+    import base64
+    import time
+    import urllib.parse
+    
+    # Enhance the prompt for modern, high-end logo generation
+    enhanced_prompt = f"Professional global brand logo, {prompt}. Masterpiece, isolated on pure white background, minimal, clean edges, award winning logo design, vector art style"
+    encoded_prompt = urllib.parse.quote(enhanced_prompt)
+    
+    # Pollinations AI offers incredible free AI image generation using optimal models like FLUX.
+    # Seed based on prompt hash to keep logos consistent for the same inputs, or random to vary.
+    seed = hash(prompt) % 100000
+    base_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&nologo=true&seed={seed}&model=flux"
+    
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            # First attempt: Try Pollinations AI - very fast, no API key needed
+            response = requests.get(base_url, timeout=45)
+            response.raise_for_status()
+            
+            image_bytes = response.content
+            encoded = base64.b64encode(image_bytes).decode('utf-8')
+            return f"data:image/jpeg;base64,{encoded}"
+            
+        except Exception as e:
+            print(f"Pollinations AI Generation Failed (Attempt {attempt+1}): {e}")
+            time.sleep(2)
+            
+    # If Pollinations fails completely, fallback to huggingface SDXL
+    print("Falling back to HuggingFace SDXL...")
+    return _fallback_sdxl_logo(prompt)
+
+def _fallback_sdxl_logo(prompt: str) -> str:
+    """Fallback generator that creates a high-fidelity logo image using Hugging Face SDXL."""
     import base64
     import time
     
-    # Using a specialized logo-tuning or keeping SDXL with better params
     SDXL_MODEL = "stabilityai/stable-diffusion-xl-base-1.0"
     SDXL_URL = f"https://api-inference.huggingface.co/models/{SDXL_MODEL}"
     
@@ -273,13 +306,13 @@ def generate_logo_image(prompt: str) -> str:
         }
     }
     
-    max_retries = 3
+    max_retries = 2
     for attempt in range(max_retries):
         try:
             response = requests.post(SDXL_URL, headers=HF_HEADERS, json=payload, timeout=60)
             
             if response.status_code == 503:
-                time.sleep(20)
+                time.sleep(10)
                 continue
                 
             response.raise_for_status()
@@ -289,22 +322,28 @@ def generate_logo_image(prompt: str) -> str:
             
         except Exception as e:
             print(f"SDXL Generation Failed (Attempt {attempt+1}): {e}")
-            if attempt == max_retries - 1:
-                return _fallback_svg_logo(prompt)
             time.sleep(3)
     
-    return _fallback_svg_logo(prompt)
+    # Absolute last resort - simple placeholder
+    return "https://via.placeholder.com/1024/000000/FFFFFF?text=Logo+Generation+Overloaded"
 
 def generate_multiple_logos(request: LogoRequest) -> list[dict]:
     """Generates 5 distinct logo designs in parallel."""
     import concurrent.futures
+    import time
     
     prompts = generate_logo_prompts(request)
     results = []
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         # Submit all generation tasks
-        future_to_prompt = {executor.submit(generate_logo_image, prompt): prompt for prompt in prompts}
+        # Apply a tiny delay to stagger API requests to free endpoints
+        futures = []
+        for i, prompt in enumerate(prompts):
+            time.sleep(i * 0.5)
+            futures.append(executor.submit(generate_logo_image, prompt))
+            
+        future_to_prompt = {futures[i]: prompts[i] for i in range(len(prompts))}
         
         for future in concurrent.futures.as_completed(future_to_prompt):
             prompt = future_to_prompt[future]
@@ -315,112 +354,6 @@ def generate_multiple_logos(request: LogoRequest) -> list[dict]:
                 print(f"Error in parallel logo generation: {e}")
                 
     return results
-
-def _fallback_svg_logo(prompt: str) -> str:
-    """Fallback generator that creates a clean SVG if SDXL fails."""
-    import base64
-    svg_prompt = f"""
-You are an elite brand logo designer.
-
-Generate a modern, professional startup-style logo for:
-{prompt}
-
-STRICT RULES:
-each logo should be unique and creative
-every logo should be different from each other
-you can use any shape or symbol which is perfect for the logo
-use relevant morphisms like glassmorphism, neon lighting, tech startup dashboard style, etc.
-Return ONLY valid raw SVG code.
-Do NOT include markdown.
-Do NOT include explanations.
-Do NOT include comments.
-Modern SaaS.
-Glassmorphism.
-Soft gradients.
-Floating depth.
-Neon lighting.
-Tech startup dashboard style.
-
-Design should feel like:
-worlds best logo designer
-product logo designer and brand logo designer
-logo designer for startup
-logo designer for saas company
-logo designer for tech company
-logo designer for business
-logo designer for agency
-logo designer for company
-
-VISUAL EFFECTS REQUIRED:
-any effects which is perfect for the logo
-• Smooth gradient fills
-• Soft outer glow
-• Inner shadow depth
-• Subtle drop shadow
-• Light reflection effect
-• Floating layered shapes
-• Depth illusion
-• Glass-like transparency
-
-SVG MUST USE:
- any effects which is perfect for the logo
-<linearGradient>
-<radialGradient>
-<filter>
-<feGaussianBlur>
-<feDropShadow>
-
-ICON RULES:
- 
-• what ever is perfect for the logo
-• Premium dashboard feel
-
-BACKGROUND:
-Transparent  or white or black or gray.
- any background which is perfect for the logo
-SHAPE IDEAS:
-
-everything should be realistic and premium
-
-use various shapes and images or symbols which is perfect for the logo
-
-IMPORTANT:
-Return ONLY raw SVG code.
-
-SVG MUST START WITH:
-
-
-Logo must be:
- 
-• Realistic
-• more relavant to the user given prompt
-
-Typography (if used):
-
-• Use advanced enhanced system sans-serif
-• use various fonts which is perfect for the logo
-
-Output MUST start with:
-
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-
-And end with:
-
-</svg>
-"""
-    try:
-        chat_completion = groq_client.chat.completions.create(
-            messages=[{"role": "user", "content": svg_prompt}],
-            model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-        )
-        svg_content = chat_completion.choices[0].message.content.strip()
-        # Clean up SVG
-        if "```" in svg_content:
-            svg_content = svg_content.split("```")[1].replace("svg", "", 1).strip()
-        encoded = base64.b64encode(svg_content.encode('utf-8')).decode('utf-8')
-        return f"data:image/svg+xml;base64,{encoded}"
-    except:
-        return "https://via.placeholder.com/500?text=Logo+Generation+Error"
 
 # --- Startup Tools ---
 def generate_pitch(request) -> str:
