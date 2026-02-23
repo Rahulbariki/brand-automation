@@ -198,49 +198,47 @@ def chat_with_ai(request: ChatRequest) -> str:
 
 # --- Activity 2.10: Logo Prompt Generation ---
 def generate_logo_prompts(request: LogoRequest) -> list[str]:
-    """Generates 5 distinct, sophisticated, agency-grade logo prompts."""
+    STYLE_MAP = {
+        "REAL WORLD CORPORATE":
+        "professional corporate brand logo mockup, printed on textured paper, soft studio lighting, minimal depth shadow",
+
+        "3D GLASSMORPHISM":
+        "glass transparent 3D logo mockup, floating acrylic logo, cinematic reflections, blurred glass surface",
+
+        "MINIMALIST ICONIC":
+        "premium matte logo mockup, debossed on white card, clean luxury brand identity presentation",
+
+        "ARCHITECTURE / TECH":
+        "geometric tech brand logo mockup engraved on metallic plate, industrial lighting",
+
+        "LUXURY / ELEGANT":
+        "gold foil luxury logo mockup, embossed on black paper, cinematic lighting, premium texture",
+
+        "MODERN VECTOR":
+        "modern brand logo mockup printed on minimal stationery with soft shadow"
+    }
+
+    base_style = STYLE_MAP.get(request.style, STYLE_MAP["LUXURY / ELEGANT"])
+
     prompt = f"""
-    You are a world-class senior brand identity designer. Create 5 MASTERPIECE logo generation prompts for:
+    {base_style}
+
     Brand Name: {request.brand_name}
     Industry: {request.industry}
-    Requested Global Style: {request.style}
-    Core Keywords: {', '.join(request.keywords)}
-    
-    Guidelines for the engine:
-    - Avoid anything that looks like a "child's drawing", "doodle", or "amateur sketch".
-    - Enforce "Golden Ratio", "symmetrical", "mathematical precision", and "high-end corporate identity".
-    - Use sophisticated lighting: "volumetric lighting", "soft studio shadows", "rim lighting".
-    - For {request.brand_name}, the logo should feel "expensive", "authoritative", and "stunning".
-    
-    Each prompt should represent a unique, world-class direction:
-    1. A "Real World" Corporate Identity: High-fidelity, symmetrical, precisely balanced, suitable for global tech or finance giants.
-    2. A Sophisticated 3D Glassmorphism: Clear transparency, frosted textures, depth-map shadows, photorealistic unreal engine 5 render.
-    3. A Premium Matte/Metallic Physical Mark: Embossed or debossed feel, realistic material texture (brushed aluminum or matte soft-touch), studio rim lighting.
-    4. A Modern Architectural Vector: Focus on geometric perfection, negative space mastery, timeless aesthetic.
-    5. A Luxury Physical Emblem: Professional crest with high-detail fine lines, suitable for premium hardware or high-end fashion.
-    
-    The prompts MUST include:
-    "Professional high-end [style] logo for [brand name], [Industry]. [Core elements]. Cinematic global illumination, 8k resolution, photorealistic material rendering, 3D depth, sharp focus, symmetrical composition, isolated on centered white background, award-winning studio quality, raytraced shadows."
-    
-    Return ONLY a JSON list of 5 strings.
+
+    ultra realistic logo mockup
+    logo engraved on business card
+    soft studio lighting
+    cinematic shadow
+    paper texture
+    embossed metallic finish
+    centered composition
+    professional branding mockup
+    dribbble behance style
+    8k quality
     """
-    
-    try:
-        chat_completion = groq_client.chat.completions.create(
-            messages=[{"role": "user", "content": prompt}],
-            model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-            temperature=0.7,
-            response_format={"type": "json_object"}
-        )
-        data = json.loads(chat_completion.choices[0].message.content)
-        if isinstance(data, list): return data[:5]
-        if isinstance(data, dict):
-            for val in data.values():
-                if isinstance(val, list): return val[:5]
-        return [f"Hyper-realistic professional {request.style} logo for {request.brand_name}, agency quality" for _ in range(5)]
-    except Exception as e:
-        print(f"Error generating logo prompts: {e}")
-        return [f"A hyper-realistic {request.style} professional logo for {request.brand_name}, {request.industry}, 8k, sharp edges, white background" for _ in range(5)]
+
+    return [prompt for _ in range(5)]
 
 # --- Legacy Helper ---
 def generate_tagline(request: TaglineRequest) -> str:
@@ -263,23 +261,35 @@ def generate_logo_image(prompt: str) -> str:
     import os
 
     enhanced_mockup_prompt = f"""
-    Professional luxury brand logo mockup for {prompt}
-    3D embossed metallic logo
-    gold foil or matte black finish
-    realistic paper texture
-    soft studio lighting
-    cinematic shadow
-    premium typography
-    logo engraved on business card
-    logo printed on textured paper
-    brand identity mockup
-    ultra realistic render
-    center composition
-    8k quality
-    dribbble behance style
-    """
+Professional luxury brand logo mockup for {prompt}
+
+3D embossed metallic logo
+gold foil or matte black finish
+realistic paper texture
+soft studio lighting
+cinematic shadow
+premium typography
+logo engraved on business card
+logo printed on textured paper
+brand identity mockup
+ultra realistic render
+center composition
+8k quality
+dribbble behance style
+"""
     
-    negative_prompt = "cartoon, icon, favicon, flat vector, circle logo, abstract blob, emoji, clipart, watermark, low quality"
+    negative_prompt = """
+cartoon
+icon
+favicon
+flat vector
+circle logo
+abstract blob
+emoji
+clipart
+watermark
+low quality
+"""
 
     # 1. Hugging Face (Primary attempt if token is available)
     hf_token = os.getenv("HF_API_KEY")
