@@ -524,7 +524,7 @@ export default function Dashboard() {
                                         >
                                             <GlassCard tilt={false} className="!p-2 hover:border-[var(--primary)] transition-all cursor-pointer overflow-hidden">
                                                 <div className="aspect-square bg-white rounded-lg overflow-hidden flex items-center justify-center relative">
-                                                    <img src={logo.image_url} alt={`Logo ${i + 1}`} className="w-full h-full object-contain p-2" />
+                                                    <img src={logo.image_url} crossOrigin="anonymous" alt={`Logo ${i + 1}`} className="w-full h-full object-contain p-2" />
                                                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3 p-4">
                                                         <a href={logo.image_url} download={`${brand || 'logo'}_v${i + 1}.png`} onClick={(e) => e.stopPropagation()} className="w-full">
                                                             <button className="w-full py-2 px-4 bg-[var(--primary)] text-white rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:scale-105 transition-transform shadow-lg">

@@ -1,0 +1,34 @@
+<html><body><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3498db" stop-opacity="1" />
+      <stop offset="100%" stop-color="#2ecc71" stop-opacity="1" />
+    </linearGradient>
+    <radialGradient id="rad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="10" />
+    </filter>
+    <filter id="drop">
+      <feGaussianBlur stdDeviation="5" />
+      <feOffset dx="5" dy="5" />
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="5" dy="5" stdDeviation="5" flood-color="#000000" flood-opacity="0.2" />
+    </filter>
+  </defs>
+  <g>
+    <!-- LAYER 1: Dark abstract base shape -->
+    <ellipse cx="256" cy="256" rx="200" ry="200" fill="#2c3e50" />
+    <!-- LAYER 2: Gradient lighting overlay -->
+    <ellipse cx="256" cy="256" rx="200" ry="200" fill="url(#grad)" opacity="0.5" />
+    <!-- LAYER 3: Soft glow -->
+    <ellipse cx="256" cy="256" rx="200" ry="200" fill="#2ecc71" filter="url(#glow)" opacity="0.5" />
+    <!-- LAYER 4: Floating drop shadow -->
+    <ellipse cx="256" cy="256" rx="200" ry="200" fill="#000000" filter="url(#shadow)" opacity="0.2" />
+    <!-- LAYER 5: Glass highlight -->
+    <ellipse cx="256" cy="256" rx="150" ry="150" fill="url(#rad)" />
+  </g>
+</svg></body></html>
