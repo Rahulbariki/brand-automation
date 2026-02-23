@@ -272,6 +272,7 @@ CRITICAL RULES:
 6. Do NOT include any accompanying text or brand name typography. Symbol ONLY.
 7. Use <defs> with <linearGradient> to make it look premium.
 8. Set viewBox="0 0 512 512" and width="100%" height="100%".
+9. MUST include the xmlns attribute: xmlns="http://www.w3.org/2000/svg"
 
 Generate the masterpiece SVG now.
 """
@@ -292,14 +293,19 @@ Generate the masterpiece SVG now.
         if "<svg" not in content:
             raise ValueError("No SVG found in response")
             
-        content = content.replace('\n', '')
+        content = content.replace('\n', ' ')
+        
+        # Browsers will not render SVGs in <img> tags without this xmlns!
+        if 'xmlns="http://www.w3.org/2000/svg"' not in content and "xmlns='http://www.w3.org/2000/svg'" not in content:
+            content = content.replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ')
+            
         encoded = base64.b64encode(content.encode('utf-8')).decode('utf-8')
         return f"data:image/svg+xml;base64,{encoded}"
         
     except Exception as e:
         print(f"Generative SVG Failed: {e}")
         # Absolute last resort fallback colored shape
-        fallback_svg = '<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FF512F"/><stop offset="100%" stop-color="#DD2476"/></linearGradient></defs><circle cx="256" cy="256" r="200" fill="url(#g)"/></svg>'
+        fallback_svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FF512F"/><stop offset="100%" stop-color="#DD2476"/></linearGradient></defs><circle cx="256" cy="256" r="200" fill="url(#g)"/></svg>'
         encoded = base64.b64encode(fallback_svg.encode('utf-8')).decode('utf-8')
         return f"data:image/svg+xml;base64,{encoded}"
 
