@@ -254,76 +254,67 @@ def generate_tagline(request: TaglineRequest) -> str:
 
 # --- Activity 2.10 (Part 2): Logo Image Generation ---
 def generate_logo_image(prompt: str) -> str:
-    """Generates a high-fidelity logo image using Pollinations AI (Flux based) to guarantee masterpiece quality."""
+    """Generates a high-fidelity logo image using Hugging Face Serverless Inference (FLUX)."""
     import base64
     import time
-    import urllib.parse
     
     # Enhance the prompt for modern, high-end logo generation
     enhanced_prompt = f"Professional global brand logo, {prompt}. Masterpiece, isolated on pure white background, minimal, clean edges, award winning logo design, vector art style"
-    encoded_prompt = urllib.parse.quote(enhanced_prompt)
     
-    # Pollinations AI offers incredible free AI image generation using optimal models like FLUX.
-    # Seed based on prompt hash to keep logos consistent for the same inputs, or random to vary.
-    seed = hash(prompt) % 100000
-    base_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&nologo=true&seed={seed}&model=flux"
-    
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            # First attempt: Try Pollinations AI - very fast, no API key needed
-            response = requests.get(base_url, timeout=45)
-            response.raise_for_status()
-            
-            image_bytes = response.content
-            encoded = base64.b64encode(image_bytes).decode('utf-8')
-            return f"data:image/jpeg;base64,{encoded}"
-            
-        except Exception as e:
-            print(f"Pollinations AI Generation Failed (Attempt {attempt+1}): {e}")
-            time.sleep(2)
-            
-    # If Pollinations fails completely, fallback to huggingface SDXL
-    print("Falling back to HuggingFace SDXL...")
-    return _fallback_sdxl_logo(prompt)
-
-def _fallback_sdxl_logo(prompt: str) -> str:
-    """Fallback generator that creates a high-fidelity logo image using Hugging Face SDXL."""
-    import base64
-    import time
-    
-    SDXL_MODEL = "stabilityai/stable-diffusion-xl-base-1.0"
-    SDXL_URL = f"https://api-inference.huggingface.co/models/{SDXL_MODEL}"
+    # Using the new Hugging Face Router Endpoint with FLUX
+    MODEL = "black-forest-labs/FLUX.1-schnell"
+    URL = f"https://router.huggingface.co/hf-inference/models/{MODEL}"
     
     payload = {
-        "inputs": prompt,
+        "inputs": enhanced_prompt,
         "parameters": {
-            "negative_prompt": "child drawing, crayon, doodle, messy, sketch, amateur, low quality, blurry, text, font, letters, numbers, hand drawn, watermark, signature, ugly, distorted, anatomy, paper, frame",
-            "num_inference_steps": 45,
-            "guidance_scale": 9.0,
+            "num_inference_steps": 4, # FLUX.1-schnell requires fewer steps
+            "guidance_scale": 7.5,
             "width": 1024,
             "height": 1024
         }
     }
     
-    max_retries = 2
+    max_retries = 4
     for attempt in range(max_retries):
         try:
-            response = requests.post(SDXL_URL, headers=HF_HEADERS, json=payload, timeout=60)
+            # First attempt: Try Hugging Face FLUX
+            response = requests.post(URL, headers=HF_HEADERS, json=payload, timeout=60)
             
+            # If model is loading, wait and retry
             if response.status_code == 503:
-                time.sleep(10)
+                try:
+                    err = response.json()
+                    wait_time = err.get("estimated_time", 15)
+                except:
+                    wait_time = 15
+                print(f"HF Model loading, waiting {wait_time}s...")
+                time.sleep(wait_time)
                 continue
                 
             response.raise_for_status()
+            
+            # Ensure the response is actually an image and not a JSON success response or error page
+            content_type = response.headers.get('content-type', '')
+            if not content_type.startswith('image/'):
+                print(f"Non-image response from HF: {response.text[:100]}")
+                time.sleep(3)
+                continue
+                
             image_bytes = response.content
             encoded = base64.b64encode(image_bytes).decode('utf-8')
-            return f"data:image/png;base64,{encoded}"
+            return f"data:{content_type};base64,{encoded}"
+            
+        except requests.exceptions.HTTPError as e:
+            print(f"HF Generation HTTP Failed (Attempt {attempt+1}): {e}")
+            if hasattr(e.response, "text"):
+                print("HF Error Detail:", e.response.text[:200])
+            time.sleep(3)
             
         except Exception as e:
-            print(f"SDXL Generation Failed (Attempt {attempt+1}): {e}")
+            print(f"Generation Failed (Attempt {attempt+1}): {e}")
             time.sleep(3)
-    
+            
     # Absolute last resort - simple placeholder
     return "https://via.placeholder.com/1024/000000/FFFFFF?text=Logo+Generation+Overloaded"
 
