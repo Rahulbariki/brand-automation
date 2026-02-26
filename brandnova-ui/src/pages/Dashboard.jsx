@@ -514,35 +514,65 @@ export default function Dashboard() {
                         {result?.key === "logo" && !result.error && result.data.logos && (
                             <div className="space-y-4">
                                 <div className="grid grid-cols-2 gap-3">
-                                    {result.data.logos.map((logo, i) => (
-                                        <motion.div
-                                            key={i}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: i * 0.1 }}
-                                            className="group relative"
-                                        >
-                                            <GlassCard tilt={false} className="!p-2 hover:border-[var(--primary)] transition-all cursor-pointer overflow-hidden">
-                                                <div className="aspect-square bg-white rounded-lg overflow-hidden flex items-center justify-center relative">
-                                                    <img src={logo.image_url} alt={`Logo ${i + 1}`} className="w-full h-full object-contain p-2" />
-                                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3 p-4">
-                                                        <a href={logo.image_url} download={`${brand || 'logo'}_v${i + 1}.png`} onClick={(e) => e.stopPropagation()} className="w-full">
-                                                            <button className="w-full py-2 px-4 bg-[var(--primary)] text-white rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:scale-105 transition-transform shadow-lg">
-                                                                <Download size={14} /> Download HD
+                                    {result.data.logos.map((logo, i) => {
+                                        const handleDownload = async (url, filename) => {
+                                            try {
+                                                const img = new Image();
+                                                img.crossOrigin = "anonymous";
+                                                img.onload = () => {
+                                                    const canvas = document.createElement("canvas");
+                                                    canvas.width = img.width || 1024;
+                                                    canvas.height = img.height || 1024;
+                                                    const ctx = canvas.getContext("2d");
+                                                    ctx.fillStyle = "white"; // White background for transparent SVGs
+                                                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                                                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                                    const pngUrl = canvas.toDataURL("image/png");
+                                                    const downloadLink = document.createElement("a");
+                                                    downloadLink.href = pngUrl;
+                                                    downloadLink.download = filename;
+                                                    document.body.appendChild(downloadLink);
+                                                    downloadLink.click();
+                                                    document.body.removeChild(downloadLink);
+                                                };
+                                                img.src = url;
+                                            } catch (err) {
+                                                console.error("Download failed", err);
+                                                window.open(url, '_blank');
+                                            }
+                                        };
+
+                                        return (
+                                            <motion.div
+                                                key={i}
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: i * 0.1 }}
+                                                className="group relative"
+                                            >
+                                                <GlassCard tilt={false} className="!p-2 hover:border-[var(--primary)] transition-all cursor-pointer overflow-hidden">
+                                                    <div className="aspect-square bg-white rounded-lg overflow-hidden flex items-center justify-center relative">
+                                                        <img src={logo.image_url} alt={`Logo ${i + 1}`} className="w-full h-full object-contain p-2" />
+                                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3 p-4">
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleDownload(logo.image_url, `${brand || 'logo'}_v${i + 1}.png`); }}
+                                                                className="w-full py-2 px-4 bg-[var(--primary)] text-white rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:scale-105 transition-transform shadow-lg"
+                                                            >
+                                                                <Download size={14} /> Download PNG
                                                             </button>
-                                                        </a>
-                                                        <button
-                                                            onClick={() => window.open(logo.image_url, '_blank')}
-                                                            className="w-full py-2 px-4 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white/20 transition-all"
-                                                        >
-                                                            <Sparkles size={14} /> Full Preview
-                                                        </button>
+                                                            <button
+                                                                onClick={() => window.open(logo.image_url, '_blank')}
+                                                                className="w-full py-2 px-4 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white/20 transition-all"
+                                                            >
+                                                                <Sparkles size={14} /> Full Preview
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <p className="text-[9px] mt-1.5 font-bold uppercase text-text-muted text-center">Concept {i + 1}</p>
-                                            </GlassCard>
-                                        </motion.div>
-                                    ))}
+                                                    <p className="text-[9px] mt-1.5 font-bold uppercase text-text-muted text-center">Concept {i + 1}</p>
+                                                </GlassCard>
+                                            </motion.div>
+                                        );
+                                    })}
                                 </div>
                                 <div className="p-4 bg-[var(--surface)] rounded-xl border border-[var(--card-border)] text-center">
                                     <p className="text-[10px] text-text-muted italic leading-relaxed font-medium">Click any concept to download high-resolution PNG.</p>
