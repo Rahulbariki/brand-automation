@@ -287,9 +287,9 @@ low quality
     # 1. Hugging Face (Primary attempt if token is available)
     if HF_API_KEY:
         try:
-            print(f"Generating image with Hugging Face (SDXL Refiner) for {prompt}...")
-            # Using the refiner model as requested for superior photo quality
-            API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-refiner-1.0"
+            print(f"Generating image with Hugging Face (SDXL) for {prompt[:50]}...")
+            # Use the newer router endpoint as the old one is deprecated
+            API_URL = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0"
             
             payload = {
                 "inputs": enhanced_mockup_prompt,
@@ -299,7 +299,7 @@ low quality
             
             if response.status_code == 200:
                 import base64
-                print("HF Generated Successfully. Encoding to base64 for safe Vercel transmission...")
+                print("HF Generated Successfully. Encoding to base64...")
                 encoded = base64.b64encode(response.content).decode('utf-8')
                 return f"data:image/png;base64,{encoded}"
             else:
@@ -309,34 +309,25 @@ low quality
 
     # 2. Pollinations.ai (Backup - Currently Highly Reliable for Frontend Loading)
     try:
-        print("Generating with Pollinations...")
+        print("Generating with Pollinations (Direct Mode)...")
 
+        # Simplified prompt for URL safety and speed
+        # Remove special characters that might break the URL
+        import re
+        clean_text = re.sub(r'[^a-zA-Z0-9\s]', '', prompt)
+        short_prompt = " ".join(clean_text.split()[:20]) # Limit to 20 words
+        
         seed = random.randint(1, 100000)
-        encoded_prompt = urllib.parse.quote(enhanced_mockup_prompt.strip().replace('\n', ' '))
+        # Using Flux model on Pollinations for better logo quality
+        poll_url = f"https://image.pollinations.ai/prompt/luxury%20logo%20mockup%20for%20{urllib.parse.quote(short_prompt)}?width=1024&height=1024&seed={seed}&model=flux&nologo=true"
 
-        poll_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&seed={seed}&nologo=true"
-
-        # Try to save to Supabase, but don't fail if it doesn't work (fall back to direct URL)
-        try:
-            print("Attempting upload to Supabase Storage...")
-            response = requests.get(poll_url, timeout=60)
-            if response.status_code == 200:
-                file_name = f"{uuid.uuid4()}.png"
-                supabase.storage.from_("brand-logos").upload(
-                    path=file_name,
-                    file=response.content,
-                    file_options={"content-type": "image/png"}
-                )
-                public_url = supabase.storage.from_("brand-logos").get_public_url(file_name)
-                print(f"Direct link secured via Supabase: {public_url}")
-                return public_url
-        except Exception as storage_err:
-            print(f"Supabase Storage Fallback: Using direct Pollinations link due to: {storage_err}")
-            
+        print(f"Returning Pollinations URL: {poll_url[:100]}...")
         return poll_url
+        
     except Exception as e:
         print(f"All logo generation methods failed: {e}")
         return None
+
 
 
 def generate_multiple_logos(request: LogoRequest) -> list[dict]:
