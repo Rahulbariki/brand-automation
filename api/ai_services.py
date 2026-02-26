@@ -411,52 +411,79 @@ def generate_logo_image(prompt: str, concept_id: int = 0) -> Optional[str]:
     return generate_svg_logo(prompt, concept_id)
 
 
+def _get_ai_palettes(brand_name: str, industry: str, style: str) -> list:
+    """Uses Groq to generate 5 unique color palettes tailored to the brand."""
+    try:
+        prompt = f"""Generate 5 unique color palettes for a brand logo.
+Brand: {brand_name}
+Industry: {industry}
+Style: {style}
+
+Each palette must have 3 hex colors: primary, secondary, accent.
+Make each palette VERY different from the others.
+Palette 1: Corporate/elegant
+Palette 2: Modern/minimal
+Palette 3: Luxury/premium
+Palette 4: Creative/vibrant
+Palette 5: Vintage/classic
+
+Return ONLY a JSON array like:
+[{{"c1":"#hex","c2":"#hex","ac":"#hex"}},{{"c1":"#hex","c2":"#hex","ac":"#hex"}},...] """
+
+        chat = groq_client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.3-70b-versatile",
+            max_tokens=500,
+            temperature=0.9
+        )
+        content = chat.choices[0].message.content.strip()
+        result = extract_json(content)
+        if isinstance(result, list) and len(result) >= 5:
+            # Validate each palette has the required keys
+            valid = []
+            for p in result[:5]:
+                if isinstance(p, dict) and "c1" in p and "c2" in p and "ac" in p:
+                    valid.append(p)
+            if len(valid) >= 5:
+                return valid
+    except Exception as e:
+        print(f"AI palette generation failed: {e}")
+    
+    # Fallback: use random selection from built-in palettes
+    import copy
+    shuffled = copy.deepcopy(LOGO_PALETTES)
+    random.shuffle(shuffled)
+    return shuffled[:5]
+
 def generate_multiple_logos(request: LogoRequest) -> list[dict]:
-    """Generates 5 distinct logo concepts using Pollinations AI image generation."""
+    """Generates 5 unique, beautiful logo designs with AI-picked colors."""
     brand_name = request.brand_name
     industry = getattr(request, 'industry', 'business')
     style = getattr(request, 'style', 'MODERN VECTOR')
 
-    # 5 distinct visual concepts with detailed prompts
-    CONCEPTS = [
-        {
-            "name": "Corporate Elegant",
-            "prompt": f"professional corporate brand logo design for '{brand_name}', vintage ornamental border, serif typography, cream and navy color scheme, gold accents, luxury emblem style, white background, high quality, 4k"
-        },
-        {
-            "name": "Modern Minimal",
-            "prompt": f"modern minimalist brand logo for '{brand_name}', clean geometric shapes, flat design, bold sans-serif font, professional branding mockup, centered composition, white background, high quality"
-        },
-        {
-            "name": "Luxury Premium",
-            "prompt": f"luxury premium brand logo for '{brand_name}', gold foil on dark background, elegant calligraphy, embossed effect, high-end fashion brand style, sophisticated aesthetic, 4k quality"
-        },
-        {
-            "name": "Creative Abstract",
-            "prompt": f"creative abstract brand logo for '{brand_name}', colorful gradient shapes, modern art style, dynamic composition, startup tech brand identity, professional design, white background"
-        },
-        {
-            "name": "Classic Vintage",
-            "prompt": f"vintage retro brand logo for '{brand_name}', hand-drawn ornamental details, classic serif typography, badge style emblem, weathered texture, artisan craft brand, warm tones, 4k"
-        },
-    ]
-
+    # Step 1: Get AI-customized color palettes for this specific brand
+    palettes = _get_ai_palettes(brand_name, industry, style)
+    
+    style_names = ["Iconic Brandmark", "Typographic Wordmark", "Monogram Shield", "Abstract Creative", "Luxury Emblem"]
     results = []
-    for i, concept in enumerate(CONCEPTS):
-        seed = random.randint(1, 99999)
-        encoded_prompt = urllib.parse.quote(concept["prompt"])
-        # Pollinations URL — browser loads it directly as an <img> src
-        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&seed={seed}&nologo=true"
-        # SVG fallback in case Pollinations is down
-        svg_fallback = _build_premium_svg(brand_name, i)
 
-        results.append({
-            "image_url": image_url,
-            "fallback_url": svg_fallback,
-            "prompt": concept["prompt"],
-            "concept_name": concept["name"],
-            "concept_id": i
-        })
+    for i in range(5):
+        try:
+            fn = TEMPLATE_FNS[i % len(TEMPLATE_FNS)]
+            pal = palettes[i] if i < len(palettes) else LOGO_PALETTES[i % len(LOGO_PALETTES)]
+            
+            svg = fn(brand_name, pal["c1"], pal["c2"], pal["ac"])
+            encoded = base64.b64encode(svg.encode('utf-8')).decode('utf-8')
+            img_url = f"data:image/svg+xml;base64,{encoded}"
+            
+            results.append({
+                "image_url": img_url,
+                "prompt": f"{style_names[i]} logo for {brand_name} ({industry})",
+                "concept_name": style_names[i],
+                "concept_id": i
+            })
+        except Exception as e:
+            print(f"Generation error in concept {i}: {e}")
 
     return results
 

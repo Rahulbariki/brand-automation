@@ -547,23 +547,11 @@ export default function Dashboard() {
                                                 className="group relative"
                                             >
                                                 <GlassCard tilt={false} className="!p-2 hover:border-[var(--primary)] transition-all cursor-pointer overflow-hidden">
-                                                    <div className="aspect-square bg-gray-100 dark:bg-[#111] rounded-lg overflow-hidden flex items-center justify-center relative">
-                                                        {/* Loading spinner */}
-                                                        <div className="absolute inset-0 flex items-center justify-center z-0">
-                                                            <Loader2 size={24} className="animate-spin text-gray-400" />
-                                                        </div>
+                                                    <div className="aspect-square bg-[#0f0f1e] rounded-lg overflow-hidden flex items-center justify-center relative">
                                                         <img
                                                             src={logo.image_url}
                                                             alt={logo.concept_name || `Logo ${i + 1}`}
-                                                            className="w-full h-full object-contain relative z-10"
-                                                            onLoad={(e) => { e.target.style.opacity = '1'; }}
-                                                            onError={(e) => {
-                                                                console.log(`Image failed for concept ${i + 1}, using SVG fallback`);
-                                                                if (logo.fallback_url && e.target.src !== logo.fallback_url) {
-                                                                    e.target.src = logo.fallback_url;
-                                                                }
-                                                            }}
-                                                            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
+                                                            className="w-full h-full object-contain"
                                                         />
                                                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3 p-4 z-20">
                                                             <button
