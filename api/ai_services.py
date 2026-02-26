@@ -400,70 +400,9 @@ def _build_premium_svg(brand_name: str, concept_id: int) -> str:
     return f"data:image/svg+xml;base64,{encoded}"
 
 def generate_svg_logo(prompt: str, concept_id: int = 0) -> Optional[str]:
-    """Generates a professional brand logo. Tries Groq AI first, falls back to premium templates."""
+    """Generates a professional brand logo using premium handcrafted templates."""
     brand_name = prompt.split(' ')[0] if ' ' in prompt else prompt
-
-    # 1) Try Groq AI for a unique, complex SVG
-    try:
-        styles = [
-            "iconic geometric brandmark with a bold abstract symbol above the name",
-            "elegant typographic wordmark with decorative lines and serif font",
-            "monogram letter inside a hexagonal shield frame with gradient fill",
-            "overlapping abstract circles with gradient fills and transparency",
-            "luxury emblem with ornamental circular border and gold accents",
-        ]
-        style = styles[concept_id % len(styles)]
-
-        print(f"Generating AI Logo Concept {concept_id+1} for: {brand_name}...")
-
-        system_prompt = (
-            "You are an SVG logo designer. Output ONLY raw <svg>...</svg> code. "
-            "No markdown, no explanation, no comments outside the SVG."
-        )
-
-        user_prompt = f'''Create a {style} for brand "{brand_name}".
-
-Requirements:
-- viewBox="0 0 512 512"
-- Dark background: <rect width="512" height="512" rx="40" fill="#0a0a1a"/>
-- Use <linearGradient> with vibrant modern colors
-- Include <text> element showing "{brand_name.upper()}" in white, font-size 44, text-anchor middle, centered at x=256
-- Use <filter> with feDropShadow for depth
-- Multiple layered geometric shapes for visual richness
-- At least 12 SVG elements total
-- Professional brand identity quality
-
-Output ONLY the raw SVG code starting with <svg and ending with </svg>:'''
-
-        chat_completion = groq_client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            model="llama-3.3-70b-versatile",
-            max_tokens=4000,
-            temperature=0.7
-        )
-        svg_code = chat_completion.choices[0].message.content.strip()
-
-        if "<svg" in svg_code.lower():
-            match = re.search(r'<svg.*?</svg>', svg_code, re.DOTALL | re.IGNORECASE)
-            if match:
-                svg_code = match.group(0)
-                svg_code = svg_code.replace("```svg", "").replace("```xml", "").replace("```", "")
-
-                # Only use if the SVG is rich enough (>500 chars = has gradients/shapes)
-                if len(svg_code) > 500:
-                    encoded = base64.b64encode(svg_code.encode('utf-8')).decode('utf-8')
-                    print(f"  AI SVG OK ({len(svg_code)} chars)")
-                    return f"data:image/svg+xml;base64,{encoded}"
-                else:
-                    print(f"  AI SVG too simple ({len(svg_code)} chars), using template.")
-    except Exception as e:
-        print(f"  Groq SVG failed: {e}")
-
-    # 2) Guaranteed premium fallback — handcrafted template
-    print(f"  Using premium template for concept {concept_id+1}...")
+    print(f"Building premium logo concept {concept_id+1} for: {brand_name}...")
     return _build_premium_svg(brand_name, concept_id)
 
 
@@ -473,31 +412,24 @@ def generate_logo_image(prompt: str, concept_id: int = 0) -> Optional[str]:
 
 
 def generate_multiple_logos(request: LogoRequest) -> list[dict]:
-    """Generates 5 distinct, beautiful logo designs in parallel."""
-    import concurrent.futures
-
-    prompts = generate_logo_prompts(request)
+    """Generates 5 distinct, beautiful logo designs instantly."""
+    brand_name = request.brand_name
     results = []
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        future_to_info = {}
-        for i, prompt in enumerate(prompts):
-            time.sleep(0.15)
-            f = executor.submit(generate_logo_image, prompt, i)
-            future_to_info[f] = (prompt, i)
+    for i in range(5):
+        try:
+            img_url = _build_premium_svg(brand_name, i)
+            if img_url:
+                style_names = ["Iconic", "Typographic", "Monogram", "Abstract", "Luxury"]
+                results.append({
+                    "image_url": img_url,
+                    "prompt": f"{style_names[i]} logo for {brand_name}",
+                    "concept_id": i
+                })
+        except Exception as e:
+            print(f"Generation error in concept {i}: {e}")
 
-        for future in concurrent.futures.as_completed(future_to_info):
-            prompt, idx = future_to_info[future]
-            try:
-                img_url = future.result()
-                if img_url:
-                    results.append({"image_url": img_url, "prompt": prompt, "concept_id": idx})
-            except Exception as e:
-                print(f"Generation error in concept {idx}: {e}")
-
-    # Sort by concept_id for consistent display order
-    results.sort(key=lambda x: x.get("concept_id", 0))
-    return results[:5]
+    return results
 
 
 # --- Startup Tools ---

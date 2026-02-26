@@ -518,13 +518,12 @@ export default function Dashboard() {
                                         const handleDownload = async (url, filename) => {
                                             try {
                                                 const img = new Image();
-                                                img.crossOrigin = "anonymous";
                                                 img.onload = () => {
                                                     const canvas = document.createElement("canvas");
-                                                    canvas.width = img.width || 1024;
-                                                    canvas.height = img.height || 1024;
+                                                    canvas.width = 1024;
+                                                    canvas.height = 1024;
                                                     const ctx = canvas.getContext("2d");
-                                                    ctx.fillStyle = "white"; // White background for transparent SVGs
+                                                    ctx.fillStyle = "#0a0a1a"; // Match SVG dark background
                                                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                                                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                                                     const pngUrl = canvas.toDataURL("image/png");
@@ -551,8 +550,8 @@ export default function Dashboard() {
                                                 className="group relative"
                                             >
                                                 <GlassCard tilt={false} className="!p-2 hover:border-[var(--primary)] transition-all cursor-pointer overflow-hidden">
-                                                    <div className="aspect-square bg-white rounded-lg overflow-hidden flex items-center justify-center relative">
-                                                        <img src={logo.image_url} alt={`Logo ${i + 1}`} className="w-full h-full object-contain p-2" />
+                                                    <div className="aspect-square bg-[#0a0a1a] rounded-lg overflow-hidden flex items-center justify-center relative">
+                                                        <img src={logo.image_url} alt={`Logo ${i + 1}`} className="w-full h-full object-contain" />
                                                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3 p-4">
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); handleDownload(logo.image_url, `${brand || 'logo'}_v${i + 1}.png`); }}
