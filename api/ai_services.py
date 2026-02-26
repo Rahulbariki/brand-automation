@@ -4,7 +4,10 @@ import json
 import uuid
 import random
 import time
+import re
+import base64
 import urllib.parse
+from typing import Optional
 from supabase import create_client
 from groq import Groq
 from dotenv import load_dotenv
@@ -249,99 +252,251 @@ def generate_logo_prompts(request: LogoRequest) -> list[str]:
 
     return [prompt for _ in range(5)]
 
-from typing import Optional
+
+# ══════════════════════════════════════════════════════════════════
+# LOGO GENERATION ENGINE — Premium SVG Templates + Groq AI
+# ══════════════════════════════════════════════════════════════════
+
+# ── Premium SVG Templates ──────────────────────────────────────
+# Each returns a handcrafted, professional SVG with dynamic brand name.
+
+def _svg_iconic(name: str, c1: str, c2: str, ac: str) -> str:
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{c1}"/>
+      <stop offset="100%" stop-color="{c2}"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="{ac}" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="{c1}" stop-opacity="0.4"/>
+    </linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.3"/></filter>
+  </defs>
+  <rect width="512" height="512" rx="40" fill="#0a0a1a"/>
+  <circle cx="256" cy="210" r="120" fill="url(#g1)" filter="url(#sh)"/>
+  <polygon points="256,110 340,250 172,250" fill="url(#g2)" opacity="0.9"/>
+  <circle cx="256" cy="210" r="45" fill="#0a0a1a" opacity="0.7"/>
+  <circle cx="256" cy="210" r="28" fill="{ac}" opacity="0.5"/>
+  <rect x="160" y="340" width="192" height="4" rx="2" fill="url(#g1)" opacity="0.6"/>
+  <text x="256" y="395" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="52" font-weight="800" fill="white" text-anchor="middle" letter-spacing="6">{name.upper()}</text>
+  <text x="256" y="440" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="14" fill="{ac}" text-anchor="middle" letter-spacing="10" opacity="0.6">BRAND IDENTITY</text>
+</svg>'''
+
+def _svg_typographic(name: str, c1: str, c2: str, ac: str) -> str:
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="tg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{c1}"/>
+      <stop offset="50%" stop-color="{c2}"/>
+      <stop offset="100%" stop-color="{ac}"/>
+    </linearGradient>
+    <filter id="gl"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="512" height="512" rx="40" fill="#0d1117"/>
+  <rect x="56" y="56" width="400" height="400" rx="24" fill="none" stroke="{c1}" stroke-width="1" opacity="0.15"/>
+  <rect x="72" y="72" width="368" height="368" rx="16" fill="none" stroke="{c2}" stroke-width="0.5" opacity="0.1"/>
+  <text x="256" y="240" font-family="Georgia,'Times New Roman',serif" font-size="76" font-weight="700" fill="url(#tg)" text-anchor="middle" filter="url(#gl)">{name}</text>
+  <rect x="110" y="265" width="292" height="3" rx="2" fill="url(#tg)"/>
+  <text x="256" y="320" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="18" fill="#8b949e" text-anchor="middle" letter-spacing="14">STUDIO</text>
+  <circle cx="96" cy="416" r="4" fill="{ac}" opacity="0.4"/>
+  <circle cx="256" cy="416" r="4" fill="{c1}" opacity="0.4"/>
+  <circle cx="416" cy="416" r="4" fill="{c2}" opacity="0.4"/>
+</svg>'''
+
+def _svg_monogram(name: str, c1: str, c2: str, ac: str) -> str:
+    ini = name[0].upper() if name else "B"
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="mg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{c1}"/>
+      <stop offset="100%" stop-color="{c2}"/>
+    </linearGradient>
+    <linearGradient id="mg2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="{ac}"/>
+      <stop offset="100%" stop-color="{c1}"/>
+    </linearGradient>
+    <filter id="ms"><feDropShadow dx="0" dy="6" stdDeviation="12" flood-opacity="0.25"/></filter>
+  </defs>
+  <rect width="512" height="512" rx="40" fill="#0f0f1e"/>
+  <polygon points="256,76 400,146 400,286 256,356 112,286 112,146" fill="none" stroke="url(#mg)" stroke-width="3" filter="url(#ms)"/>
+  <polygon points="256,106 374,162 374,270 256,326 138,270 138,162" fill="url(#mg)" opacity="0.12"/>
+  <text x="256" y="252" font-family="Georgia,'Times New Roman',serif" font-size="130" font-weight="700" fill="url(#mg2)" text-anchor="middle">{ini}</text>
+  <text x="256" y="418" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="38" font-weight="700" fill="white" text-anchor="middle" letter-spacing="8">{name.upper()}</text>
+  <rect x="165" y="436" width="182" height="2" rx="1" fill="{ac}" opacity="0.35"/>
+  <text x="256" y="468" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#555" text-anchor="middle" letter-spacing="6">EST. 2025</text>
+</svg>'''
+
+def _svg_abstract(name: str, c1: str, c2: str, ac: str) -> str:
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="a1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{c1}"/>
+      <stop offset="100%" stop-color="{c2}"/>
+    </linearGradient>
+    <linearGradient id="a2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="{ac}"/>
+      <stop offset="100%" stop-color="{c1}"/>
+    </linearGradient>
+    <filter id="as"><feDropShadow dx="0" dy="3" stdDeviation="6" flood-opacity="0.2"/></filter>
+  </defs>
+  <rect width="512" height="512" rx="40" fill="#080c14"/>
+  <circle cx="195" cy="195" r="95" fill="url(#a1)" opacity="0.8" filter="url(#as)"/>
+  <circle cx="310" cy="195" r="95" fill="url(#a2)" opacity="0.6"/>
+  <circle cx="252" cy="290" r="95" fill="{ac}" opacity="0.35"/>
+  <rect x="176" y="176" width="160" height="160" rx="32" fill="none" stroke="white" stroke-width="2" opacity="0.15" transform="rotate(15 256 256)"/>
+  <text x="256" y="425" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="46" font-weight="800" fill="white" text-anchor="middle" letter-spacing="5">{name.upper()}</text>
+  <text x="256" y="465" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="13" fill="#555" text-anchor="middle" letter-spacing="10">CREATIVE</text>
+</svg>'''
+
+def _svg_luxury(name: str, c1: str, c2: str, ac: str) -> str:
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D4AF37"/>
+      <stop offset="50%" stop-color="#F5E6A3"/>
+      <stop offset="100%" stop-color="#D4AF37"/>
+    </linearGradient>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="{c1}"/>
+      <stop offset="100%" stop-color="{c2}"/>
+    </linearGradient>
+    <filter id="ls"><feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="#D4AF37" flood-opacity="0.15"/></filter>
+  </defs>
+  <rect width="512" height="512" rx="40" fill="#0a0a0a"/>
+  <circle cx="256" cy="225" r="145" fill="none" stroke="url(#lg)" stroke-width="2" filter="url(#ls)"/>
+  <circle cx="256" cy="225" r="125" fill="none" stroke="url(#lg)" stroke-width="1" opacity="0.4"/>
+  <circle cx="256" cy="225" r="105" fill="url(#bg)" opacity="0.15"/>
+  <line x1="150" y1="225" x2="362" y2="225" stroke="url(#lg)" stroke-width="1" opacity="0.3"/>
+  <text x="256" y="215" font-family="Georgia,'Times New Roman',serif" font-size="44" font-weight="700" fill="url(#lg)" text-anchor="middle">{name.upper()}</text>
+  <text x="256" y="255" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="13" fill="#D4AF37" text-anchor="middle" letter-spacing="10" opacity="0.6">PREMIUM</text>
+  <rect x="195" y="405" width="122" height="1" rx="1" fill="url(#lg)" opacity="0.4"/>
+  <text x="256" y="435" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="11" fill="#555" text-anchor="middle" letter-spacing="5">ESTABLISHED 2025</text>
+  <circle cx="150" cy="125" r="3" fill="#D4AF37" opacity="0.25"/>
+  <circle cx="362" cy="125" r="3" fill="#D4AF37" opacity="0.25"/>
+  <circle cx="150" cy="325" r="3" fill="#D4AF37" opacity="0.25"/>
+  <circle cx="362" cy="325" r="3" fill="#D4AF37" opacity="0.25"/>
+</svg>'''
+
+# Color palettes — vibrant and modern
+LOGO_PALETTES = [
+    {"c1": "#6C63FF", "c2": "#3F3D9E", "ac": "#FF6584"},   # Tech / Modern
+    {"c1": "#00B4D8", "c2": "#0077B6", "ac": "#90E0EF"},   # Ocean / Trust
+    {"c1": "#E63946", "c2": "#1D3557", "ac": "#F1FAEE"},   # Bold / Corporate
+    {"c1": "#2D6A4F", "c2": "#40916C", "ac": "#B7E4C7"},   # Nature / Eco
+    {"c1": "#7209B7", "c2": "#3A0CA3", "ac": "#F72585"},   # Creative / Purple
+    {"c1": "#FF6B35", "c2": "#F7931E", "ac": "#FFBA08"},   # Energy / Warm
+    {"c1": "#D4AF37", "c2": "#B8860B", "ac": "#F5E6A3"},   # Luxury / Gold
+]
+
+TEMPLATE_FNS = [_svg_iconic, _svg_typographic, _svg_monogram, _svg_abstract, _svg_luxury]
+
+def _build_premium_svg(brand_name: str, concept_id: int) -> str:
+    """Builds a guaranteed-beautiful SVG using handcrafted templates."""
+    fn = TEMPLATE_FNS[concept_id % len(TEMPLATE_FNS)]
+    pal = LOGO_PALETTES[(concept_id + hash(brand_name)) % len(LOGO_PALETTES)]
+    svg = fn(brand_name, pal["c1"], pal["c2"], pal["ac"])
+    encoded = base64.b64encode(svg.encode('utf-8')).decode('utf-8')
+    return f"data:image/svg+xml;base64,{encoded}"
 
 def generate_svg_logo(prompt: str, concept_id: int = 0) -> Optional[str]:
-    """Generates a professional-grade, multi-style SVG logo using Groq."""
+    """Generates a professional brand logo. Tries Groq AI first, falls back to premium templates."""
+    brand_name = prompt.split(' ')[0] if ' ' in prompt else prompt
+
+    # 1) Try Groq AI for a unique, complex SVG
     try:
-        brand_name = prompt.split(' ')[0] if ' ' in prompt else prompt
-        # We use distinct designer personas based on the concept index
-        STYLES = [
-            f"ICONIC BRANDMARK: Design a iconic symbolic logo for {brand_name}. Use bold geometry, linear gradients, and a modern aesthetic.",
-            f"PROFESSIONAL TYPOGRAPHIC: Create a sleek typographic logo for {brand_name}. Use elegant paths, letter-spacing, and professional balance.",
-            f"PREMIUM MONOGRAM: Design a minimalist monogram using the initials of {brand_name} inside a geometric container (hexagon/diamond).",
-            f"MODERN ABSTRACT: Create a creative abstract shape that Represents {prompt}. Use vibrant colors and clean lines.",
-            f"LUXURY EMBLEM: Design a centered high-end emblem for {brand_name} with gold/slat gradients and luxury framing."
+        styles = [
+            "iconic geometric brandmark with a bold abstract symbol above the name",
+            "elegant typographic wordmark with decorative lines and serif font",
+            "monogram letter inside a hexagonal shield frame with gradient fill",
+            "overlapping abstract circles with gradient fills and transparency",
+            "luxury emblem with ornamental circular border and gold accents",
         ]
-        style_instruction = STYLES[concept_id % len(STYLES)]
-        
-        print(f"Generating Premium SVG Concept {concept_id+1} for: {brand_name}...")
-        
-        system_prompt = "You are an elite brand identity designer. You provide ONLY raw, valid, high-conversion SVG source code. No explanations."
-        user_prompt = f"""
-        Design Requirement: {style_instruction}
-        Full Business Context: {prompt}
-        
-        Task: Output a professional 512x512 SVG.
-        - Include the brand text "{brand_name}" visibly.
-        - Use <linearGradient> with id="grad{concept_id}" for a premium 3D look.
-        - Use professional colors (Gold: #D4AF37, Slate: #2F4F4F, Navy: #000080, White: #FFFFFF).
-        - Center all elements within the 512x512 viewBox.
-        - Return ONLY raw <svg>...</svg> code. No markdown, no text.
-        """
-        
+        style = styles[concept_id % len(styles)]
+
+        print(f"Generating AI Logo Concept {concept_id+1} for: {brand_name}...")
+
+        system_prompt = (
+            "You are an SVG logo designer. Output ONLY raw <svg>...</svg> code. "
+            "No markdown, no explanation, no comments outside the SVG."
+        )
+
+        user_prompt = f'''Create a {style} for brand "{brand_name}".
+
+Requirements:
+- viewBox="0 0 512 512"
+- Dark background: <rect width="512" height="512" rx="40" fill="#0a0a1a"/>
+- Use <linearGradient> with vibrant modern colors
+- Include <text> element showing "{brand_name.upper()}" in white, font-size 44, text-anchor middle, centered at x=256
+- Use <filter> with feDropShadow for depth
+- Multiple layered geometric shapes for visual richness
+- At least 12 SVG elements total
+- Professional brand identity quality
+
+Output ONLY the raw SVG code starting with <svg and ending with </svg>:'''
+
         chat_completion = groq_client.chat.completions.create(
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
             model="llama-3.3-70b-versatile",
-            max_tokens=3000,
-            temperature=0.4
+            max_tokens=4000,
+            temperature=0.7
         )
         svg_code = chat_completion.choices[0].message.content.strip()
-        
-        # Enhanced extraction for robustness
+
         if "<svg" in svg_code.lower():
-            import re
             match = re.search(r'<svg.*?</svg>', svg_code, re.DOTALL | re.IGNORECASE)
             if match:
                 svg_code = match.group(0)
-                # Cleanup potential whitespace or invalid chars from LLM
-                svg_code = svg_code.replace("```svg", "").replace("```", "")
-                
-                import base64
-                encoded = base64.b64encode(svg_code.encode('utf-8')).decode('utf-8')
-                return f"data:image/svg+xml;base64,{encoded}"
+                svg_code = svg_code.replace("```svg", "").replace("```xml", "").replace("```", "")
+
+                # Only use if the SVG is rich enough (>500 chars = has gradients/shapes)
+                if len(svg_code) > 500:
+                    encoded = base64.b64encode(svg_code.encode('utf-8')).decode('utf-8')
+                    print(f"  AI SVG OK ({len(svg_code)} chars)")
+                    return f"data:image/svg+xml;base64,{encoded}"
+                else:
+                    print(f"  AI SVG too simple ({len(svg_code)} chars), using template.")
     except Exception as e:
-        print(f"SVG Master Fallback failed: {e}")
-    return None
+        print(f"  Groq SVG failed: {e}")
+
+    # 2) Guaranteed premium fallback — handcrafted template
+    print(f"  Using premium template for concept {concept_id+1}...")
+    return _build_premium_svg(brand_name, concept_id)
+
 
 def generate_logo_image(prompt: str, concept_id: int = 0) -> Optional[str]:
-    """
-    Primary Logo Generation Engine. 
-    Switched to high-fidelity Base64 SVGs to ensure NO BROKEN IMAGES and 100% reliability.
-    """
-    # We directly use the rich SVG engine because external providers (HF/Pollinations) 
-    # are currently returning 402/530 and breaking the user experience.
+    """Primary Logo Generation Engine. Always returns a valid Base64 SVG."""
     return generate_svg_logo(prompt, concept_id)
 
+
 def generate_multiple_logos(request: LogoRequest) -> list[dict]:
-    """Generates 5 distinct, reliable logo designs in parallel."""
+    """Generates 5 distinct, beautiful logo designs in parallel."""
     import concurrent.futures
-    import time
-    
+
     prompts = generate_logo_prompts(request)
     results = []
-    
-    # We use ThreadPoolExecutor to generate 5 rich SVGs in parallel via Groq
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         future_to_info = {}
         for i, prompt in enumerate(prompts):
-            time.sleep(0.1) # Rapid staggering
+            time.sleep(0.15)
             f = executor.submit(generate_logo_image, prompt, i)
-            future_to_info[f] = prompt
-            
+            future_to_info[f] = (prompt, i)
+
         for future in concurrent.futures.as_completed(future_to_info):
-            prompt = future_to_info[future]
+            prompt, idx = future_to_info[future]
             try:
                 img_url = future.result()
                 if img_url:
-                    results.append({"image_url": img_url, "prompt": prompt})
+                    results.append({"image_url": img_url, "prompt": prompt, "concept_id": idx})
             except Exception as e:
-                print(f"Generation error in concept: {e}")
+                print(f"Generation error in concept {idx}: {e}")
 
-    # Sorting to maintain consistent display order if possible
+    # Sort by concept_id for consistent display order
+    results.sort(key=lambda x: x.get("concept_id", 0))
     return results[:5]
 
 
