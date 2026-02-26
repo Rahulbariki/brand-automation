@@ -249,8 +249,10 @@ def generate_logo_prompts(request: LogoRequest) -> list[str]:
 
     return [prompt for _ in range(5)]
 
+from typing import Optional
+
 # --- Activity 2.10 (Part 2): Logo Image Generation ---
-def generate_logo_image(prompt: str) -> str:
+def generate_logo_image(prompt: str) -> Optional[str]:
     enhanced_mockup_prompt = f"""
 Professional luxury brand logo mockup for {prompt}
 
@@ -307,34 +309,35 @@ low quality
 
     # 2. Pollinations.ai (Backup - Currently Highly Reliable for Frontend Loading)
     try:
-        print("Generating with Pollinations + Saving to Supabase...")
+        print("Generating with Pollinations...")
 
         seed = random.randint(1, 100000)
         encoded_prompt = urllib.parse.quote(enhanced_mockup_prompt.strip().replace('\n', ' '))
 
         poll_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&seed={seed}&nologo=true"
 
-        response = requests.get(poll_url, timeout=60)
-
-        if response.status_code != 200:
-            raise Exception("Pollinations download failed")
-
-        print("Uploading to Supabase Storage...")
-
-        file_name = f"{uuid.uuid4()}.png"
-
-        supabase.storage.from_("brand-logos").upload(
-            path=file_name,
-            file=response.content,
-            file_options={"content-type": "image/png"}
-        )
-
-        public_url = supabase.storage.from_("brand-logos").get_public_url(file_name)
-
-        return public_url
+        # Try to save to Supabase, but don't fail if it doesn't work (fall back to direct URL)
+        try:
+            print("Attempting upload to Supabase Storage...")
+            response = requests.get(poll_url, timeout=60)
+            if response.status_code == 200:
+                file_name = f"{uuid.uuid4()}.png"
+                supabase.storage.from_("brand-logos").upload(
+                    path=file_name,
+                    file=response.content,
+                    file_options={"content-type": "image/png"}
+                )
+                public_url = supabase.storage.from_("brand-logos").get_public_url(file_name)
+                print(f"Direct link secured via Supabase: {public_url}")
+                return public_url
+        except Exception as storage_err:
+            print(f"Supabase Storage Fallback: Using direct Pollinations link due to: {storage_err}")
+            
+        return poll_url
     except Exception as e:
-        print(f"Image generation failed: {e}")
+        print(f"All logo generation methods failed: {e}")
         return None
+
 
 def generate_multiple_logos(request: LogoRequest) -> list[dict]:
     """Generates 5 distinct logo designs in parallel."""
