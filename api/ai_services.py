@@ -251,17 +251,55 @@ def generate_logo_prompts(request: LogoRequest) -> list[str]:
 
 from typing import Optional
 
+def generate_svg_logo(prompt: str) -> Optional[str]:
+    """Generates a raw SVG logo using Groq as a guaranteed fallback."""
+    try:
+        print(f"Generating SVG Logo via Groq for: {prompt[:30]}...")
+        system_prompt = "You are a professional graphic designer. Your task is to generate a high-end, minimalist SVG logo."
+        user_prompt = f"""
+        Brand Concept: {prompt}
+        
+        Create a clean, modern, and symbolic SVG logo for this brand. 
+        - Use elegant shapes or typography.
+        - Ensure it's centered in a 512x512 viewbox.
+        - Return ONLY the raw <svg> code.
+        - No markdown, no comments, no explanation.
+        """
+        
+        chat_completion = groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+            max_tokens=1024,
+        )
+        svg_code = chat_completion.choices[0].message.content.strip()
+        
+        # Clean up any potential markdown wrap
+        if "```" in svg_code:
+            import re
+            match = re.search(r'<svg.*?</svg>', svg_code, re.DOTALL | re.IGNORECASE)
+            if match:
+                svg_code = match.group(0)
+        
+        if "<svg" in svg_code.lower():
+            import base64
+            encoded = base64.b64encode(svg_code.encode('utf-8')).decode('utf-8')
+            return f"data:image/svg+xml;base64,{encoded}"
+    except Exception as e:
+        print(f"SVG Fallback failed: {e}")
+    return None
+
 # --- Activity 2.10 (Part 2): Logo Image Generation ---
 def generate_logo_image(prompt: str) -> Optional[str]:
     enhanced_mockup_prompt = f"""
 Professional luxury brand logo mockup for {prompt}
 
-3D embossed metallic logo
-gold foil or matte black finish
-realistic paper texture
-soft studio lighting
-cinematic shadow
-premium typography
+Brand Name: {prompt.split(' ')[0]}
+Industry: {prompt.split(' ')[-1]}
+
+ultra realistic logo mockup
 logo engraved on business card
 logo printed on textured paper
 brand identity mockup
@@ -271,66 +309,48 @@ center composition
 dribbble behance style
 """
     
-    negative_prompt = """
-cartoon
-icon
-favicon
-flat vector
-circle logo
-abstract blob
-emoji
-clipart
-watermark
-low quality
-"""
+    negative_prompt = "cartoon, icon, favicon, flat vector, circle logo, abstract blob, emoji, clipart, watermark, low quality"
 
-    # 1. Hugging Face (Primary attempt if token is available)
+    # 1. Hugging Face (Primary attempt)
     if HF_API_KEY:
         try:
             print(f"Generating image with Hugging Face (SDXL) for {prompt[:50]}...")
-            # Use the newer router endpoint as the old one is deprecated
             API_URL = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0"
-            
-            payload = {
-                "inputs": enhanced_mockup_prompt,
-                "parameters": {"negative_prompt": negative_prompt}
-            }
+            payload = {"inputs": enhanced_mockup_prompt, "parameters": {"negative_prompt": negative_prompt}}
             response = requests.post(API_URL, headers=HF_HEADERS, json=payload, timeout=20)
             
             if response.status_code == 200:
                 import base64
-                print("HF Generated Successfully. Encoding to base64...")
+                print("HF Generated Success.")
                 encoded = base64.b64encode(response.content).decode('utf-8')
                 return f"data:image/png;base64,{encoded}"
             else:
-                print(f"HF Generation failed with status {response.status_code}. Fallthrough to backup...")
+                print(f"HF failed ({response.status_code}).")
         except Exception as e:
-            print(f"HF Generation exception: {e}. Fallthrough to backup...")
+            print(f"HF error: {e}")
 
-    # 2. Pollinations.ai (Backup - Currently Highly Reliable for Frontend Loading)
+    # 2. SVG Fallback (Guaranteed to work if API is up)
+    svg_result = generate_svg_logo(prompt)
+    if svg_result:
+        return svg_result
+
+    # 3. Pollinations.ai (Absolute last resort)
     try:
-        print("Generating with Pollinations (Direct Mode)...")
-
-        # Simplified prompt for URL safety and speed
+        print("Final Fallback: Pollinations...")
         import re
         clean_text = re.sub(r'[^a-zA-Z0-9\s]', '', prompt)
-        short_prompt = " ".join(clean_text.split()[:15]) # Even shorter
-        
+        short_prompt = " ".join(clean_text.split()[:10])
         seed = random.randint(1, 100000)
-        # Using a simpler URL to avoid 530s
-        poll_url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(short_prompt)}?width=1024&height=1024&seed={seed}&nologo=true"
-
-        print(f"Returning Pollinations URL: {poll_url[:100]}...")
+        poll_url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(short_prompt)}?width=512&height=512&seed={seed}&nologo=true"
         return poll_url
-        
     except Exception as e:
-        print(f"All logo generation methods failed: {e}")
+        print(f"All generation failed: {e}")
         return None
 
 
 
 def generate_multiple_logos(request: LogoRequest) -> list[dict]:
-    """Generates 5 distinct logo designs in parallel."""
+    """Generates 5 distinct logo designs in parallel with staggering."""
     import concurrent.futures
     import time
     
@@ -338,25 +358,21 @@ def generate_multiple_logos(request: LogoRequest) -> list[dict]:
     results = []
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        # Submit all generation tasks
-        # Apply a tiny delay to stagger API requests to free endpoints
         futures = []
         for i, prompt in enumerate(prompts):
-            time.sleep(i * 0.5)
+            # Staggered start to prevent simultaneous rate hits
+            time.sleep(0.5)
             futures.append(executor.submit(generate_logo_image, prompt))
             
-        future_to_prompt = {futures[i]: prompts[i] for i in range(len(prompts))}
-        
-        for future in concurrent.futures.as_completed(future_to_prompt):
-            prompt = future_to_prompt[future]
+        for future in concurrent.futures.as_completed(futures):
             try:
                 img_url = future.result()
                 if img_url:
-                    results.append({"prompt": prompt, "image_url": img_url})
+                    results.append({"image_url": img_url})
             except Exception as e:
-                print(f"Error in parallel logo generation: {e}")
-                
-    return results
+                print(f"Conc. Error: {e}")
+
+    return results[:5]
 
 # --- Startup Tools ---
 def generate_pitch(request) -> str:
