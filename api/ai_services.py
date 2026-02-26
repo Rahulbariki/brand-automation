@@ -358,19 +358,20 @@ def generate_multiple_logos(request: LogoRequest) -> list[dict]:
     results = []
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        futures = []
+        future_to_prompt = {}
         for i, prompt in enumerate(prompts):
-            # Staggered start to prevent simultaneous rate hits
             time.sleep(0.5)
-            futures.append(executor.submit(generate_logo_image, prompt))
+            f = executor.submit(generate_logo_image, prompt)
+            future_to_prompt[f] = prompt
             
-        for future in concurrent.futures.as_completed(futures):
+        for future in concurrent.futures.as_completed(future_to_prompt):
+            prompt = future_to_prompt[future]
             try:
                 img_url = future.result()
                 if img_url:
-                    results.append({"image_url": img_url})
+                    results.append({"image_url": img_url, "prompt": prompt})
             except Exception as e:
-                print(f"Conc. Error: {e}")
+                print(f"Conc. Error for {prompt[:30]}: {e}")
 
     return results[:5]
 
