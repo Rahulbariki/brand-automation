@@ -515,24 +515,25 @@ export default function Dashboard() {
                             <div className="space-y-4">
                                 <div className="grid grid-cols-2 gap-3">
                                     {result.data.logos.map((logo, i) => {
-                                        const handleDownload = async (imgElement, filename) => {
+                                        const handleDownload = async (filename) => {
                                             try {
-                                                const canvas = document.createElement("canvas");
-                                                canvas.width = 1024;
-                                                canvas.height = 1024;
-                                                const ctx = canvas.getContext("2d");
-                                                ctx.fillStyle = "white";
-                                                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                                                ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
-                                                const pngUrl = canvas.toDataURL("image/png");
-                                                const downloadLink = document.createElement("a");
-                                                downloadLink.href = pngUrl;
-                                                downloadLink.download = filename;
-                                                document.body.appendChild(downloadLink);
-                                                downloadLink.click();
-                                                document.body.removeChild(downloadLink);
+                                                // Try to fetch the image as a blob for download
+                                                const response = await fetch(logo.image_url);
+                                                if (response.ok) {
+                                                    const blob = await response.blob();
+                                                    const blobUrl = URL.createObjectURL(blob);
+                                                    const link = document.createElement("a");
+                                                    link.href = blobUrl;
+                                                    link.download = filename;
+                                                    document.body.appendChild(link);
+                                                    link.click();
+                                                    document.body.removeChild(link);
+                                                    URL.revokeObjectURL(blobUrl);
+                                                } else {
+                                                    window.open(logo.image_url, '_blank');
+                                                }
                                             } catch (err) {
-                                                console.error("Canvas download failed, opening image", err);
+                                                console.error("Download failed, opening in new tab", err);
                                                 window.open(logo.image_url, '_blank');
                                             }
                                         };
@@ -555,10 +556,9 @@ export default function Dashboard() {
                                                             src={logo.image_url}
                                                             alt={logo.concept_name || `Logo ${i + 1}`}
                                                             className="w-full h-full object-contain relative z-10"
-                                                            crossOrigin="anonymous"
                                                             onLoad={(e) => { e.target.style.opacity = '1'; }}
                                                             onError={(e) => {
-                                                                console.log(`Pollinations failed for concept ${i + 1}, using SVG fallback`);
+                                                                console.log(`Image failed for concept ${i + 1}, using SVG fallback`);
                                                                 if (logo.fallback_url && e.target.src !== logo.fallback_url) {
                                                                     e.target.src = logo.fallback_url;
                                                                 }
@@ -569,8 +569,7 @@ export default function Dashboard() {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    const imgEl = e.target.closest('.aspect-square').querySelector('img');
-                                                                    handleDownload(imgEl, `${brand || 'logo'}_v${i + 1}.png`);
+                                                                    handleDownload(`${brand || 'logo'}_${logo.concept_name || 'v' + (i + 1)}.png`);
                                                                 }}
                                                                 className="w-full py-2 px-4 bg-[var(--primary)] text-white rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:scale-105 transition-transform shadow-lg"
                                                             >
