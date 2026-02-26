@@ -412,22 +412,51 @@ def generate_logo_image(prompt: str, concept_id: int = 0) -> Optional[str]:
 
 
 def generate_multiple_logos(request: LogoRequest) -> list[dict]:
-    """Generates 5 distinct, beautiful logo designs instantly."""
+    """Generates 5 distinct logo concepts using Pollinations AI image generation."""
     brand_name = request.brand_name
-    results = []
+    industry = getattr(request, 'industry', 'business')
+    style = getattr(request, 'style', 'MODERN VECTOR')
 
-    for i in range(5):
-        try:
-            img_url = _build_premium_svg(brand_name, i)
-            if img_url:
-                style_names = ["Iconic", "Typographic", "Monogram", "Abstract", "Luxury"]
-                results.append({
-                    "image_url": img_url,
-                    "prompt": f"{style_names[i]} logo for {brand_name}",
-                    "concept_id": i
-                })
-        except Exception as e:
-            print(f"Generation error in concept {i}: {e}")
+    # 5 distinct visual concepts with detailed prompts
+    CONCEPTS = [
+        {
+            "name": "Corporate Elegant",
+            "prompt": f"professional corporate brand logo design for '{brand_name}', vintage ornamental border, serif typography, cream and navy color scheme, gold accents, luxury emblem style, white background, high quality, 4k"
+        },
+        {
+            "name": "Modern Minimal",
+            "prompt": f"modern minimalist brand logo for '{brand_name}', clean geometric shapes, flat design, bold sans-serif font, professional branding mockup, centered composition, white background, high quality"
+        },
+        {
+            "name": "Luxury Premium",
+            "prompt": f"luxury premium brand logo for '{brand_name}', gold foil on dark background, elegant calligraphy, embossed effect, high-end fashion brand style, sophisticated aesthetic, 4k quality"
+        },
+        {
+            "name": "Creative Abstract",
+            "prompt": f"creative abstract brand logo for '{brand_name}', colorful gradient shapes, modern art style, dynamic composition, startup tech brand identity, professional design, white background"
+        },
+        {
+            "name": "Classic Vintage",
+            "prompt": f"vintage retro brand logo for '{brand_name}', hand-drawn ornamental details, classic serif typography, badge style emblem, weathered texture, artisan craft brand, warm tones, 4k"
+        },
+    ]
+
+    results = []
+    for i, concept in enumerate(CONCEPTS):
+        seed = random.randint(1, 99999)
+        encoded_prompt = urllib.parse.quote(concept["prompt"])
+        # Pollinations URL — browser loads it directly as an <img> src
+        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&seed={seed}&nologo=true"
+        # SVG fallback in case Pollinations is down
+        svg_fallback = _build_premium_svg(brand_name, i)
+
+        results.append({
+            "image_url": image_url,
+            "fallback_url": svg_fallback,
+            "prompt": concept["prompt"],
+            "concept_name": concept["name"],
+            "concept_id": i
+        })
 
     return results
 

@@ -515,29 +515,25 @@ export default function Dashboard() {
                             <div className="space-y-4">
                                 <div className="grid grid-cols-2 gap-3">
                                     {result.data.logos.map((logo, i) => {
-                                        const handleDownload = async (url, filename) => {
+                                        const handleDownload = async (imgElement, filename) => {
                                             try {
-                                                const img = new Image();
-                                                img.onload = () => {
-                                                    const canvas = document.createElement("canvas");
-                                                    canvas.width = 1024;
-                                                    canvas.height = 1024;
-                                                    const ctx = canvas.getContext("2d");
-                                                    ctx.fillStyle = "#0a0a1a"; // Match SVG dark background
-                                                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                                                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                                                    const pngUrl = canvas.toDataURL("image/png");
-                                                    const downloadLink = document.createElement("a");
-                                                    downloadLink.href = pngUrl;
-                                                    downloadLink.download = filename;
-                                                    document.body.appendChild(downloadLink);
-                                                    downloadLink.click();
-                                                    document.body.removeChild(downloadLink);
-                                                };
-                                                img.src = url;
+                                                const canvas = document.createElement("canvas");
+                                                canvas.width = 1024;
+                                                canvas.height = 1024;
+                                                const ctx = canvas.getContext("2d");
+                                                ctx.fillStyle = "white";
+                                                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                                                ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+                                                const pngUrl = canvas.toDataURL("image/png");
+                                                const downloadLink = document.createElement("a");
+                                                downloadLink.href = pngUrl;
+                                                downloadLink.download = filename;
+                                                document.body.appendChild(downloadLink);
+                                                downloadLink.click();
+                                                document.body.removeChild(downloadLink);
                                             } catch (err) {
-                                                console.error("Download failed", err);
-                                                window.open(url, '_blank');
+                                                console.error("Canvas download failed, opening image", err);
+                                                window.open(logo.image_url, '_blank');
                                             }
                                         };
 
@@ -550,11 +546,32 @@ export default function Dashboard() {
                                                 className="group relative"
                                             >
                                                 <GlassCard tilt={false} className="!p-2 hover:border-[var(--primary)] transition-all cursor-pointer overflow-hidden">
-                                                    <div className="aspect-square bg-[#0a0a1a] rounded-lg overflow-hidden flex items-center justify-center relative">
-                                                        <img src={logo.image_url} alt={`Logo ${i + 1}`} className="w-full h-full object-contain" />
-                                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3 p-4">
+                                                    <div className="aspect-square bg-gray-100 dark:bg-[#111] rounded-lg overflow-hidden flex items-center justify-center relative">
+                                                        {/* Loading spinner */}
+                                                        <div className="absolute inset-0 flex items-center justify-center z-0">
+                                                            <Loader2 size={24} className="animate-spin text-gray-400" />
+                                                        </div>
+                                                        <img
+                                                            src={logo.image_url}
+                                                            alt={logo.concept_name || `Logo ${i + 1}`}
+                                                            className="w-full h-full object-contain relative z-10"
+                                                            crossOrigin="anonymous"
+                                                            onLoad={(e) => { e.target.style.opacity = '1'; }}
+                                                            onError={(e) => {
+                                                                console.log(`Pollinations failed for concept ${i + 1}, using SVG fallback`);
+                                                                if (logo.fallback_url && e.target.src !== logo.fallback_url) {
+                                                                    e.target.src = logo.fallback_url;
+                                                                }
+                                                            }}
+                                                            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
+                                                        />
+                                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3 p-4 z-20">
                                                             <button
-                                                                onClick={(e) => { e.stopPropagation(); handleDownload(logo.image_url, `${brand || 'logo'}_v${i + 1}.png`); }}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    const imgEl = e.target.closest('.aspect-square').querySelector('img');
+                                                                    handleDownload(imgEl, `${brand || 'logo'}_v${i + 1}.png`);
+                                                                }}
                                                                 className="w-full py-2 px-4 bg-[var(--primary)] text-white rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:scale-105 transition-transform shadow-lg"
                                                             >
                                                                 <Download size={14} /> Download PNG
@@ -567,14 +584,14 @@ export default function Dashboard() {
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <p className="text-[9px] mt-1.5 font-bold uppercase text-text-muted text-center">Concept {i + 1}</p>
+                                                    <p className="text-[9px] mt-1.5 font-bold uppercase text-text-muted text-center">{logo.concept_name || `Concept ${i + 1}`}</p>
                                                 </GlassCard>
                                             </motion.div>
                                         );
                                     })}
                                 </div>
                                 <div className="p-4 bg-[var(--surface)] rounded-xl border border-[var(--card-border)] text-center">
-                                    <p className="text-[10px] text-text-muted italic leading-relaxed font-medium">Click any concept to download high-resolution PNG.</p>
+                                    <p className="text-[10px] text-text-muted italic leading-relaxed font-medium">Click any concept to download high-resolution PNG. Images may take a few seconds to generate.</p>
                                 </div>
                             </div>
                         )}
