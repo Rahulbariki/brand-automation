@@ -312,14 +312,13 @@ low quality
         print("Generating with Pollinations (Direct Mode)...")
 
         # Simplified prompt for URL safety and speed
-        # Remove special characters that might break the URL
         import re
         clean_text = re.sub(r'[^a-zA-Z0-9\s]', '', prompt)
-        short_prompt = " ".join(clean_text.split()[:20]) # Limit to 20 words
+        short_prompt = " ".join(clean_text.split()[:15]) # Even shorter
         
         seed = random.randint(1, 100000)
-        # Using Flux model on Pollinations for better logo quality
-        poll_url = f"https://image.pollinations.ai/prompt/luxury%20logo%20mockup%20for%20{urllib.parse.quote(short_prompt)}?width=1024&height=1024&seed={seed}&model=flux&nologo=true"
+        # Using a simpler URL to avoid 530s
+        poll_url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(short_prompt)}?width=1024&height=1024&seed={seed}&nologo=true"
 
         print(f"Returning Pollinations URL: {poll_url[:100]}...")
         return poll_url
