@@ -1,14 +1,12 @@
 import requests
 import os
 import json
-# import speech_recognition as sr # Removed to save space on Vercel
+import uuid
+import random
+import time
+import urllib.parse
+from supabase import create_client
 from groq import Groq
-
-# --- Activity 2.11: Voice Input Transcription ---
-def transcribe_audio(audio_file_path: str) -> str:
-    """Transcribes audio file to text using Google Speech Recognition."""
-    # Disabled for Vercel Serverless optimization (omitting large libraries)
-    return "Voice transcription is currently disabled in this lightweight deployment."
 from dotenv import load_dotenv
 from schemas import (
     BrandNameRequest, TaglineRequest, StrategyRequest,
@@ -17,23 +15,28 @@ from schemas import (
 )
 
 # Load environment variables
-# Load environment variables
 load_dotenv()
 
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+# Handle both names for the service key
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+    print("Warning: Supabase credentials missing from environment.")
+
+supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
 # --- Clients ---
-api_key = os.getenv("GROQ_API_KEY")
-if not api_key:
-    # Fallback or warning - though for now we assume it exists if .env is loaded
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
     print("Warning: GROQ_API_KEY not found in environment.")
 
-groq_client = Groq(api_key=api_key)
+groq_client = Groq(api_key=GROQ_API_KEY)
 
 # IBM Granite (Hugging Face)
 HF_API_KEY = os.getenv("HF_API_KEY")
-# Using a more reliable endpoint for Granite
 IBM_MODEL = os.getenv("IBM_MODEL", "ibm-granite/granite-3.0-8b-instruct") 
-HF_API_URL = f"https://api-inference.huggingface.co/models/{IBM_MODEL}"
-HF_HEADERS = {"Authorization": f"Bearer {HF_API_KEY}"}
+HF_HEADERS = {"Authorization": f"Bearer {HF_API_KEY}"} if HF_API_KEY else {}
 
 # --- Helper: Robust JSON Extraction ---
 def extract_json(text: str):
@@ -56,6 +59,12 @@ def extract_json(text: str):
         except:
             pass
     return None
+
+# --- Activity 2.11: Voice Input Transcription ---
+def transcribe_audio(audio_file_path: str) -> str:
+    """Transcribes audio file to text using Google Speech Recognition."""
+    # Disabled for Vercel Serverless optimization (omitting large libraries)
+    return "Voice transcription is currently disabled in this lightweight deployment."
 
 # --- Activity 2.5: Brand Name Generator ---
 def generate_brand_names(request: BrandNameRequest) -> list[str]:
@@ -240,26 +249,8 @@ def generate_logo_prompts(request: LogoRequest) -> list[str]:
 
     return [prompt for _ in range(5)]
 
-# --- Legacy Helper ---
-def generate_tagline(request: TaglineRequest) -> str:
-    # Re-using the content generator logic or simple prompt
-    prompt = f"Create a catchy tagline for {request.brand_name} ({request.industry}). Return only the tagline."
-    chat_completion = groq_client.chat.completions.create(
-        messages=[{"role": "user", "content": prompt}],
-        model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-    )
-    return chat_completion.choices[0].message.content.strip().replace('"', '')
-
-# --- Activity 2.10 (Part 2): Logo Image Generation ---
 # --- Activity 2.10 (Part 2): Logo Image Generation ---
 def generate_logo_image(prompt: str) -> str:
-    import urllib.parse
-    import random
-    import time
-    from pathlib import Path
-    import requests
-    import os
-
     enhanced_mockup_prompt = f"""
 Professional luxury brand logo mockup for {prompt}
 
@@ -292,19 +283,17 @@ low quality
 """
 
     # 1. Hugging Face (Primary attempt if token is available)
-    hf_token = os.getenv("HF_API_KEY")
-    if hf_token:
+    if HF_API_KEY:
         try:
             print(f"Generating image with Hugging Face (SDXL Refiner) for {prompt}...")
             # Using the refiner model as requested for superior photo quality
             API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-refiner-1.0"
-            headers = {"Authorization": f"Bearer {hf_token}"}
             
             payload = {
                 "inputs": enhanced_mockup_prompt,
                 "parameters": {"negative_prompt": negative_prompt}
             }
-            response = requests.post(API_URL, headers=headers, json=payload, timeout=20)
+            response = requests.post(API_URL, headers=HF_HEADERS, json=payload, timeout=20)
             
             if response.status_code == 200:
                 import base64
@@ -318,7 +307,7 @@ low quality
 
     # 2. Pollinations.ai (Backup - Currently Highly Reliable for Frontend Loading)
     try:
-        print("Generating with Pollinations + Saving Locally...")
+        print("Generating with Pollinations + Saving to Supabase...")
 
         seed = random.randint(1, 100000)
         encoded_prompt = urllib.parse.quote(enhanced_mockup_prompt.strip().replace('\n', ' '))
@@ -330,22 +319,20 @@ low quality
         if response.status_code != 200:
             raise Exception("Pollinations download failed")
 
-        # 🔥 SAVE LOCALLY
-        output_dir = Path(__file__).resolve().parent.parent / "frontend" / "assets" / "generated"
-        output_dir.mkdir(parents=True, exist_ok=True)
+        print("Uploading to Supabase Storage...")
 
-        filename = f"logo_{int(time.time())}.png"
-        filepath = output_dir / filename
+        file_name = f"{uuid.uuid4()}.png"
 
-        with open(filepath, "wb") as f:
-            f.write(response.content)
+        supabase.storage.from_("brand-logos").upload(
+            path=file_name,
+            file=response.content,
+            file_options={"content-type": "image/png"}
+        )
 
-        print("Saved:", filepath)
+        public_url = supabase.storage.from_("brand-logos").get_public_url(file_name)
 
-        # RETURN LOCAL SERVED PATH
-        return f"/assets/generated/{filename}"
+        return public_url
     except Exception as e:
-        pass  # Shift line number
         print(f"Image generation failed: {e}")
         return None
 
@@ -371,7 +358,8 @@ def generate_multiple_logos(request: LogoRequest) -> list[dict]:
             prompt = future_to_prompt[future]
             try:
                 img_url = future.result()
-                results.append({"prompt": prompt, "image_url": img_url})
+                if img_url:
+                    results.append({"prompt": prompt, "image_url": img_url})
             except Exception as e:
                 print(f"Error in parallel logo generation: {e}")
                 
@@ -415,5 +403,3 @@ def generate_investor_email(request) -> str:
         model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
     )
     return chat_completion.choices[0].message.content.strip()
-
-
